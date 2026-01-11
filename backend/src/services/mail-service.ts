@@ -1,40 +1,28 @@
-import { gt } from './gt-executor.js';
-import type {
-  Message,
-  SendMessageRequest,
-  PaginatedResponse,
-} from '../types/index.js';
+/**
+ * Mail service for gastown-boy.
+ *
+ * This service provides a typed interface for mail operations,
+ * wrapping the lower-level gt-executor mail commands.
+ */
+
+import { gt } from "./gt-executor.js";
+import type { Message, SendMessageRequest } from "../types/mail.js";
+import { MessageSchema } from "../types/mail.js";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export interface ListMailOptions {
-  limit?: number;
-  offset?: number;
-  unreadOnly?: boolean;
-}
-
-export interface MailServiceError extends Error {
-  code: string;
-  details?: string;
-}
-
-// ============================================================================
-// Error Helpers
-// ============================================================================
-
-function createMailError(
-  code: string,
-  message: string,
-  details?: string
-): MailServiceError {
-  const error = new Error(message) as MailServiceError;
-  error.code = code;
-  if (details !== undefined) {
-    error.details = details;
-  }
-  return error;
+/**
+ * Result type for mail service operations.
+ */
+export interface MailServiceResult<T> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+  };
 }
 
 // ============================================================================
@@ -42,81 +30,115 @@ function createMailError(
 // ============================================================================
 
 /**
- * List mail messages with optional pagination and filtering.
+ * Lists all mail messages, sorted by newest first.
  */
-export async function listMail(
-  options: ListMailOptions = {}
-): Promise<PaginatedResponse<Message>> {
-  const result = await gt.mail.inbox<Message[]>();
+export async function listMail(): Promise<MailServiceResult<Message[]>> {
+  const result = await gt.mail.inbox<{ messages: Message[] }>();
 
   if (!result.success) {
-    throw createMailError(
-      result.error?.code ?? 'LIST_MAIL_ERROR',
-      result.error?.message ?? 'Failed to list mail',
-      result.error?.stderr
-    );
+    return {
+      success: false,
+      error: {
+        code: result.error?.code ?? "LIST_MAIL_ERROR",
+        message: result.error?.message ?? "Failed to list mail",
+      },
+    };
   }
 
-  const allMessages = result.data ?? [];
+  // Validate response structure
+  if (!result.data || !Array.isArray(result.data.messages)) {
+    return {
+      success: false,
+      error: {
+        code: "INVALID_RESPONSE",
+        message: "Invalid response from mail inbox",
+      },
+    };
+  }
 
-  // Apply filtering
-  let filtered = options.unreadOnly
-    ? allMessages.filter((m) => !m.read)
-    : allMessages;
+  // Sort messages by timestamp, newest first
+  const sorted = [...result.data.messages].sort((a, b) => {
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  });
 
-  // Apply pagination
-  const offset = options.offset ?? 0;
-  const limit = options.limit ?? 50;
-  const items = filtered.slice(offset, offset + limit);
-  const total = filtered.length;
-  const hasMore = offset + items.length < total;
-
-  return { items, total, hasMore };
+  return { success: true, data: sorted };
 }
 
 /**
- * Get a single message by ID.
+ * Gets a single message by ID.
  */
-export async function getMessage(messageId: string): Promise<Message> {
+export async function getMessage(
+  messageId: string
+): Promise<MailServiceResult<Message>> {
   if (!messageId) {
-    throw createMailError('INVALID_MESSAGE_ID', 'Message ID is required');
+    return {
+      success: false,
+      error: {
+        code: "INVALID_ARGUMENT",
+        message: "Message ID is required",
+      },
+    };
   }
 
   const result = await gt.mail.read<Message>(messageId);
 
   if (!result.success) {
-    throw createMailError(
-      result.error?.code ?? 'GET_MESSAGE_ERROR',
-      result.error?.message ?? `Failed to get message: ${messageId}`,
-      result.error?.stderr
-    );
+    return {
+      success: false,
+      error: {
+        code: result.error?.code ?? "GET_MESSAGE_ERROR",
+        message: result.error?.message ?? `Failed to get message: ${messageId}`,
+      },
+    };
   }
 
-  if (!result.data) {
-    throw createMailError('MESSAGE_NOT_FOUND', `Message not found: ${messageId}`);
+  // Validate response is a complete message
+  const parseResult = MessageSchema.safeParse(result.data);
+  if (!parseResult.success) {
+    return {
+      success: false,
+      error: {
+        code: "INVALID_RESPONSE",
+        message: "Invalid message format in response",
+      },
+    };
   }
 
-  return result.data;
+  return { success: true, data: result.data as Message };
 }
 
 /**
- * Send a new mail message.
+ * Sends a message. Defaults to sending to the Mayor.
  */
 export async function sendMail(
   request: SendMessageRequest
-): Promise<{ messageId: string }> {
-  if (!request.subject || !request.body) {
-    throw createMailError(
-      'INVALID_REQUEST',
-      'Subject and body are required'
-    );
+): Promise<MailServiceResult<void>> {
+  // Validate required fields
+  if (!request.subject) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Subject is required",
+      },
+    };
   }
 
-  const to = request.to ?? 'mayor/';
+  if (!request.body) {
+    return {
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Message body is required",
+      },
+    };
+  }
+
+  const to = request.to ?? "mayor/";
 
   // Build send options, only including defined values
   const sendOptions: {
-    type?: 'notification' | 'task' | 'scavenge' | 'reply';
+    type?: "notification" | "task" | "scavenge" | "reply";
     priority?: 0 | 1 | 2 | 3 | 4;
     replyTo?: string;
   } = {};
@@ -132,80 +154,45 @@ export async function sendMail(
   );
 
   if (!result.success) {
-    throw createMailError(
-      result.error?.code ?? 'SEND_MAIL_ERROR',
-      result.error?.message ?? 'Failed to send mail',
-      result.error?.stderr
-    );
+    return {
+      success: false,
+      error: {
+        code: result.error?.code ?? "SEND_FAILED",
+        message: result.error?.message ?? "Failed to send message",
+      },
+    };
   }
 
-  // Parse message ID from response
-  // gt mail send returns the message ID in stdout
-  const messageId = (result.data ?? '').trim() || generateMessageId();
-
-  return { messageId };
+  return { success: true };
 }
 
 /**
- * Mark a message as read.
+ * Marks a message as read. This is idempotent.
  */
-export async function markRead(messageId: string): Promise<void> {
+export async function markRead(
+  messageId: string
+): Promise<MailServiceResult<void>> {
   if (!messageId) {
-    throw createMailError('INVALID_MESSAGE_ID', 'Message ID is required');
+    return {
+      success: false,
+      error: {
+        code: "INVALID_ARGUMENT",
+        message: "Message ID is required",
+      },
+    };
   }
 
   const result = await gt.mail.markRead(messageId);
 
   if (!result.success) {
-    throw createMailError(
-      result.error?.code ?? 'MARK_READ_ERROR',
-      result.error?.message ?? `Failed to mark message as read: ${messageId}`,
-      result.error?.stderr
-    );
-  }
-}
-
-/**
- * Get all messages in a thread.
- */
-export async function getThread(threadId: string): Promise<Message[]> {
-  if (!threadId) {
-    throw createMailError('INVALID_THREAD_ID', 'Thread ID is required');
+    return {
+      success: false,
+      error: {
+        code: result.error?.code ?? "MARK_READ_ERROR",
+        message: result.error?.message ?? `Failed to mark message as read`,
+      },
+    };
   }
 
-  const result = await gt.mail.thread<Message[]>(threadId);
-
-  if (!result.success) {
-    throw createMailError(
-      result.error?.code ?? 'GET_THREAD_ERROR',
-      result.error?.message ?? `Failed to get thread: ${threadId}`,
-      result.error?.stderr
-    );
-  }
-
-  return result.data ?? [];
+  return { success: true };
 }
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function generateMessageId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 8);
-  return `msg-${timestamp}-${random}`;
-}
-
-// ============================================================================
-// Export
-// ============================================================================
-
-export const mailService = {
-  listMail,
-  getMessage,
-  sendMail,
-  markRead,
-  getThread,
-};
-
-export default mailService;
