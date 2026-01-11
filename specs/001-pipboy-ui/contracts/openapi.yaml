@@ -1,0 +1,573 @@
+openapi: 3.1.0
+info:
+  title: Gastown-Boy API
+  description: |
+    Backend API for the Pip-Boy themed gastown UI.
+    Wraps gastown CLI commands and exposes them as REST endpoints.
+  version: 1.0.0
+  contact:
+    name: Gastown-Boy
+
+servers:
+  - url: http://localhost:3001/api
+    description: Local development server
+
+tags:
+  - name: Status
+    description: Gastown system status and health
+  - name: Mail
+    description: Mayor message communication
+  - name: Power
+    description: Gastown power control (start/stop)
+  - name: Agents
+    description: Crew member information
+
+paths:
+  /status:
+    get:
+      tags: [Status]
+      summary: Get gastown status
+      description: Returns the current state of gastown including power state, agent health, and rig information.
+      operationId: getStatus
+      responses:
+        '200':
+          description: Gastown status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+        '500':
+          description: Failed to retrieve status (gt command failed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /mail:
+    get:
+      tags: [Mail]
+      summary: List mail messages
+      description: Returns messages from the inbox. Supports filtering by read status.
+      operationId: listMail
+      parameters:
+        - name: unread
+          in: query
+          description: If true, only return unread messages
+          schema:
+            type: boolean
+            default: false
+        - name: limit
+          in: query
+          description: Maximum number of messages to return
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailListResponse'
+        '500':
+          description: Failed to retrieve messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Mail]
+      summary: Send a message
+      description: Send a new message to the Mayor or another gastown address.
+      operationId: sendMail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessageRequest'
+      responses:
+        '201':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendMailResponse'
+        '400':
+          description: Invalid request (missing subject or body)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Gastown is not running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /mail/{messageId}:
+    get:
+      tags: [Mail]
+      summary: Get message details
+      description: Returns the full content of a specific message.
+      operationId: getMessage
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: The message ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Message retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MailDetailResponse'
+        '404':
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /mail/{messageId}/read:
+    post:
+      tags: [Mail]
+      summary: Mark message as read
+      description: Marks a message as read (archives it in gastown).
+      operationId: markMessageRead
+      parameters:
+        - name: messageId
+          in: path
+          required: true
+          description: The message ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Message marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Message not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /power/up:
+    post:
+      tags: [Power]
+      summary: Start gastown
+      description: Starts gastown infrastructure agents (daemon, deacon, mayor, witnesses, refineries).
+      operationId: powerUp
+      responses:
+        '200':
+          description: Gastown started or already running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerResponse'
+        '500':
+          description: Failed to start gastown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /power/down:
+    post:
+      tags: [Power]
+      summary: Stop gastown
+      description: Gracefully stops gastown infrastructure agents.
+      operationId: powerDown
+      responses:
+        '200':
+          description: Gastown stopped or already stopped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PowerResponse'
+        '500':
+          description: Failed to stop gastown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /agents:
+    get:
+      tags: [Agents]
+      summary: List crew members
+      description: Returns all gastown agents formatted as crew members for the dashboard.
+      operationId: listAgents
+      parameters:
+        - name: includePolecats
+          in: query
+          description: Include ephemeral polecat agents
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Agents retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentsResponse'
+        '500':
+          description: Failed to retrieve agents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # Enums
+    MessagePriority:
+      type: integer
+      enum: [0, 1, 2, 3, 4]
+      description: |
+        Message priority levels:
+        - 0: Urgent
+        - 1: High
+        - 2: Normal (default)
+        - 3: Low
+        - 4: Lowest
+
+    MessageType:
+      type: string
+      enum: [notification, task, scavenge, reply]
+
+    PowerState:
+      type: string
+      enum: [stopped, starting, running, stopping]
+
+    CrewMemberStatus:
+      type: string
+      enum: [idle, working, blocked, stuck, offline]
+
+    AgentType:
+      type: string
+      enum: [mayor, deacon, witness, refinery, crew, polecat]
+
+    # Core entities
+    Message:
+      type: object
+      required: [id, from, to, subject, body, timestamp, read, priority, type, threadId, pinned]
+      properties:
+        id:
+          type: string
+          description: Unique message identifier
+        from:
+          type: string
+          description: Sender address
+          example: "mayor/"
+        to:
+          type: string
+          description: Recipient address
+        subject:
+          type: string
+          description: Message subject line
+        body:
+          type: string
+          description: Full message content
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was sent
+        read:
+          type: boolean
+          description: Whether the message has been read
+        priority:
+          $ref: '#/components/schemas/MessagePriority'
+        type:
+          $ref: '#/components/schemas/MessageType'
+        threadId:
+          type: string
+          description: Thread ID for grouping related messages
+        replyTo:
+          type: string
+          description: ID of message being replied to
+        pinned:
+          type: boolean
+          description: Whether message is pinned
+        cc:
+          type: array
+          items:
+            type: string
+          description: Additional recipients
+
+    SendMessageRequest:
+      type: object
+      required: [subject, body]
+      properties:
+        to:
+          type: string
+          default: "mayor/"
+          description: Recipient address
+        subject:
+          type: string
+          minLength: 1
+          description: Message subject
+        body:
+          type: string
+          minLength: 1
+          description: Message body
+        priority:
+          $ref: '#/components/schemas/MessagePriority'
+        type:
+          $ref: '#/components/schemas/MessageType'
+        replyTo:
+          type: string
+          description: ID of message being replied to
+
+    CrewMember:
+      type: object
+      required: [id, name, type, status, unreadMail]
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+          example: "greenplace/Toast"
+        name:
+          type: string
+          description: Display name
+        type:
+          $ref: '#/components/schemas/AgentType'
+        rig:
+          type: string
+          nullable: true
+          description: Rig name (null for town-level agents)
+        status:
+          $ref: '#/components/schemas/CrewMemberStatus'
+        currentTask:
+          type: string
+          description: Current task description
+        unreadMail:
+          type: integer
+          description: Number of unread messages
+
+    GastownStatus:
+      type: object
+      required: [powerState, town, operator, infrastructure, rigs, fetchedAt]
+      properties:
+        powerState:
+          $ref: '#/components/schemas/PowerState'
+        town:
+          type: object
+          properties:
+            name:
+              type: string
+            root:
+              type: string
+        operator:
+          type: object
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+            unreadMail:
+              type: integer
+        infrastructure:
+          type: object
+          properties:
+            mayor:
+              $ref: '#/components/schemas/AgentStatus'
+            deacon:
+              $ref: '#/components/schemas/AgentStatus'
+            daemon:
+              $ref: '#/components/schemas/AgentStatus'
+        rigs:
+          type: array
+          items:
+            $ref: '#/components/schemas/RigStatus'
+        fetchedAt:
+          type: string
+          format: date-time
+
+    AgentStatus:
+      type: object
+      required: [name, running, unreadMail]
+      properties:
+        name:
+          type: string
+        running:
+          type: boolean
+        pinnedWork:
+          type: array
+          items:
+            type: string
+        unreadMail:
+          type: integer
+        firstMessageSubject:
+          type: string
+        state:
+          type: string
+          enum: [stuck, awaiting-gate, idle, working]
+
+    RigStatus:
+      type: object
+      required: [name, path, witness, refinery, crew, polecats, mergeQueue]
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        witness:
+          $ref: '#/components/schemas/AgentStatus'
+        refinery:
+          $ref: '#/components/schemas/AgentStatus'
+        crew:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentStatus'
+        polecats:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentStatus'
+        mergeQueue:
+          type: object
+          properties:
+            pending:
+              type: integer
+            inFlight:
+              type: integer
+            blocked:
+              type: integer
+
+    # Response wrappers
+    SuccessResponse:
+      type: object
+      required: [success, timestamp]
+      properties:
+        success:
+          type: boolean
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required: [success, error, timestamp]
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: "GT_COMMAND_FAILED"
+            message:
+              type: string
+              example: "Failed to execute gt status"
+            details:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    StatusResponse:
+      type: object
+      required: [success, data, timestamp]
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/GastownStatus'
+        timestamp:
+          type: string
+          format: date-time
+
+    MailListResponse:
+      type: object
+      required: [success, data, timestamp]
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Message'
+            total:
+              type: integer
+            hasMore:
+              type: boolean
+        timestamp:
+          type: string
+          format: date-time
+
+    MailDetailResponse:
+      type: object
+      required: [success, data, timestamp]
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Message'
+        timestamp:
+          type: string
+          format: date-time
+
+    SendMailResponse:
+      type: object
+      required: [success, data, timestamp]
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            messageId:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    PowerResponse:
+      type: object
+      required: [success, data, timestamp]
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            previousState:
+              $ref: '#/components/schemas/PowerState'
+            newState:
+              $ref: '#/components/schemas/PowerState'
+        timestamp:
+          type: string
+          format: date-time
+
+    AgentsResponse:
+      type: object
+      required: [success, data, timestamp]
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CrewMember'
+        timestamp:
+          type: string
+          format: date-time
