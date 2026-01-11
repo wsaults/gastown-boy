@@ -1,0 +1,194 @@
+@import "tailwindcss";
+
+/*
+ * Pip-Boy Theme Configuration
+ * Inspired by the Fallout series' iconic green phosphor CRT display
+ */
+@theme {
+  /* Pip-Boy green phosphor colors */
+  --color-pipboy-green: #4af626;
+  --color-pipboy-green-dim: #2d9a16;
+  --color-pipboy-green-bright: #7fff00;
+  --color-pipboy-green-glow: rgba(74, 246, 38, 0.3);
+
+  /* Pip-Boy amber accent (for warnings/highlights) */
+  --color-pipboy-amber: #ffb000;
+  --color-pipboy-amber-dim: #cc8c00;
+  --color-pipboy-amber-bright: #ffc933;
+
+  /* Pip-Boy red (for errors/danger) */
+  --color-pipboy-red: #ff3c3c;
+  --color-pipboy-red-dim: #cc3030;
+
+  /* Background colors (dark CRT) */
+  --color-pipboy-bg: #0a0f0a;
+  --color-pipboy-bg-light: #111a11;
+  --color-pipboy-bg-lighter: #1a261a;
+
+  /* Terminal/panel backgrounds */
+  --color-pipboy-panel: #0d140d;
+  --color-pipboy-panel-border: #1a3a1a;
+
+  /* Fonts */
+  --font-mono: "Share Tech Mono", "Courier New", monospace;
+  --font-display: "Share Tech Mono", "Courier New", monospace;
+
+  /* Shadows with green glow */
+  --shadow-pipboy: 0 0 10px rgba(74, 246, 38, 0.3), 0 0 20px rgba(74, 246, 38, 0.1);
+  --shadow-pipboy-strong: 0 0 15px rgba(74, 246, 38, 0.5), 0 0 30px rgba(74, 246, 38, 0.2);
+
+  /* Animation timing */
+  --animate-flicker: flicker 0.15s infinite;
+  --animate-scan: scan 8s linear infinite;
+}
+
+/* Base styles */
+@layer base {
+  html {
+    font-family: var(--font-mono);
+    background-color: var(--color-pipboy-bg);
+    color: var(--color-pipboy-green);
+  }
+
+  body {
+    min-height: 100vh;
+    background-color: var(--color-pipboy-bg);
+  }
+
+  /* CRT scanline effect overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+    z-index: 9999;
+  }
+
+  /* Selection colors */
+  ::selection {
+    background-color: var(--color-pipboy-green);
+    color: var(--color-pipboy-bg);
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-pipboy-bg-light);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-pipboy-green-dim);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-pipboy-green);
+  }
+}
+
+/* Component styles */
+@layer components {
+  /* Panel/card style */
+  .pipboy-panel {
+    background-color: var(--color-pipboy-panel);
+    border: 1px solid var(--color-pipboy-panel-border);
+    box-shadow: var(--shadow-pipboy);
+  }
+
+  /* Button styles */
+  .pipboy-btn {
+    background-color: var(--color-pipboy-bg-lighter);
+    border: 1px solid var(--color-pipboy-green-dim);
+    color: var(--color-pipboy-green);
+    padding: 0.5rem 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.15s ease;
+  }
+
+  .pipboy-btn:hover {
+    background-color: var(--color-pipboy-green-dim);
+    color: var(--color-pipboy-bg);
+    box-shadow: var(--shadow-pipboy);
+  }
+
+  .pipboy-btn:active {
+    background-color: var(--color-pipboy-green);
+  }
+
+  .pipboy-btn-danger {
+    border-color: var(--color-pipboy-red-dim);
+    color: var(--color-pipboy-red);
+  }
+
+  .pipboy-btn-danger:hover {
+    background-color: var(--color-pipboy-red-dim);
+  }
+
+  /* Input styles */
+  .pipboy-input {
+    background-color: var(--color-pipboy-bg-light);
+    border: 1px solid var(--color-pipboy-panel-border);
+    color: var(--color-pipboy-green);
+    padding: 0.5rem;
+  }
+
+  .pipboy-input:focus {
+    outline: none;
+    border-color: var(--color-pipboy-green);
+    box-shadow: var(--shadow-pipboy);
+  }
+
+  /* Text glow effect */
+  .pipboy-glow {
+    text-shadow: 0 0 5px var(--color-pipboy-green-glow),
+      0 0 10px var(--color-pipboy-green-glow);
+  }
+
+  /* Status indicators */
+  .pipboy-status-online {
+    color: var(--color-pipboy-green-bright);
+  }
+
+  .pipboy-status-offline {
+    color: var(--color-pipboy-red);
+  }
+
+  .pipboy-status-warning {
+    color: var(--color-pipboy-amber);
+  }
+}
+
+/* Animations */
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes scan {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 100%;
+  }
+}
