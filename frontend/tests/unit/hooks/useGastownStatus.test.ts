@@ -488,12 +488,17 @@ describe("useGastownStatus", () => {
         await Promise.resolve();
       });
 
-      await expect(
-        act(async () => {
+      // Catch error inside act() to ensure state updates are flushed
+      let caughtError: Error | null = null;
+      await act(async () => {
+        try {
           await result.current.powerUp();
-        })
-      ).rejects.toThrow("Failed to start");
+        } catch (err) {
+          caughtError = err as Error;
+        }
+      });
 
+      expect(caughtError?.message).toBe("Failed to start");
       expect(result.current.powerError).toEqual(powerError);
       expect(result.current.poweringUp).toBe(false);
     });
@@ -511,12 +516,15 @@ describe("useGastownStatus", () => {
         await Promise.resolve();
       });
 
-      // First power up fails
-      await expect(
-        act(async () => {
+      // First power up fails - catch inside act() to ensure state updates are flushed
+      await act(async () => {
+        try {
           await result.current.powerUp();
-        })
-      ).rejects.toThrow();
+        } catch {
+          // Expected to throw
+        }
+      });
+
       expect(result.current.powerError).toEqual(powerError);
 
       // Second power up succeeds
@@ -616,12 +624,17 @@ describe("useGastownStatus", () => {
         await Promise.resolve();
       });
 
-      await expect(
-        act(async () => {
+      // Catch error inside act() to ensure state updates are flushed
+      let caughtError: Error | null = null;
+      await act(async () => {
+        try {
           await result.current.powerDown();
-        })
-      ).rejects.toThrow("Failed to stop");
+        } catch (err) {
+          caughtError = err as Error;
+        }
+      });
 
+      expect(caughtError?.message).toBe("Failed to stop");
       expect(result.current.powerError).toEqual(powerError);
       expect(result.current.poweringDown).toBe(false);
     });
