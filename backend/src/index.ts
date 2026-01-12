@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { mailRouter, powerRouter } from "./routes/index.js";
+import { mailRouter, powerRouter, statusRouter } from "./routes/index.js";
 
 const app = express();
 const PORT = process.env["PORT"] ?? 3001;
@@ -12,6 +12,7 @@ app.use(express.json());
 // Routes
 app.use("/api/mail", mailRouter);
 app.use("/api/power", powerRouter);
+app.use("/api/status", statusRouter);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
