@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MailView } from "./components/mail/MailView";
 
 type TabId = "mail" | "power" | "crew";
 
@@ -35,12 +36,7 @@ function App() {
       </nav>
 
       <main className="app-content">
-        {activeTab === "mail" && (
-          <div className="tab-panel">
-            <h2>Mail</h2>
-            <p>Messages and notifications</p>
-          </div>
-        )}
+        {activeTab === "mail" && <MailView />}
         {activeTab === "power" && (
           <div className="tab-panel">
             <h2>Power</h2>
