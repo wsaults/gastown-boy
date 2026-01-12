@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { MailView } from "./components/mail/MailView";
+import { PowerButton } from "./components/power/PowerButton";
 
 type TabId = "mail" | "power" | "crew";
 
@@ -41,6 +42,7 @@ function App() {
           <div className="tab-panel">
             <h2>Power</h2>
             <p>System power and resources</p>
+            <PowerButton />
           </div>
         )}
         {activeTab === "crew" && (
