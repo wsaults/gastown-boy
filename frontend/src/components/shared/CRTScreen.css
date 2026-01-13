@@ -1,0 +1,406 @@
+/*
+ * CRT Screen Effects
+ * Authentic Fallout Pip-Boy terminal aesthetics
+ */
+
+/* ============================================
+   Color Variables - Authentic Phosphor Colors
+   ============================================ */
+:root {
+  /* Classic Pip-Boy amber-green (P1 phosphor inspired) */
+  --crt-phosphor: #20C20E;
+  --crt-phosphor-bright: #33FF33;
+  --crt-phosphor-dim: #0A5F07;
+  --crt-phosphor-glow: rgba(32, 194, 14, 0.6);
+  --crt-phosphor-bloom: rgba(32, 194, 14, 0.2);
+
+  /* Amber variant for warnings */
+  --crt-amber: #FFB000;
+  --crt-amber-glow: rgba(255, 176, 0, 0.5);
+
+  /* Screen background - deep CRT black */
+  --crt-bg: #020502;
+  --crt-bg-active: #040804;
+
+  /* Bezel color */
+  --crt-bezel: #1a1a18;
+  --crt-bezel-highlight: #2a2a26;
+  --crt-bezel-shadow: #0a0a08;
+}
+
+/* ============================================
+   Monitor Container
+   ============================================ */
+.crt-monitor {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(180deg, #0d0d0b 0%, #1a1a18 50%, #0d0d0b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   Bezel Frame (Monitor Housing)
+   ============================================ */
+.crt-bezel {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  min-height: calc(100vh - 40px);
+  background: linear-gradient(145deg, var(--crt-bezel-highlight), var(--crt-bezel-shadow));
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Glass Layer (Screen Surface)
+   ============================================ */
+.crt-glass {
+  width: 100%;
+  min-height: calc(100vh - 72px);
+  background: var(--crt-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+
+  /* CRT curvature simulation */
+  box-shadow:
+    inset 0 0 100px 20px rgba(0, 0, 0, 0.9),
+    inset 0 0 10px 2px rgba(0, 0, 0, 0.5),
+    0 0 20px var(--crt-phosphor-bloom),
+    0 0 40px var(--crt-phosphor-bloom);
+
+  /* Subtle barrel distortion for CRT curvature */
+  border: 2px solid rgba(32, 194, 14, 0.15);
+}
+
+/* Active flicker effect */
+.crt-flicker-active {
+  animation: crt-flicker 0.15s infinite;
+}
+
+@keyframes crt-flicker {
+  0% { opacity: 1; }
+  3% { opacity: 0.98; }
+  6% { opacity: 1; }
+  9% { opacity: 0.99; }
+  12% { opacity: 1; }
+  50% { opacity: 0.995; }
+  100% { opacity: 1; }
+}
+
+/* ============================================
+   Phosphor Layer (Glowing Screen)
+   ============================================ */
+.crt-phosphor {
+  min-height: calc(100vh - 72px);
+  position: relative;
+
+  /* Phosphor glow effect */
+  filter: contrast(1.1) brightness(1.05);
+
+  /* Subtle color bleed for phosphor persistence */
+  text-shadow:
+    0 0 2px var(--crt-phosphor),
+    0 0 4px var(--crt-phosphor-glow);
+}
+
+/* ============================================
+   Content Layer
+   ============================================ */
+.crt-content {
+  min-height: calc(100vh - 72px);
+  padding: 20px;
+  position: relative;
+  z-index: 1;
+  color: var(--crt-phosphor);
+  font-family: 'VT323', 'Share Tech Mono', monospace;
+
+  /* Text rendering for CRT look */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.crt-booting {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   Scanline Effects
+   ============================================ */
+.crt-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+
+  /* Dense scanlines */
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 1px,
+    rgba(0, 0, 0, 0.3) 1px,
+    rgba(0, 0, 0, 0.3) 2px
+  );
+
+  /* Slight movement */
+  animation: scanline-drift 0.05s steps(2) infinite;
+}
+
+@keyframes scanline-drift {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(2px); }
+}
+
+/* Rolling scan bar (like old CRT refresh) */
+.crt-scan-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  pointer-events: none;
+  z-index: 11;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(32, 194, 14, 0.1) 40%,
+    rgba(32, 194, 14, 0.15) 50%,
+    rgba(32, 194, 14, 0.1) 60%,
+    transparent 100%
+  );
+  animation: scan-roll 6s linear infinite;
+}
+
+@keyframes scan-roll {
+  0% { top: -8px; }
+  100% { top: 100%; }
+}
+
+/* ============================================
+   Noise Effect
+   ============================================ */
+.crt-noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  animation: noise-shift 0.1s steps(5) infinite;
+}
+
+@keyframes noise-shift {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(-1%, 1%); }
+  50% { transform: translate(1%, -1%); }
+  75% { transform: translate(-1%, -1%); }
+  100% { transform: translate(1%, 1%); }
+}
+
+/* ============================================
+   Vignette Effect (Edge Darkening)
+   ============================================ */
+.crt-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+
+  /* Heavy vignette for CRT edge falloff */
+  background: radial-gradient(
+    ellipse 80% 80% at 50% 50%,
+    transparent 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.4) 80%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+}
+
+/* ============================================
+   Screen Glare/Reflection
+   ============================================ */
+.crt-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+
+  /* Subtle glass reflection */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    transparent 30%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+}
+
+/* ============================================
+   Boot Sequence Animation
+   ============================================ */
+.boot-sequence {
+  font-family: 'VT323', monospace;
+  font-size: 24px;
+  color: var(--crt-phosphor);
+  text-align: left;
+  max-width: 600px;
+}
+
+.boot-line {
+  margin-bottom: 8px;
+  text-shadow:
+    0 0 5px var(--crt-phosphor),
+    0 0 10px var(--crt-phosphor-glow);
+  animation: boot-appear 0.3s ease-out;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.boot-flash {
+  animation: boot-flash 0.3s ease-out;
+}
+
+@keyframes boot-flash {
+  0% {
+    opacity: 0;
+    filter: brightness(3);
+  }
+  50% {
+    opacity: 1;
+    filter: brightness(2);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+@keyframes boot-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.boot-ready {
+  color: var(--crt-phosphor-bright);
+  text-shadow:
+    0 0 8px var(--crt-phosphor),
+    0 0 16px var(--crt-phosphor-glow),
+    0 0 24px var(--crt-phosphor-bloom);
+}
+
+.boot-cursor {
+  animation: cursor-blink 0.5s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ============================================
+   Corner Decorations (Pip-Boy style)
+   ============================================ */
+.crt-bezel::before,
+.crt-bezel::after {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--crt-phosphor-dim);
+  opacity: 0.5;
+}
+
+.crt-bezel::before {
+  top: 8px;
+  left: 8px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.crt-bezel::after {
+  bottom: 8px;
+  right: 8px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Additional corner brackets via the glass element */
+.crt-glass::after {
+  content: '';
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+  border-left: 2px solid var(--crt-phosphor-dim);
+  border-bottom: 2px solid var(--crt-phosphor-dim);
+  opacity: 0.3;
+  z-index: 25;
+}
+
+/* ============================================
+   Chromatic Aberration (subtle RGB split)
+   ============================================ */
+@keyframes chromatic-shift {
+  0%, 100% {
+    text-shadow:
+      -0.5px 0 rgba(255, 0, 0, 0.1),
+      0.5px 0 rgba(0, 255, 255, 0.1),
+      0 0 2px var(--crt-phosphor),
+      0 0 4px var(--crt-phosphor-glow);
+  }
+  50% {
+    text-shadow:
+      -0.3px 0 rgba(255, 0, 0, 0.08),
+      0.3px 0 rgba(0, 255, 255, 0.08),
+      0 0 2px var(--crt-phosphor),
+      0 0 4px var(--crt-phosphor-glow);
+  }
+}
+
+.crt-content h1,
+.crt-content h2 {
+  animation: chromatic-shift 4s ease-in-out infinite;
+}
+
+/* ============================================
+   Responsive Adjustments
+   ============================================ */
+@media (max-width: 768px) {
+  .crt-monitor {
+    padding: 10px;
+  }
+
+  .crt-bezel {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .crt-glass {
+    border-radius: 8px;
+  }
+
+  .crt-content {
+    padding: 12px;
+  }
+
+  .crt-bezel::before,
+  .crt-bezel::after {
+    display: none;
+  }
+}

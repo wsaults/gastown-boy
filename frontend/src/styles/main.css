@@ -3,39 +3,42 @@
 /*
  * Pip-Boy Theme Configuration
  * Inspired by the Fallout series' iconic green phosphor CRT display
+ * Using authentic P1/P31 phosphor colors
  */
 @theme {
-  /* Pip-Boy green phosphor colors */
-  --color-pipboy-green: #4af626;
-  --color-pipboy-green-dim: #2d9a16;
-  --color-pipboy-green-bright: #7fff00;
-  --color-pipboy-green-glow: rgba(74, 246, 38, 0.3);
+  /* Authentic CRT Phosphor colors (P1 phosphor green) */
+  --color-pipboy-green: #20C20E;
+  --color-pipboy-green-dim: #0A5F07;
+  --color-pipboy-green-bright: #33FF33;
+  --color-pipboy-green-glow: rgba(32, 194, 14, 0.4);
 
-  /* Pip-Boy amber accent (for warnings/highlights) */
-  --color-pipboy-amber: #ffb000;
-  --color-pipboy-amber-dim: #cc8c00;
-  --color-pipboy-amber-bright: #ffc933;
+  /* Pip-Boy amber accent (for warnings/highlights - P3 phosphor) */
+  --color-pipboy-amber: #FFB000;
+  --color-pipboy-amber-dim: #996800;
+  --color-pipboy-amber-bright: #FFCC33;
+  --color-pipboy-amber-glow: rgba(255, 176, 0, 0.4);
 
   /* Pip-Boy red (for errors/danger) */
-  --color-pipboy-red: #ff3c3c;
-  --color-pipboy-red-dim: #cc3030;
+  --color-pipboy-red: #FF4444;
+  --color-pipboy-red-dim: #AA2222;
+  --color-pipboy-red-glow: rgba(255, 68, 68, 0.4);
 
-  /* Background colors (dark CRT) */
-  --color-pipboy-bg: #0a0f0a;
-  --color-pipboy-bg-light: #111a11;
-  --color-pipboy-bg-lighter: #1a261a;
+  /* Background colors (deep CRT black) */
+  --color-pipboy-bg: #020502;
+  --color-pipboy-bg-light: #040A04;
+  --color-pipboy-bg-lighter: #081008;
 
   /* Terminal/panel backgrounds */
-  --color-pipboy-panel: #0d140d;
-  --color-pipboy-panel-border: #1a3a1a;
+  --color-pipboy-panel: #030803;
+  --color-pipboy-panel-border: #0A3A0A;
 
-  /* Fonts */
-  --font-mono: "Share Tech Mono", "Courier New", monospace;
-  --font-display: "Share Tech Mono", "Courier New", monospace;
+  /* Fonts - VT323 for authentic terminal look */
+  --font-mono: "VT323", "Share Tech Mono", "Courier New", monospace;
+  --font-display: "Orbitron", "Share Tech Mono", monospace;
 
-  /* Shadows with green glow */
-  --shadow-pipboy: 0 0 10px rgba(74, 246, 38, 0.3), 0 0 20px rgba(74, 246, 38, 0.1);
-  --shadow-pipboy-strong: 0 0 15px rgba(74, 246, 38, 0.5), 0 0 30px rgba(74, 246, 38, 0.2);
+  /* Shadows with green phosphor glow */
+  --shadow-pipboy: 0 0 8px rgba(32, 194, 14, 0.4), 0 0 16px rgba(32, 194, 14, 0.2);
+  --shadow-pipboy-strong: 0 0 12px rgba(32, 194, 14, 0.6), 0 0 24px rgba(32, 194, 14, 0.3), 0 0 36px rgba(32, 194, 14, 0.1);
 
   /* Animation timing */
   --animate-flicker: flicker 0.15s infinite;
@@ -48,30 +51,15 @@
     font-family: var(--font-mono);
     background-color: var(--color-pipboy-bg);
     color: var(--color-pipboy-green);
+    font-size: 18px; /* Larger for VT323 readability */
+    -webkit-font-smoothing: none; /* Crisp pixel edges */
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
     min-height: 100vh;
     background-color: var(--color-pipboy-bg);
-  }
-
-  /* CRT scanline effect overlay */
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    background: repeating-linear-gradient(
-      0deg,
-      rgba(0, 0, 0, 0.15),
-      rgba(0, 0, 0, 0.15) 1px,
-      transparent 1px,
-      transparent 2px
-    );
-    z-index: 9999;
+    /* Remove default scanlines - CRTScreen handles this now */
   }
 
   /* Selection colors */
@@ -198,64 +186,139 @@
   .app-container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1rem;
+    min-height: calc(100vh - 112px); /* Account for CRT bezel padding */
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   .app-header {
     text-align: center;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--color-pipboy-panel-border);
+    padding: 1.5rem 0 1rem;
+    border-bottom: 2px solid var(--color-pipboy-green-dim);
     margin-bottom: 1rem;
+    position: relative;
+  }
+
+  /* Decorative header line */
+  .app-header::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-pipboy-green), transparent);
   }
 
   .app-header h1 {
-    font-size: 2rem;
-    letter-spacing: 0.3em;
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 500;
+    letter-spacing: 0.4em;
     text-transform: uppercase;
     color: var(--color-pipboy-green-bright);
-    text-shadow: 0 0 10px var(--color-pipboy-green-glow),
-      0 0 20px var(--color-pipboy-green-glow);
+    text-shadow:
+      0 0 4px var(--color-pipboy-green),
+      0 0 8px var(--color-pipboy-green),
+      0 0 16px var(--color-pipboy-green-glow),
+      0 0 32px var(--color-pipboy-green-glow);
     margin: 0;
+    animation: header-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes header-glow {
+    0%, 100% {
+      text-shadow:
+        0 0 4px var(--color-pipboy-green),
+        0 0 8px var(--color-pipboy-green),
+        0 0 16px var(--color-pipboy-green-glow),
+        0 0 32px var(--color-pipboy-green-glow);
+    }
+    50% {
+      text-shadow:
+        0 0 6px var(--color-pipboy-green),
+        0 0 12px var(--color-pipboy-green),
+        0 0 24px var(--color-pipboy-green-glow),
+        0 0 48px var(--color-pipboy-green-glow);
+    }
   }
 
   .app-nav {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid var(--color-pipboy-panel-border);
-    padding-bottom: 0.5rem;
+    gap: 4px;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    justify-content: center;
   }
 
   .nav-tab {
-    background: transparent;
-    border: 1px solid var(--color-pipboy-panel-border);
+    background: var(--color-pipboy-panel);
+    border: 2px solid var(--color-pipboy-green-dim);
+    border-radius: 0;
     color: var(--color-pipboy-green-dim);
-    padding: 0.5rem 1.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
-    letter-spacing: 0.15em;
+    padding: 0.75rem 2rem;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.1s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Hover scanline effect */
+  .nav-tab::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(32, 194, 14, 0.2), transparent);
+    transition: left 0.3s ease;
+  }
+
+  .nav-tab:hover::before {
+    left: 100%;
   }
 
   .nav-tab:hover {
     border-color: var(--color-pipboy-green);
     color: var(--color-pipboy-green);
+    text-shadow: 0 0 8px var(--color-pipboy-green-glow);
   }
 
   .nav-tab.active {
-    background: var(--color-pipboy-bg-lighter);
+    background: linear-gradient(180deg, var(--color-pipboy-green-dim), var(--color-pipboy-panel));
     border-color: var(--color-pipboy-green);
     color: var(--color-pipboy-green-bright);
-    box-shadow: var(--shadow-pipboy);
+    box-shadow:
+      var(--shadow-pipboy),
+      inset 0 1px 0 rgba(51, 255, 51, 0.3);
+    text-shadow:
+      0 0 4px var(--color-pipboy-green),
+      0 0 8px var(--color-pipboy-green-glow);
+  }
+
+  .nav-tab:active {
+    transform: scale(0.98);
   }
 
   .app-content {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* Allow flex children to shrink */
+  }
+
+  /* Ensure child views fill the content area */
+  .app-content > * {
+    flex: 1;
+    min-height: 0;
   }
 
   .tab-panel {

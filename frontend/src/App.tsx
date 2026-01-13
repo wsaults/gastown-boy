@@ -2,49 +2,53 @@ import { useState } from "react";
 import { CrewStats } from "./components/crew/CrewStats";
 import { MailView } from "./components/mail/MailView";
 import { PowerButton } from "./components/power/PowerButton";
+import { CRTScreen } from "./components/shared/CRTScreen";
 
 type TabId = "mail" | "power" | "crew";
 
 interface Tab {
   id: TabId;
   label: string;
+  icon: string;
 }
 
 const TABS: Tab[] = [
-  { id: "mail", label: "MAIL" },
-  { id: "power", label: "POWER" },
-  { id: "crew", label: "CREW" },
+  { id: "mail", label: "MAIL", icon: "📧" },
+  { id: "power", label: "POWER", icon: "⚡" },
+  { id: "crew", label: "CREW", icon: "👥" },
 ];
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("mail");
 
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <h1>GASTOWN BOY</h1>
-      </header>
+    <CRTScreen showBootSequence={true} enableFlicker={true} enableScanlines={true} enableNoise={true}>
+      <div className="app-container">
+        <header className="app-header">
+          <h1>GASTOWN BOY</h1>
+        </header>
 
-      <nav className="app-nav">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            className={`nav-tab ${activeTab === tab.id ? "active" : ""}`}
-            onClick={() => {
-              setActiveTab(tab.id);
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </nav>
+        <nav className="app-nav">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`nav-tab ${activeTab === tab.id ? "active" : ""}`}
+              onClick={() => {
+                setActiveTab(tab.id);
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
 
-      <main className="app-content">
-        {activeTab === "mail" && <MailView />}
-        {activeTab === "power" && <PowerButton />}
-        {activeTab === "crew" && <CrewStats />}
-      </main>
-    </div>
+        <main className="app-content">
+          {activeTab === "mail" && <MailView />}
+          {activeTab === "power" && <PowerButton />}
+          {activeTab === "crew" && <CrewStats />}
+        </main>
+      </div>
+    </CRTScreen>
   );
 }
 
