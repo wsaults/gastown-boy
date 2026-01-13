@@ -1,7 +1,9 @@
 import type { CSSProperties } from 'react';
 import { usePolling } from '../../hooks/usePolling';
+import { useRigFilteredItems } from '../../contexts/RigContext';
 import { api } from '../../services/api';
 import type { CrewMember, CrewMemberStatus, AgentType } from '../../types';
+import { RigBadge } from '../shared/RigBadge';
 
 /**
  * Props for the CrewStats component.
@@ -25,6 +27,9 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
   } = usePolling<CrewMember[]>(() => api.agents.list(), {
     interval: 5000,
   });
+
+  // Filter agents by selected rig
+  const filteredAgents = useRigFilteredItems(agents ?? []);
 
   return (
     <section style={styles.container} className={className}>
@@ -55,9 +60,13 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
           <div style={styles.emptyState}>NO AGENTS FOUND</div>
         )}
 
-        {agents && agents.length > 0 && (
+        {agents && agents.length > 0 && filteredAgents.length === 0 && (
+          <div style={styles.emptyState}>NO AGENTS MATCH FILTER</div>
+        )}
+
+        {filteredAgents.length > 0 && (
           <div style={styles.crewGrid} role="list" aria-label="Crew members">
-            {agents.map((agent) => (
+            {filteredAgents.map((agent) => (
               <CrewCard key={agent.id} agent={agent} />
             ))}
           </div>
@@ -118,6 +127,7 @@ function CrewCard({ agent }: CrewCardProps) {
           {typeIcon}
         </span>
         <span style={styles.agentName}>{agent.name}</span>
+        <RigBadge rig={agent.rig} size="small" />
         {agent.unreadMail > 0 && (
           <span style={styles.mailBadge} title={`${agent.unreadMail} unread`}>
             ✉ {agent.unreadMail}
@@ -139,11 +149,6 @@ function CrewCard({ agent }: CrewCardProps) {
           </span>
         </div>
 
-        {agent.rig && (
-          <div style={styles.rigInfo}>
-            RIG: {agent.rig}
-          </div>
-        )}
 
         {agent.currentTask && (
           <div style={styles.taskInfo} title={agent.currentTask}>

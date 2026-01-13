@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { api } from '../../services/api';
 import { usePolling } from '../../hooks/usePolling';
+import { useRigSync } from '../shared/RigFilter';
 import type { GastownStatus, PowerState } from '../../types';
 
 /**
@@ -43,6 +44,9 @@ export function PowerButton({ className = '' }: PowerButtonProps) {
   } = usePolling<GastownStatus>(() => api.getStatus(), {
     interval: 2000,
   });
+
+  // Sync available rigs to the filter context
+  useRigSync(data?.rigs);
 
   const [actionState, setActionState] = useState<PowerState | null>(null);
   const [actionLoading, setActionLoading] = useState(false);

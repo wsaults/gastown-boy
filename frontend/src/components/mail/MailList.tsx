@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Message } from '../../types';
+import { RigBadge } from '../shared/RigBadge';
 
 /**
  * Props for the MailList component.
@@ -72,7 +73,10 @@ export function MailList({
               </span>
             </div>
             <div style={styles.messageMeta}>
-              <span style={styles.from}>{formatSender(message.from)}</span>
+              <span style={styles.metaLeft}>
+                <RigBadge rig={message.to} size="small" />
+                <span style={styles.from}>{formatSender(message.from)}</span>
+              </span>
               <span style={styles.timestamp}>{formatTimestamp(message.timestamp)}</span>
             </div>
           </button>
@@ -217,9 +221,16 @@ const styles = {
   messageMeta: {
     display: 'flex',
     justifyContent: 'space-between',
+    alignItems: 'center',
     fontSize: '0.75rem',
     color: colors.primaryDim,
     marginLeft: '32px',
+  },
+
+  metaLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
   },
 
   from: {

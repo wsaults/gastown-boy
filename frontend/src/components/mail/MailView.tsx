@@ -4,7 +4,8 @@ import { MailList } from './MailList';
 import { MailDetail } from './MailDetail';
 import { ComposeMessage } from './ComposeMessage';
 import { useMail } from '../../hooks/useMail';
-import type { SendMessageRequest } from '../../types';
+import { useRigFilteredItems } from '../../contexts/RigContext';
+import type { Message, SendMessageRequest } from '../../types';
 
 /**
  * Props for the MailView container component.
@@ -36,6 +37,12 @@ export function MailView({ className = '' }: MailViewProps) {
     sendError,
     clearSendError,
   } = useMail();
+
+  // Filter messages by selected rig (based on 'to' address)
+  const filteredMessages = useRigFilteredItems<Message>(
+    messages,
+    (msg) => msg.to // Extract rig from 'to' address (e.g., "gastown_boy/crew/carl")
+  );
 
   // Compose mode state
   const [composing, setComposing] = useState(false);
@@ -122,11 +129,11 @@ export function MailView({ className = '' }: MailViewProps) {
         <aside style={styles.listPanel}>
           <div style={styles.panelHeader}>
             <span style={styles.panelTitle}>INBOX</span>
-            <span style={styles.messageCount}>{messages.length} MSG</span>
+            <span style={styles.messageCount}>{filteredMessages.length} MSG</span>
           </div>
           <div style={styles.listContent}>
             <MailList
-              messages={messages}
+              messages={filteredMessages}
               selectedId={selectedMessage?.id ?? null}
               onSelect={handleMessageSelect}
               loading={loading && messages.length === 0}
