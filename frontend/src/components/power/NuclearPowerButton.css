@@ -1,478 +1,297 @@
 /*
- * Nuclear Launch-Style Power Button
- * Glass safety case with visible red button inside
+ * Power Toggle Switch
+ * Pip-Boy styled flip switch for header power control
  */
 
 /* ============================================
    Color Variables
    ============================================ */
-.nuclear-power-button {
-  --nuclear-red: #FF2222;
-  --nuclear-red-bright: #FF4444;
-  --nuclear-red-dark: #BB0000;
-  --nuclear-red-glow: rgba(255, 34, 34, 0.7);
-  --nuclear-red-inner: #DD1111;
+.power-toggle {
+  --switch-green: #20C20E;
+  --switch-green-bright: #33FF33;
+  --switch-green-dim: #0A5F07;
+  --switch-green-glow: rgba(32, 194, 14, 0.5);
 
-  --nuclear-green: #20C20E;
-  --nuclear-green-bright: #33FF33;
-  --nuclear-green-glow: rgba(32, 194, 14, 0.5);
+  --switch-red: #FF4444;
+  --switch-red-dim: #AA2222;
+  --switch-red-glow: rgba(255, 68, 68, 0.5);
 
-  --nuclear-amber: #FFB000;
-  --nuclear-amber-glow: rgba(255, 176, 0, 0.5);
+  --switch-amber: #FFB000;
+  --switch-amber-glow: rgba(255, 176, 0, 0.5);
 
-  --housing-metal: #2a2a28;
-  --housing-metal-light: #3a3a36;
-  --housing-metal-dark: #1a1a18;
-  --housing-border: #444440;
+  --track-bg: #0a0f0a;
+  --track-border: #1a3a1a;
+  --thumb-metal: #3a3a36;
+  --thumb-metal-light: #5a5a54;
 
-  --glass-body: rgba(180, 200, 220, 0.15);
-  --glass-highlight: rgba(255, 255, 255, 0.35);
-  --glass-edge: rgba(255, 255, 255, 0.2);
-  --glass-shadow: rgba(0, 0, 0, 0.2);
-
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: 'VT323', 'Share Tech Mono', monospace;
 }
 
 /* ============================================
-   Housing Frame - Industrial Metal Look
+   Toggle Switch Button
    ============================================ */
-.nuclear-housing {
+.toggle-switch {
   position: relative;
-  width: 72px;
-  height: 72px;
-  background: linear-gradient(
-    145deg,
-    var(--housing-metal-light) 0%,
-    var(--housing-metal) 50%,
-    var(--housing-metal-dark) 100%
-  );
-  border: 2px solid var(--housing-border);
-  border-radius: 8px;
-  padding: 6px;
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-  perspective: 400px;
+  width: 64px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
 }
 
-/* Hazard stripes - subtle background */
-.hazard-stripes {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
-  border-radius: 4px;
-  background: repeating-linear-gradient(
-    -45deg,
-    #FFD100 0px,
-    #FFD100 3px,
-    #1a1a1a 3px,
-    #1a1a1a 6px
-  );
-  opacity: 0.08;
-  pointer-events: none;
+.toggle-switch:focus-visible {
+  outline: 2px solid var(--switch-green);
+  outline-offset: 3px;
+  border-radius: 14px;
 }
 
-/* Corner screws */
-.screw {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  background: radial-gradient(
-    circle at 30% 30%,
-    var(--housing-metal-light),
-    #555550
-  );
-  border-radius: 50%;
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.5),
-    0 1px 1px rgba(255, 255, 255, 0.1);
-}
-
-.screw::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 1px;
-  background: #333330;
-  transform: translate(-50%, -50%);
-}
-
-.screw-tl { top: 3px; left: 3px; }
-.screw-tr { top: 3px; right: 3px; }
-.screw-bl { bottom: 3px; left: 3px; }
-.screw-br { bottom: 3px; right: 3px; }
-
-/* ============================================
-   Warning Label
-   ============================================ */
-.warning-label {
-  position: absolute;
-  top: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.6);
-  padding: 1px 5px;
-  border-radius: 2px;
-  border: 1px solid var(--nuclear-red-dark);
-  z-index: 25;
-}
-
-.warning-text {
-  font-size: 7px;
-  font-weight: bold;
-  color: var(--nuclear-red);
-  letter-spacing: 0.1em;
-  text-shadow: 0 0 4px var(--nuclear-red-glow);
+.toggle-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* ============================================
-   Button Well - Recessed area for button
+   Switch Track
    ============================================ */
-.button-well {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 44px;
-  height: 44px;
-  background: radial-gradient(
-    circle at center,
-    #0c0c0a 0%,
-    #151512 60%,
-    #1a1a18 100%
-  );
-  border-radius: 50%;
-  border: 2px solid var(--housing-metal-dark);
-  box-shadow:
-    inset 0 4px 12px rgba(0, 0, 0, 0.9),
-    inset 0 -2px 6px rgba(255, 255, 255, 0.02);
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.button-ring {
+.switch-track {
+  position: relative;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--track-bg);
+  border: 2px solid var(--track-border);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
   transition: all 0.3s ease;
 }
 
-.button-ring.armed {
-  animation: ring-glow 1s ease-in-out infinite;
-}
-
-@keyframes ring-glow {
-  0%, 100% { box-shadow: inset 0 0 8px var(--nuclear-red-glow); }
-  50% { box-shadow: inset 0 0 15px var(--nuclear-red-glow); }
-}
-
-/* ============================================
-   The Big Red Button - Always visible
-   ============================================ */
-.launch-button {
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 50%;
-  cursor: not-allowed;
-  transition: all 0.15s ease;
-  position: relative;
-  transform: translateY(0);
-  outline: none;
-  background: transparent;
-  padding: 0;
-}
-
-.launch-button:focus-visible {
-  outline: 2px solid var(--nuclear-amber);
-  outline-offset: 4px;
-}
-
-.launch-button.exposed {
-  cursor: pointer;
-}
-
-.button-surface {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  position: relative;
-  overflow: hidden;
-  background: radial-gradient(
-    circle at 35% 35%,
-    var(--nuclear-red-bright) 0%,
-    var(--nuclear-red) 40%,
-    var(--nuclear-red-dark) 100%
-  );
-  box-shadow:
-    0 4px 0 var(--nuclear-red-dark),
-    0 6px 12px rgba(0, 0, 0, 0.5),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.2);
-  transition: all 0.1s ease;
-}
-
-/* Inner glow on button */
-.button-surface::before {
-  content: '';
+/* Track labels */
+.track-label {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle at 40% 40%,
-    rgba(255, 100, 100, 0.4) 0%,
-    transparent 60%
-  );
-}
-
-/* Highlight reflection */
-.button-highlight {
-  position: absolute;
-  top: 4px;
-  left: 15%;
-  width: 50%;
-  height: 35%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0.1) 100%
-  );
-  border-radius: 50%;
-  filter: blur(1px);
-}
-
-.button-label {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
   font-weight: bold;
-  color: rgba(0, 0, 0, 0.5);
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.05em;
+  transition: all 0.3s ease;
+  user-select: none;
 }
 
-/* Button glowing when armed */
-.launch-button.exposed .button-surface {
-  box-shadow:
-    0 4px 0 var(--nuclear-red-dark),
-    0 6px 12px rgba(0, 0, 0, 0.5),
-    0 0 20px var(--nuclear-red-glow),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+.track-label-on {
+  left: 8px;
+  color: var(--switch-green-dim);
 }
 
-/* Pressed state */
-.launch-button.pressed {
-  transform: translateY(3px);
-}
-
-.launch-button.pressed .button-surface {
-  box-shadow:
-    0 1px 0 var(--nuclear-red-dark),
-    0 2px 6px rgba(0, 0, 0, 0.5),
-    0 0 30px var(--nuclear-red-glow),
-    inset 0 3px 8px rgba(0, 0, 0, 0.5);
-}
-
-/* Hover effect when exposed */
-.launch-button.exposed:hover .button-surface {
-  box-shadow:
-    0 4px 0 var(--nuclear-red-dark),
-    0 6px 12px rgba(0, 0, 0, 0.5),
-    0 0 30px var(--nuclear-red-glow),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+.track-label-off {
+  right: 8px;
+  color: var(--switch-red-dim);
 }
 
 /* ============================================
-   Glass Safety Cover - Transparent
+   Switch Thumb
    ============================================ */
-.flip-cover {
+.switch-thumb {
   position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 48px;
-  height: 48px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transform-style: preserve-3d;
-  z-index: 20;
-  outline: none;
-}
-
-.flip-cover:focus-visible {
-  outline: 2px solid var(--nuclear-green);
-  outline-offset: 4px;
-  border-radius: 50%;
-}
-
-.cover-surface {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%;
-  transform-origin: top center;
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-  /* Glass material */
-  background: linear-gradient(
-    160deg,
-    var(--glass-highlight) 0%,
-    var(--glass-body) 30%,
-    rgba(100, 120, 140, 0.1) 70%,
-    var(--glass-shadow) 100%
-  );
-
-  /* Glass border/edge */
-  border: 2px solid var(--glass-edge);
-  border-bottom-color: rgba(0, 0, 0, 0.15);
-
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.3),
-    inset 0 2px 8px rgba(255, 255, 255, 0.15),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.1);
-
-  /* Slight blur for glass depth */
-  backdrop-filter: blur(1px);
-}
-
-/* Glass reflection streak */
-.cover-stripes {
-  position: absolute;
-  top: 8px;
-  left: 20%;
-  width: 40%;
-  height: 30%;
-  background: linear-gradient(
-    170deg,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 100%
-  );
-  border-radius: 50%;
-  filter: blur(2px);
-}
-
-/* Handle tab at bottom of glass dome */
-.cover-handle {
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 16px;
-  height: 8px;
-  background: linear-gradient(
-    180deg,
-    var(--glass-edge),
-    rgba(200, 220, 240, 0.2)
-  );
-  border-radius: 0 0 4px 4px;
-  border: 1px solid var(--glass-edge);
-  border-top: none;
-}
-
-/* Hinge at top */
-.cover-hinge {
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 2px;
+  left: 2px;
   width: 20px;
-  height: 8px;
+  height: 20px;
   background: linear-gradient(
-    90deg,
-    var(--housing-metal-dark),
-    var(--housing-metal-light),
-    var(--housing-metal-dark)
+    145deg,
+    var(--thumb-metal-light) 0%,
+    var(--thumb-metal) 50%,
+    #2a2a26 100%
   );
-  border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  z-index: 2;
-}
-
-/* Armed state - cover flipped up */
-.flip-cover.armed .cover-surface {
-  transform: rotateX(-135deg) translateZ(10px);
-}
-
-/* Hover effect - slight lift */
-.flip-cover:not(.armed):hover .cover-surface {
-  transform: rotateX(-20deg);
+  border-radius: 50%;
   box-shadow:
-    0 8px 16px rgba(0, 0, 0, 0.4),
-    inset 0 2px 8px rgba(255, 255, 255, 0.2),
-    0 0 15px rgba(255, 255, 255, 0.1);
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumb-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #333;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
 }
 
 /* ============================================
-   Status LEDs
+   Power Status Display
    ============================================ */
-.status-leds {
-  position: absolute;
-  bottom: 4px;
-  left: 50%;
-  transform: translateX(-50%);
+.power-status {
   display: flex;
-  gap: 5px;
-  z-index: 5;
+  align-items: center;
+  gap: 6px;
 }
 
-.led {
-  width: 5px;
-  height: 5px;
+.status-led {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #333;
   border: 1px solid #222;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
-.led.on {
+.status-text {
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  color: var(--switch-green-dim);
+  transition: all 0.3s ease;
+}
+
+/* ============================================
+   Power ON State
+   ============================================ */
+.power-on .switch-track {
+  border-color: var(--switch-green-dim);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 8px var(--switch-green-glow),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.power-on .switch-thumb {
+  left: calc(100% - 22px);
+}
+
+.power-on .thumb-indicator {
+  background: var(--switch-green);
   box-shadow:
     inset 0 1px 2px rgba(0, 0, 0, 0.3),
-    0 0 6px currentColor;
+    0 0 6px var(--switch-green-glow);
 }
 
-.led-power.on {
-  background: var(--nuclear-green);
-  color: var(--nuclear-green-glow);
+.power-on .track-label-on {
+  color: var(--switch-green);
+  text-shadow: 0 0 6px var(--switch-green-glow);
 }
 
-.led-armed.on {
-  background: var(--nuclear-amber);
-  color: var(--nuclear-amber-glow);
+.power-on .status-led {
+  background: var(--switch-green);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 8px var(--switch-green-glow);
 }
 
-.led-action.on {
-  background: var(--nuclear-red);
-  color: var(--nuclear-red-glow);
+.power-on .status-led.on {
+  background: var(--switch-green-bright);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 12px var(--switch-green-glow);
 }
 
-.led.blink {
-  animation: led-blink 0.8s ease-in-out infinite;
+.power-on .status-text {
+  color: var(--switch-green);
+  text-shadow: 0 0 4px var(--switch-green-glow);
 }
 
-.led.blink-fast {
-  animation: led-blink 0.3s ease-in-out infinite;
+/* ============================================
+   Power OFF State
+   ============================================ */
+.power-off .switch-track {
+  border-color: var(--switch-red-dim);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 6px var(--switch-red-glow),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.power-off .switch-thumb {
+  left: 2px;
+}
+
+.power-off .thumb-indicator {
+  background: var(--switch-red);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 4px var(--switch-red-glow);
+}
+
+.power-off .track-label-off {
+  color: var(--switch-red);
+  text-shadow: 0 0 4px var(--switch-red-glow);
+}
+
+.power-off .status-led {
+  background: var(--switch-red-dim);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.power-off .status-text {
+  color: var(--switch-red);
+}
+
+/* ============================================
+   Transitioning State
+   ============================================ */
+.power-transitioning .switch-track {
+  border-color: var(--switch-amber);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 10px var(--switch-amber-glow),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  animation: track-pulse 1s ease-in-out infinite;
+}
+
+.power-transitioning .switch-thumb {
+  left: calc(50% - 10px);
+}
+
+.power-transitioning .thumb-indicator {
+  background: var(--switch-amber);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 6px var(--switch-amber-glow);
+  animation: indicator-blink 0.5s ease-in-out infinite;
+}
+
+.power-transitioning .status-led {
+  background: var(--switch-amber);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.3),
+    0 0 8px var(--switch-amber-glow);
+  animation: led-blink 0.5s ease-in-out infinite;
+}
+
+.power-transitioning .status-text {
+  color: var(--switch-amber);
+  text-shadow: 0 0 4px var(--switch-amber-glow);
+}
+
+@keyframes track-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 2px 6px rgba(0, 0, 0, 0.8),
+      0 0 8px var(--switch-amber-glow),
+      0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    box-shadow:
+      inset 0 2px 6px rgba(0, 0, 0, 0.8),
+      0 0 16px var(--switch-amber-glow),
+      0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+}
+
+@keyframes indicator-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 @keyframes led-blink {
@@ -481,75 +300,57 @@
 }
 
 /* ============================================
-   Arm Status Text
+   Unknown State
    ============================================ */
-.arm-status {
-  position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 7px;
-  letter-spacing: 0.12em;
-  color: var(--nuclear-green);
-  text-shadow: 0 0 4px var(--nuclear-green-glow);
-  white-space: nowrap;
-  transition: all 0.3s ease;
+.power-unknown .switch-track {
+  border-color: #333;
 }
 
-.arm-status.armed {
-  color: var(--nuclear-red);
-  text-shadow: 0 0 6px var(--nuclear-red-glow);
-  animation: armed-pulse 0.5s ease-in-out infinite;
+.power-unknown .switch-thumb {
+  left: calc(50% - 10px);
 }
 
-@keyframes armed-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+.power-unknown .thumb-indicator {
+  background: #555;
+}
+
+.power-unknown .status-led {
+  background: #444;
+}
+
+.power-unknown .status-text {
+  color: #555;
 }
 
 /* ============================================
-   Status-based Housing Glow
+   Hover & Active States
    ============================================ */
-.nuclear-power-button.status-online .nuclear-housing {
+.toggle-switch:not(:disabled):hover .switch-track {
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 15px var(--nuclear-green-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 12px var(--switch-green-glow),
+    0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.nuclear-power-button.status-offline .nuclear-housing {
+.toggle-switch:not(:disabled):hover .switch-thumb {
+  transform: scale(1.05);
+}
+
+.toggle-switch:not(:disabled):active .switch-thumb {
+  transform: scale(0.95);
+}
+
+/* Override hover for specific states */
+.power-off .toggle-switch:not(:disabled):hover .switch-track {
   box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 10px var(--nuclear-red-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 12px var(--switch-red-glow),
+    0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.nuclear-power-button.status-transitioning .nuclear-housing {
-  animation: housing-pulse 1s ease-in-out infinite;
-}
-
-@keyframes housing-pulse {
-  0%, 100% {
-    box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.6),
-      0 0 10px var(--nuclear-amber-glow),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  }
-  50% {
-    box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.6),
-      0 0 25px var(--nuclear-amber-glow),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  }
-}
-
-/* ============================================
-   Disabled States
-   ============================================ */
-.flip-cover:disabled {
-  cursor: not-allowed;
-}
-
-.flip-cover:disabled .cover-surface {
-  opacity: 0.6;
+.power-transitioning .toggle-switch:not(:disabled):hover .switch-track {
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 0 16px var(--switch-amber-glow),
+    0 1px 0 rgba(255, 255, 255, 0.1);
 }

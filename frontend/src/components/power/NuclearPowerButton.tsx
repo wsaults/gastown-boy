@@ -5,16 +5,14 @@ import type { GastownStatus, PowerState } from '../../types';
 import './NuclearPowerButton.css';
 
 /**
- * Nuclear launch-style power button with flip-up safety cover.
- * Always visible in header, provides dramatic power control.
+ * Power toggle switch for the header.
+ * Simple flip switch to control Gastown power state.
  */
 export function NuclearPowerButton() {
   const { data, refresh } = usePolling<GastownStatus>(() => api.getStatus(), {
     interval: 2000,
   });
 
-  const [isArmed, setIsArmed] = useState(false);
-  const [isPressed, setIsPressed] = useState(false);
   const [actionState, setActionState] = useState<PowerState | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -30,24 +28,9 @@ export function NuclearPowerButton() {
     }
   }, [actionState, data?.powerState]);
 
-  // Auto-close cover after successful action
-  useEffect(() => {
-    if (!isTransitioning && !actionLoading && isArmed) {
-      const timer = setTimeout(() => setIsArmed(false), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [isTransitioning, actionLoading, isArmed]);
+  const handleToggle = useCallback(async () => {
+    if (isTransitioning || actionLoading || !powerState) return;
 
-  const handleCoverToggle = useCallback(() => {
-    if (!isTransitioning && !actionLoading) {
-      setIsArmed(prev => !prev);
-    }
-  }, [isTransitioning, actionLoading]);
-
-  const handleButtonPress = useCallback(async () => {
-    if (!isArmed || isTransitioning || actionLoading || !powerState) return;
-
-    setIsPressed(true);
     setActionLoading(true);
 
     try {
@@ -61,88 +44,51 @@ export function NuclearPowerButton() {
         setActionState(result.newState);
       }
     } catch {
-      // Error handling - reset states
       setActionState(null);
     } finally {
       setActionLoading(false);
-      setIsPressed(false);
       void refresh();
     }
-  }, [isArmed, isTransitioning, actionLoading, powerState, isRunning, isStopped, refresh]);
+  }, [isTransitioning, actionLoading, powerState, isRunning, isStopped, refresh]);
 
   const statusClass = isRunning
-    ? 'status-online'
+    ? 'power-on'
     : isStopped
-      ? 'status-offline'
+      ? 'power-off'
       : isTransitioning
-        ? 'status-transitioning'
-        : 'status-unknown';
+        ? 'power-transitioning'
+        : 'power-unknown';
 
-  const buttonLabel = isRunning ? 'SHUTDOWN' : isStopped ? 'IGNITE' : 'WAIT';
+  const statusLabel = isRunning
+    ? 'ON'
+    : isStopped
+      ? 'OFF'
+      : isTransitioning
+        ? '...'
+        : '?';
 
   return (
-    <div className={`nuclear-power-button ${statusClass}`}>
-      {/* Housing frame */}
-      <div className="nuclear-housing">
-        {/* Hazard stripes background */}
-        <div className="hazard-stripes" />
-
-        {/* Corner screws */}
-        <div className="screw screw-tl" />
-        <div className="screw screw-tr" />
-        <div className="screw screw-bl" />
-        <div className="screw screw-br" />
-
-        {/* Warning label */}
-        <div className="warning-label">
-          <span className="warning-text">DANGER</span>
-        </div>
-
-        {/* The flip cover */}
-        <button
-          type="button"
-          className={`flip-cover ${isArmed ? 'armed' : ''}`}
-          onClick={handleCoverToggle}
-          disabled={isTransitioning || actionLoading}
-          aria-label={isArmed ? 'Close safety cover' : 'Open safety cover'}
-          aria-expanded={isArmed}
-        >
-          <div className="cover-surface">
-            <div className="cover-stripes" />
-            <div className="cover-handle" />
-          </div>
-          <div className="cover-hinge" />
-        </button>
-
-        {/* The big red button underneath */}
-        <div className="button-well">
-          <div className={`button-ring ${isArmed ? 'armed' : ''}`}>
-            <button
-              type="button"
-              className={`launch-button ${isPressed ? 'pressed' : ''} ${isArmed ? 'exposed' : ''}`}
-              onClick={() => void handleButtonPress()}
-              disabled={!isArmed || isTransitioning || actionLoading}
-              aria-label={`${buttonLabel} Gastown`}
-            >
-              <div className="button-surface">
-                <div className="button-highlight" />
-                <span className="button-label">{buttonLabel}</span>
-              </div>
-            </button>
+    <div className={`power-toggle ${statusClass}`}>
+      <button
+        type="button"
+        className="toggle-switch"
+        onClick={() => void handleToggle()}
+        disabled={isTransitioning || actionLoading || !powerState}
+        aria-label={`Power is ${statusLabel}. Click to ${isRunning ? 'shut down' : 'start'} Gastown.`}
+        aria-pressed={isRunning}
+        role="switch"
+      >
+        <div className="switch-track">
+          <span className="track-label track-label-on">ON</span>
+          <span className="track-label track-label-off">OFF</span>
+          <div className="switch-thumb">
+            <div className="thumb-indicator" />
           </div>
         </div>
-
-        {/* Status indicator LEDs */}
-        <div className="status-leds">
-          <div className={`led led-power ${isRunning ? 'on' : ''}`} title="Power" />
-          <div className={`led led-armed ${isArmed ? 'on blink' : ''}`} title="Armed" />
-          <div className={`led led-action ${actionLoading ? 'on blink-fast' : ''}`} title="Action" />
-        </div>
-
-        {/* Arm status text */}
-        <div className={`arm-status ${isArmed ? 'armed' : ''}`}>
-          {isArmed ? '▲ ARMED ▲' : '◄ SAFE ►'}
-        </div>
+      </button>
+      <div className="power-status">
+        <div className={`status-led ${isRunning ? 'on' : ''}`} />
+        <span className="status-text">{statusLabel}</span>
       </div>
     </div>
   );

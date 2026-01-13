@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { CrewStats } from "./components/crew/CrewStats";
 import { MailView } from "./components/mail/MailView";
-import { PowerButton } from "./components/power/PowerButton";
 import { NuclearPowerButton } from "./components/power/NuclearPowerButton";
 import { CRTScreen } from "./components/shared/CRTScreen";
 import { RigFilter } from "./components/shared/RigFilter";
 import { RigProvider } from "./contexts/RigContext";
 
-type TabId = "mail" | "power" | "crew";
+type TabId = "mail" | "crew";
 
 interface Tab {
   id: TabId;
@@ -17,7 +16,6 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: "mail", label: "MAIL", icon: "📧" },
-  { id: "power", label: "POWER", icon: "⚡" },
   { id: "crew", label: "CREW", icon: "👥" },
 ];
 
@@ -52,7 +50,6 @@ function App() {
 
           <main className="app-content">
             {activeTab === "mail" && <MailView />}
-            {activeTab === "power" && <PowerButton />}
             {activeTab === "crew" && <CrewStats />}
           </main>
         </div>
