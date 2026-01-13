@@ -1,36 +1,34 @@
 /*
  * Nuclear Launch-Style Power Button
- * Industrial military aesthetic with flip-up safety cover
+ * Glass safety case with visible red button inside
  */
 
 /* ============================================
    Color Variables
    ============================================ */
 .nuclear-power-button {
-  --nuclear-red: #FF2B2B;
-  --nuclear-red-bright: #FF5555;
-  --nuclear-red-dark: #AA1111;
-  --nuclear-red-glow: rgba(255, 43, 43, 0.6);
-
-  --nuclear-amber: #FFB000;
-  --nuclear-amber-bright: #FFCC33;
-  --nuclear-amber-dark: #996600;
-  --nuclear-amber-glow: rgba(255, 176, 0, 0.5);
+  --nuclear-red: #FF2222;
+  --nuclear-red-bright: #FF4444;
+  --nuclear-red-dark: #BB0000;
+  --nuclear-red-glow: rgba(255, 34, 34, 0.7);
+  --nuclear-red-inner: #DD1111;
 
   --nuclear-green: #20C20E;
   --nuclear-green-bright: #33FF33;
   --nuclear-green-glow: rgba(32, 194, 14, 0.5);
+
+  --nuclear-amber: #FFB000;
+  --nuclear-amber-glow: rgba(255, 176, 0, 0.5);
 
   --housing-metal: #2a2a28;
   --housing-metal-light: #3a3a36;
   --housing-metal-dark: #1a1a18;
   --housing-border: #444440;
 
-  --hazard-yellow: #FFD100;
-  --hazard-black: #1a1a1a;
-
-  --screw-color: #555550;
-  --screw-slot: #333330;
+  --glass-body: rgba(180, 200, 220, 0.15);
+  --glass-highlight: rgba(255, 255, 255, 0.35);
+  --glass-edge: rgba(255, 255, 255, 0.2);
+  --glass-shadow: rgba(0, 0, 0, 0.2);
 
   position: relative;
   font-family: 'VT323', 'Share Tech Mono', monospace;
@@ -41,8 +39,8 @@
    ============================================ */
 .nuclear-housing {
   position: relative;
-  width: 90px;
-  height: 70px;
+  width: 72px;
+  height: 72px;
   background: linear-gradient(
     145deg,
     var(--housing-metal-light) 0%,
@@ -50,43 +48,43 @@
     var(--housing-metal-dark) 100%
   );
   border: 2px solid var(--housing-border);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 6px;
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-  perspective: 300px;
+  perspective: 400px;
 }
 
-/* Hazard stripes background */
+/* Hazard stripes - subtle background */
 .hazard-stripes {
   position: absolute;
   top: 4px;
   left: 4px;
   right: 4px;
   bottom: 4px;
-  border-radius: 3px;
+  border-radius: 4px;
   background: repeating-linear-gradient(
     -45deg,
-    var(--hazard-yellow) 0px,
-    var(--hazard-yellow) 4px,
-    var(--hazard-black) 4px,
-    var(--hazard-black) 8px
+    #FFD100 0px,
+    #FFD100 3px,
+    #1a1a1a 3px,
+    #1a1a1a 6px
   );
-  opacity: 0.15;
+  opacity: 0.08;
   pointer-events: none;
 }
 
-/* Corner screws for industrial look */
+/* Corner screws */
 .screw {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   background: radial-gradient(
     circle at 30% 30%,
     var(--housing-metal-light),
-    var(--screw-color)
+    #555550
   );
   border-radius: 50%;
   box-shadow:
@@ -99,11 +97,10 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 6px;
+  width: 5px;
   height: 1px;
-  background: var(--screw-slot);
+  background: #333330;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 1px rgba(0, 0, 0, 0.8);
 }
 
 .screw-tl { top: 3px; left: 3px; }
@@ -116,34 +113,204 @@
    ============================================ */
 .warning-label {
   position: absolute;
-  top: 4px;
+  top: 2px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--nuclear-red-dark);
-  padding: 1px 6px;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1px 5px;
   border-radius: 2px;
-  border: 1px solid var(--nuclear-red);
-  z-index: 5;
+  border: 1px solid var(--nuclear-red-dark);
+  z-index: 25;
 }
 
 .warning-text {
-  font-size: 8px;
+  font-size: 7px;
   font-weight: bold;
-  color: var(--nuclear-red-bright);
+  color: var(--nuclear-red);
   letter-spacing: 0.1em;
   text-shadow: 0 0 4px var(--nuclear-red-glow);
 }
 
 /* ============================================
-   Flip Cover - The Star of the Show
+   Button Well - Recessed area for button
+   ============================================ */
+.button-well {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  background: radial-gradient(
+    circle at center,
+    #0c0c0a 0%,
+    #151512 60%,
+    #1a1a18 100%
+  );
+  border-radius: 50%;
+  border: 2px solid var(--housing-metal-dark);
+  box-shadow:
+    inset 0 4px 12px rgba(0, 0, 0, 0.9),
+    inset 0 -2px 6px rgba(255, 255, 255, 0.02);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button-ring {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.button-ring.armed {
+  animation: ring-glow 1s ease-in-out infinite;
+}
+
+@keyframes ring-glow {
+  0%, 100% { box-shadow: inset 0 0 8px var(--nuclear-red-glow); }
+  50% { box-shadow: inset 0 0 15px var(--nuclear-red-glow); }
+}
+
+/* ============================================
+   The Big Red Button - Always visible
+   ============================================ */
+.launch-button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  cursor: not-allowed;
+  transition: all 0.15s ease;
+  position: relative;
+  transform: translateY(0);
+  outline: none;
+  background: transparent;
+  padding: 0;
+}
+
+.launch-button:focus-visible {
+  outline: 2px solid var(--nuclear-amber);
+  outline-offset: 4px;
+}
+
+.launch-button.exposed {
+  cursor: pointer;
+}
+
+.button-surface {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(
+    circle at 35% 35%,
+    var(--nuclear-red-bright) 0%,
+    var(--nuclear-red) 40%,
+    var(--nuclear-red-dark) 100%
+  );
+  box-shadow:
+    0 4px 0 var(--nuclear-red-dark),
+    0 6px 12px rgba(0, 0, 0, 0.5),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+  transition: all 0.1s ease;
+}
+
+/* Inner glow on button */
+.button-surface::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 40% 40%,
+    rgba(255, 100, 100, 0.4) 0%,
+    transparent 60%
+  );
+}
+
+/* Highlight reflection */
+.button-highlight {
+  position: absolute;
+  top: 4px;
+  left: 15%;
+  width: 50%;
+  height: 35%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+.button-label {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 6px;
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Button glowing when armed */
+.launch-button.exposed .button-surface {
+  box-shadow:
+    0 4px 0 var(--nuclear-red-dark),
+    0 6px 12px rgba(0, 0, 0, 0.5),
+    0 0 20px var(--nuclear-red-glow),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+/* Pressed state */
+.launch-button.pressed {
+  transform: translateY(3px);
+}
+
+.launch-button.pressed .button-surface {
+  box-shadow:
+    0 1px 0 var(--nuclear-red-dark),
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    0 0 30px var(--nuclear-red-glow),
+    inset 0 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+/* Hover effect when exposed */
+.launch-button.exposed:hover .button-surface {
+  box-shadow:
+    0 4px 0 var(--nuclear-red-dark),
+    0 6px 12px rgba(0, 0, 0, 0.5),
+    0 0 30px var(--nuclear-red-glow),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   Glass Safety Cover - Transparent
    ============================================ */
 .flip-cover {
   position: absolute;
-  top: 16px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 50px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -153,242 +320,107 @@
 }
 
 .flip-cover:focus-visible {
-  outline: 2px solid var(--nuclear-amber);
-  outline-offset: 2px;
+  outline: 2px solid var(--nuclear-green);
+  outline-offset: 4px;
+  border-radius: 50%;
 }
 
 .cover-surface {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    180deg,
-    var(--nuclear-red-bright) 0%,
-    var(--nuclear-red) 40%,
-    var(--nuclear-red-dark) 100%
-  );
-  border: 2px solid var(--nuclear-red-dark);
-  border-radius: 4px 4px 6px 6px;
+  border-radius: 50% 50% 50% 50% / 55% 55% 45% 45%;
   transform-origin: top center;
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Glass material */
+  background: linear-gradient(
+    160deg,
+    var(--glass-highlight) 0%,
+    var(--glass-body) 30%,
+    rgba(100, 120, 140, 0.1) 70%,
+    var(--glass-shadow) 100%
+  );
+
+  /* Glass border/edge */
+  border: 2px solid var(--glass-edge);
+  border-bottom-color: rgba(0, 0, 0, 0.15);
+
   box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.5),
-    inset 0 2px 4px rgba(255, 255, 255, 0.2),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    inset 0 2px 8px rgba(255, 255, 255, 0.15),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.1);
+
+  /* Slight blur for glass depth */
+  backdrop-filter: blur(1px);
 }
 
-/* Diagonal stripes on cover */
+/* Glass reflection streak */
 .cover-stripes {
   position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    -45deg,
-    transparent 0px,
-    transparent 3px,
-    rgba(0, 0, 0, 0.2) 3px,
-    rgba(0, 0, 0, 0.2) 6px
+  top: 8px;
+  left: 20%;
+  width: 40%;
+  height: 30%;
+  background: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
   );
+  border-radius: 50%;
+  filter: blur(2px);
 }
 
-/* Handle grip on cover */
+/* Handle tab at bottom of glass dome */
 .cover-handle {
   position: absolute;
-  bottom: 4px;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 8px;
+  background: linear-gradient(
+    180deg,
+    var(--glass-edge),
+    rgba(200, 220, 240, 0.2)
+  );
+  border-radius: 0 0 4px 4px;
+  border: 1px solid var(--glass-edge);
+  border-top: none;
+}
+
+/* Hinge at top */
+.cover-hinge {
+  position: absolute;
+  top: -4px;
   left: 50%;
   transform: translateX(-50%);
   width: 20px;
-  height: 6px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.3),
-    rgba(0, 0, 0, 0.2)
-  );
-  border-radius: 2px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-
-/* Hinge at top of cover */
-.cover-hinge {
-  position: absolute;
-  top: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 30px;
-  height: 6px;
+  height: 8px;
   background: linear-gradient(
     90deg,
     var(--housing-metal-dark),
     var(--housing-metal-light),
     var(--housing-metal-dark)
   );
-  border-radius: 2px;
+  border-radius: 3px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  z-index: 2;
 }
 
 /* Armed state - cover flipped up */
 .flip-cover.armed .cover-surface {
-  transform: rotateX(-120deg);
+  transform: rotateX(-135deg) translateZ(10px);
 }
 
-/* Hover effect on cover */
+/* Hover effect - slight lift */
 .flip-cover:not(.armed):hover .cover-surface {
-  transform: rotateX(-15deg);
+  transform: rotateX(-20deg);
   box-shadow:
-    0 6px 12px rgba(0, 0, 0, 0.6),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    0 0 20px var(--nuclear-red-glow);
-}
-
-/* ============================================
-   Button Well (where the button sits)
-   ============================================ */
-.button-well {
-  position: absolute;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 46px;
-  height: 32px;
-  background: radial-gradient(
-    ellipse at center,
-    #0a0a08 0%,
-    #151512 100%
-  );
-  border-radius: 4px;
-  border: 2px solid var(--housing-metal-dark);
-  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.8);
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Glowing ring around button when armed */
-.button-ring {
-  width: 38px;
-  height: 26px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.button-ring.armed {
-  box-shadow:
-    0 0 8px var(--nuclear-amber-glow),
-    inset 0 0 4px var(--nuclear-amber-glow);
-  animation: ring-pulse 1s ease-in-out infinite;
-}
-
-@keyframes ring-pulse {
-  0%, 100% { box-shadow: 0 0 8px var(--nuclear-amber-glow), inset 0 0 4px var(--nuclear-amber-glow); }
-  50% { box-shadow: 0 0 16px var(--nuclear-amber-glow), inset 0 0 8px var(--nuclear-amber-glow); }
-}
-
-/* ============================================
-   The Big Red Button
-   ============================================ */
-.launch-button {
-  width: 34px;
-  height: 22px;
-  border: none;
-  border-radius: 3px;
-  cursor: not-allowed;
-  opacity: 0.3;
-  transition: all 0.2s ease;
-  position: relative;
-  transform: translateY(0);
-  outline: none;
-}
-
-.launch-button:focus-visible {
-  outline: 2px solid var(--nuclear-amber);
-  outline-offset: 2px;
-}
-
-.launch-button.exposed {
-  cursor: pointer;
-  opacity: 1;
-}
-
-.button-surface {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    180deg,
-    var(--nuclear-amber-bright) 0%,
-    var(--nuclear-amber) 30%,
-    var(--nuclear-amber-dark) 100%
-  );
-  border-radius: 3px;
-  position: relative;
-  overflow: hidden;
-  box-shadow:
-    0 3px 0 var(--nuclear-amber-dark),
-    0 4px 8px rgba(0, 0, 0, 0.5),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4);
-  transition: all 0.1s ease;
-}
-
-/* Highlight reflection on button */
-.button-highlight {
-  position: absolute;
-  top: 2px;
-  left: 10%;
-  width: 80%;
-  height: 6px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.5),
-    transparent
-  );
-  border-radius: 2px;
-}
-
-.button-label {
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 7px;
-  font-weight: bold;
-  color: var(--housing-metal-dark);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-}
-
-/* Button exposed and glowing */
-.launch-button.exposed .button-surface {
-  box-shadow:
-    0 3px 0 var(--nuclear-amber-dark),
-    0 4px 8px rgba(0, 0, 0, 0.5),
-    0 0 12px var(--nuclear-amber-glow),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4);
-}
-
-/* Pressed state */
-.launch-button.pressed {
-  transform: translateY(2px);
-}
-
-.launch-button.pressed .button-surface {
-  box-shadow:
-    0 1px 0 var(--nuclear-amber-dark),
-    0 2px 4px rgba(0, 0, 0, 0.5),
-    0 0 20px var(--nuclear-amber-glow),
-    inset 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Hover effect when exposed */
-.launch-button.exposed:hover .button-surface {
-  box-shadow:
-    0 3px 0 var(--nuclear-amber-dark),
-    0 4px 8px rgba(0, 0, 0, 0.5),
-    0 0 20px var(--nuclear-amber-glow),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 2px 8px rgba(255, 255, 255, 0.2),
+    0 0 15px rgba(255, 255, 255, 0.1);
 }
 
 /* ============================================
@@ -396,17 +428,17 @@
    ============================================ */
 .status-leds {
   position: absolute;
-  bottom: 5px;
+  bottom: 4px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 6px;
+  gap: 5px;
   z-index: 5;
 }
 
 .led {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #333;
   border: 1px solid #222;
@@ -435,7 +467,6 @@
   color: var(--nuclear-red-glow);
 }
 
-/* Blinking animations */
 .led.blink {
   animation: led-blink 0.8s ease-in-out infinite;
 }
@@ -454,11 +485,11 @@
    ============================================ */
 .arm-status {
   position: absolute;
-  bottom: -14px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 8px;
-  letter-spacing: 0.15em;
+  font-size: 7px;
+  letter-spacing: 0.12em;
   color: var(--nuclear-green);
   text-shadow: 0 0 4px var(--nuclear-green-glow);
   white-space: nowrap;
@@ -466,54 +497,33 @@
 }
 
 .arm-status.armed {
-  color: var(--nuclear-amber);
-  text-shadow: 0 0 6px var(--nuclear-amber-glow);
-  animation: armed-pulse 0.6s ease-in-out infinite;
+  color: var(--nuclear-red);
+  text-shadow: 0 0 6px var(--nuclear-red-glow);
+  animation: armed-pulse 0.5s ease-in-out infinite;
 }
 
 @keyframes armed-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.5; }
 }
 
 /* ============================================
-   Status-based Color Overrides
+   Status-based Housing Glow
    ============================================ */
-
-/* Online - green glow */
 .nuclear-power-button.status-online .nuclear-housing {
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 12px var(--nuclear-green-glow),
+    0 0 15px var(--nuclear-green-glow),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-/* Offline - red accent */
 .nuclear-power-button.status-offline .nuclear-housing {
   box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.6),
-    0 0 8px var(--nuclear-red-glow),
+    0 0 10px var(--nuclear-red-glow),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-.nuclear-power-button.status-offline .button-surface {
-  background: linear-gradient(
-    180deg,
-    var(--nuclear-red-bright) 0%,
-    var(--nuclear-red) 30%,
-    var(--nuclear-red-dark) 100%
-  );
-}
-
-.nuclear-power-button.status-offline .launch-button.exposed .button-surface {
-  box-shadow:
-    0 3px 0 var(--nuclear-red-dark),
-    0 4px 8px rgba(0, 0, 0, 0.5),
-    0 0 12px var(--nuclear-red-glow),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4);
-}
-
-/* Transitioning - amber pulsing */
 .nuclear-power-button.status-transitioning .nuclear-housing {
   animation: housing-pulse 1s ease-in-out infinite;
 }
@@ -522,24 +532,24 @@
   0%, 100% {
     box-shadow:
       0 4px 12px rgba(0, 0, 0, 0.6),
-      0 0 8px var(--nuclear-amber-glow),
+      0 0 10px var(--nuclear-amber-glow),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
   50% {
     box-shadow:
       0 4px 12px rgba(0, 0, 0, 0.6),
-      0 0 20px var(--nuclear-amber-glow),
+      0 0 25px var(--nuclear-amber-glow),
       inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 }
 
 /* ============================================
-   Disabled state during transitions
+   Disabled States
    ============================================ */
 .flip-cover:disabled {
   cursor: not-allowed;
 }
 
 .flip-cover:disabled .cover-surface {
-  opacity: 0.7;
+  opacity: 0.6;
 }
