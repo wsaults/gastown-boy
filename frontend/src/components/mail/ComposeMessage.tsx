@@ -65,7 +65,9 @@ export function ComposeMessage({
     <form
       style={styles.container}
       className={className}
-      onSubmit={handleSubmit}
+      onSubmit={(e) => {
+        void handleSubmit(e);
+      }}
       aria-label="Compose message"
     >
       {/* Header */}
@@ -118,7 +120,9 @@ export function ComposeMessage({
           type="text"
           style={styles.input}
           value={subject}
-          onChange={(e) => setSubject(e.target.value)}
+          onChange={(e) => {
+            setSubject(e.target.value);
+          }}
           placeholder="Enter subject..."
           disabled={sending}
           maxLength={200}
@@ -135,7 +139,9 @@ export function ComposeMessage({
           id="compose-priority"
           style={styles.select}
           value={priority}
-          onChange={(e) => setPriority(Number(e.target.value) as MessagePriority)}
+          onChange={(e) => {
+            setPriority(Number(e.target.value) as MessagePriority);
+          }}
           disabled={sending}
         >
           <option value={0}>!!! URGENT</option>
@@ -155,7 +161,9 @@ export function ComposeMessage({
           id="compose-body"
           style={styles.textarea}
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onChange={(e) => {
+            setBody(e.target.value);
+          }}
           placeholder="Enter your message..."
           disabled={sending}
           rows={8}

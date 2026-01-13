@@ -187,7 +187,7 @@ export function PowerButton({ className = '' }: PowerButtonProps) {
         </button>
       </div>
 
-      {(error || actionError) && (
+      {(error != null || actionError != null) && (
         <div style={styles.errorBanner} role="alert">
           ⚠ POWER ERROR:{' '}
           {actionError ?? error?.message ?? 'Unknown issue'}

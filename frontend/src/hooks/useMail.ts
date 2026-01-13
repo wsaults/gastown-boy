@@ -97,6 +97,7 @@ export function useMail(options: UseMailOptions = {}): UseMailResult {
     setLoading(true);
     try {
       const response = await api.mail.list();
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- async safety
       if (mountedRef.current) {
         setMessages(response.items);
         setTotal(response.total);
@@ -104,11 +105,13 @@ export function useMail(options: UseMailOptions = {}): UseMailResult {
         setError(null);
       }
     } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- async safety
       if (mountedRef.current) {
         setError(err instanceof Error ? err : new Error(String(err)));
         // Preserve existing messages on error
       }
     } finally {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- async safety
       if (mountedRef.current) {
         setLoading(false);
       }

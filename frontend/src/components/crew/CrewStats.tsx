@@ -308,7 +308,7 @@ const styles = {
   mailBadge: {
     fontSize: '0.75rem',
     color: colors.primaryBright,
-    backgroundColor: `${colors.primaryGlow}`,
+    backgroundColor: colors.primaryGlow,
     padding: '2px 6px',
     borderRadius: '2px',
   },

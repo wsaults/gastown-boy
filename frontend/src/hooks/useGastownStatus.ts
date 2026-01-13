@@ -89,7 +89,7 @@ export function useGastownStatus(
   const [powerError, setPowerError] = useState<Error | null>(null);
 
   // Track mounted state to prevent state updates after unmount
-  const mountedRef = useRef(true);
+  const mountedRef = useRef<boolean>(true);
 
   // Fetch status from API
   const fetchStatus = useCallback(async () => {
@@ -98,18 +98,21 @@ export function useGastownStatus(
     setLoading(true);
     try {
       const result = await api.getStatus();
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- async safety
       if (mountedRef.current) {
         setStatus(result);
         setError(null);
         setLastUpdated(new Date());
       }
     } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- async safety
       if (mountedRef.current) {
         const fetchError = err instanceof Error ? err : new Error(String(err));
         setError(fetchError);
         // Note: We preserve existing status on error (stale-while-revalidate pattern)
       }
     } finally {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- async safety
       if (mountedRef.current) {
         setLoading(false);
       }

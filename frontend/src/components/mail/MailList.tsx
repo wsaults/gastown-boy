@@ -176,7 +176,7 @@ const styles = {
   },
 
   messageItemSelected: {
-    background: `${colors.primaryGlow}`,
+    background: colors.primaryGlow,
     borderColor: colors.primary,
     boxShadow: `0 0 8px ${colors.primaryGlow}`,
   },

@@ -12,9 +12,7 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ["tests/*.ts", "tests/*/*.ts", "tests/*/*/*.ts"],
-        },
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -33,6 +31,19 @@ export default tseslint.config(
       "@typescript-eslint/restrict-template-expressions": [
         "error",
         { allowNumber: true },
+      ],
+    },
+  },
+  {
+    // Test file overrides - relax rules for common test patterns
+    files: ["tests/**/*.ts", "tests/**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/unbound-method": "off",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
     },
   },

@@ -16,7 +16,7 @@ import type {
 // Configuration
 // =============================================================================
 
-const API_BASE_URL = import.meta.env['VITE_API_URL'] ?? 'http://localhost:3001';
+const API_BASE_URL = (import.meta.env['VITE_API_URL'] as string | undefined) ?? 'http://localhost:3001';
 const DEFAULT_TIMEOUT = 30000;
 
 // =============================================================================
@@ -51,13 +51,18 @@ async function apiFetch<T>(
   const { timeout = DEFAULT_TIMEOUT, body, ...fetchOptions } = options;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, timeout);
 
   const url = `${API_BASE_URL}${endpoint}`;
-  const headers: HeadersInit = {
+  const baseHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...fetchOptions.headers,
   };
+  // Merge additional headers if provided (assumes Record-style headers)
+  const headers: HeadersInit = fetchOptions.headers
+    ? { ...baseHeaders, ...(fetchOptions.headers as Record<string, string>) }
+    : baseHeaders;
 
   try {
     const response = await fetch(url, {

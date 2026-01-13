@@ -32,7 +32,7 @@ export function PipBoyFrame({
     <div style={styles.container} className={className}>
       <div style={styles.outerFrame}>
         <div style={styles.innerFrame}>
-          {(title || connectionError) && (
+          {(title != null || connectionError) && (
             <header style={styles.header}>
               <div style={styles.headerRow}>
                 {title && <h1 style={styles.title}>{title}</h1>}

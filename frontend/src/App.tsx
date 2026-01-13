@@ -30,7 +30,9 @@ function App() {
           <button
             key={tab.id}
             className={`nav-tab ${activeTab === tab.id ? "active" : ""}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              setActiveTab(tab.id);
+            }}
           >
             {tab.label}
           </button>
