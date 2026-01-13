@@ -33,7 +33,7 @@ export interface MailServiceResult<T> {
  * Lists all mail messages, sorted by newest first.
  */
 export async function listMail(): Promise<MailServiceResult<Message[]>> {
-  const result = await gt.mail.inbox<{ messages: Message[] }>();
+  const result = await gt.mail.inbox<Message[]>();
 
   if (!result.success) {
     return {
@@ -45,8 +45,8 @@ export async function listMail(): Promise<MailServiceResult<Message[]>> {
     };
   }
 
-  // Validate response structure
-  if (!result.data || !Array.isArray(result.data.messages)) {
+  // Validate response structure - gt mail inbox returns a raw array
+  if (!result.data || !Array.isArray(result.data)) {
     return {
       success: false,
       error: {
@@ -57,7 +57,7 @@ export async function listMail(): Promise<MailServiceResult<Message[]>> {
   }
 
   // Sort messages by timestamp, newest first
-  const sorted = [...result.data.messages].sort((a, b) => {
+  const sorted = [...result.data].sort((a, b) => {
     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
 

@@ -77,15 +77,18 @@ function mapStatus(running: boolean, state?: string): CrewMemberStatus {
  * Transforms raw agent data to CrewMember format.
  */
 function transformAgent(raw: RawAgent): CrewMember {
-  return {
+  const result: CrewMember = {
     id: raw.rig ? `${raw.rig}/${raw.name}` : raw.name,
     name: raw.name,
     type: mapAgentType(raw.type),
     rig: raw.rig ?? null,
     status: mapStatus(raw.running, raw.state),
-    currentTask: raw.currentTask,
     unreadMail: raw.unreadMail,
   };
+  if (raw.currentTask) {
+    result.currentTask = raw.currentTask;
+  }
+  return result;
 }
 
 // ============================================================================

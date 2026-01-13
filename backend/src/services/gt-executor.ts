@@ -28,6 +28,9 @@ export interface GtExecOptions {
 
 const DEFAULT_TIMEOUT = 30000;
 
+// GT commands must run from the town root to work correctly
+const GT_TOWN_ROOT = process.env['GT_TOWN_ROOT'] ?? '/Users/will/gt';
+
 /**
  * Executes a GT command and returns the result.
  *
@@ -39,7 +42,7 @@ export async function execGt<T = unknown>(
   args: string[],
   options: GtExecOptions = {}
 ): Promise<GtResult<T>> {
-  const { cwd, timeout = DEFAULT_TIMEOUT, parseJson = true } = options;
+  const { cwd = GT_TOWN_ROOT, timeout = DEFAULT_TIMEOUT, parseJson = true } = options;
 
   return new Promise((resolve) => {
     const child = spawn('gt', args, {
