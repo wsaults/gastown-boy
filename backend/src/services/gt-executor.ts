@@ -119,6 +119,78 @@ export async function execGt<T = unknown>(
 }
 
 /**
+ * Parses a single agent line from gt agents list output.
+ * Format: "  🎩 Mayor" or "  👷 crew/name"
+ */
+interface ParsedAgent {
+  name: string;
+  type: string;
+  rig: string | null;
+  running: boolean;
+  state: string;
+  unreadMail: number;
+}
+
+/**
+ * Maps emoji to agent type.
+ */
+const EMOJI_TYPE_MAP: Record<string, string> = {
+  '🎩': 'mayor',
+  '🏭': 'refinery',
+  '🦉': 'witness',
+  '👷': 'crew',
+  '🐱': 'polecat',
+  '😈': 'deacon',
+};
+
+/**
+ * Parses the text output of gt agents list --all into structured data.
+ *
+ * Example input:
+ *   🎩 Mayor
+ * ── gastown ──
+ *   🏭 refinery
+ *   🦉 witness
+ *   👷 crew/vin
+ */
+function parseAgentsListOutput(output: string): ParsedAgent[] {
+  const agents: ParsedAgent[] = [];
+  let currentRig: string | null = null;
+
+  const lines = output.split('\n');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Check for rig header: "── gastown ──"
+    const rigMatch = trimmed.match(/^──\s+(.+?)\s+──$/);
+    if (rigMatch) {
+      currentRig = rigMatch[1];
+      continue;
+    }
+
+    // Check for agent line: "🎩 Mayor" or "👷 crew/name"
+    for (const [emoji, type] of Object.entries(EMOJI_TYPE_MAP)) {
+      if (trimmed.startsWith(emoji)) {
+        const namePart = trimmed.slice(emoji.length).trim();
+        agents.push({
+          name: namePart.toLowerCase(),
+          type,
+          rig: currentRig,
+          running: true, // Assume running since they appear in the list
+          state: 'idle',
+          unreadMail: 0,
+        });
+        break;
+      }
+    }
+  }
+
+  return agents;
+}
+
+/**
  * GT command executor with typed methods for each operation.
  */
 export const gt = {
@@ -223,9 +295,21 @@ export const gt = {
   agents: {
     /**
      * List all agents.
+     * Note: gt agents list doesn't support --json, so we parse text output.
      */
     async list<T = unknown>(options?: GtExecOptions): Promise<GtResult<T>> {
-      return execGt<T>(['agents', 'list', '--all', '--json'], options);
+      const result = await execGt<string>(['agents', 'list', '--all'], {
+        ...options,
+        parseJson: false,
+      });
+
+      if (!result.success) {
+        return result as GtResult<T>;
+      }
+
+      // Parse the text output into structured data
+      const agents = parseAgentsListOutput(result.data ?? '');
+      return { success: true, data: agents as T, exitCode: result.exitCode };
     },
 
     /**

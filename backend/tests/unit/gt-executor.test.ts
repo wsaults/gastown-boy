@@ -375,19 +375,37 @@ describe("gt-executor", () => {
   });
 
   describe("gt.agents.list", () => {
-    it("should call execGt with agents list --all --json args", async () => {
+    it("should call execGt with agents list --all args and parse text output", async () => {
       const resultPromise = gt.agents.list();
 
-      mockProcess.simulateOutput(JSON.stringify({ agents: [] }), "", 0);
+      // Simulate the text output format from gt agents list --all
+      const textOutput = `  🎩 Mayor
+── gastown ──
+  🏭 refinery
+  🦉 witness
+  👷 crew/vin`;
+
+      mockProcess.simulateOutput(textOutput, "", 0);
 
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
         "gt",
-        ["agents", "list", "--all", "--json"],
+        ["agents", "list", "--all"],
         expect.any(Object)
       );
       expect(result.success).toBe(true);
+      expect(Array.isArray(result.data)).toBe(true);
+
+      // Verify parsed data structure
+      const agents = result.data as Array<{
+        name: string;
+        type: string;
+        rig: string | null;
+      }>;
+      expect(agents.length).toBe(4);
+      expect(agents[0]).toMatchObject({ name: "mayor", type: "mayor", rig: null });
+      expect(agents[1]).toMatchObject({ name: "refinery", type: "refinery", rig: "gastown" });
     });
   });
 
