@@ -99,7 +99,7 @@ function BootSequence({ phase }: { phase: number }) {
       )}
       {phase >= 2 && (
         <div className="boot-line">
-          ROBCO INDUSTRIES (TM) TERMLINK PROTOCOL
+          GASCO INDUSTRIES TERMLINK PROTOCOL
         </div>
       )}
       {phase >= 3 && (

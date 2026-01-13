@@ -1,7 +1,7 @@
 /**
  * Pip-Boy Theme Tokens
  *
- * Design tokens for a Fallout Pip-Boy inspired UI.
+ * Design tokens for a retro terminal inspired UI.
  * Based on the classic green phosphor CRT aesthetic.
  */
 
@@ -11,7 +11,7 @@
 
 /**
  * Primary phosphor colors - the classic Pip-Boy green glow
- * Derived from the iconic Fallout 3/NV terminal aesthetic
+ * Derived from vintage P1 phosphor CRT displays
  */
 export const colors = {
   // Primary phosphor green scale
@@ -29,7 +29,7 @@ export const colors = {
     950: '#023305',
   },
 
-  // Amber variant (Fallout 4 alternative)
+  // Amber variant (P3 phosphor alternative)
   amber: {
     50: '#fffbeb',
     100: '#fff3c4',

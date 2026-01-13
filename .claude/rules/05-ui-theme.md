@@ -21,9 +21,9 @@ production-grade implementations that avoid generic "AI slop" styling.
 /frontend-design Create a status indicator component with Pip-Boy styling
 ```
 
-## Pip-Boy Aesthetic
+## Retro Terminal Aesthetic
 
-The UI should evoke the Fallout Pip-Boy terminal:
+The UI should evoke a retro CRT terminal display:
 - Monochrome green phosphor display
 - CRT scanline effects
 - Retro-futuristic typography

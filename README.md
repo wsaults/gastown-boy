@@ -1,6 +1,6 @@
 # Gastown-Boy
 
-A Fallout Pip-Boy themed web UI for [Gastown](https://github.com/steveyegge/gastown) multi-agent orchestration.
+A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gastown) multi-agent orchestration.
 
 ## Overview
 

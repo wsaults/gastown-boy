@@ -17,8 +17,8 @@ export interface PipBoyFrameProps {
 }
 
 /**
- * Pip-Boy themed frame component that wraps content with the classic
- * Fallout terminal aesthetic - green phosphor glow, CRT-style borders,
+ * Pip-Boy themed frame component that wraps content with retro
+ * terminal aesthetics - green phosphor glow, CRT-style borders,
  * and dark background.
  */
 export function PipBoyFrame({
