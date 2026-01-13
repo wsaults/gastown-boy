@@ -194,7 +194,7 @@
 
   .app-header {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     padding: 1.5rem 1rem 1rem;
     border-bottom: 2px solid var(--color-pipboy-green-dim);
@@ -202,10 +202,10 @@
     position: relative;
   }
 
-  /* Position RigFilter at the right side of header */
-  .app-header > *:last-child:not(h1) {
-    position: absolute;
-    right: 1rem;
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
   }
 
   /* Decorative header line */

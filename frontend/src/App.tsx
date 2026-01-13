@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CrewStats } from "./components/crew/CrewStats";
 import { MailView } from "./components/mail/MailView";
 import { PowerButton } from "./components/power/PowerButton";
+import { NuclearPowerButton } from "./components/power/NuclearPowerButton";
 import { CRTScreen } from "./components/shared/CRTScreen";
 import { RigFilter } from "./components/shared/RigFilter";
 import { RigProvider } from "./contexts/RigContext";
@@ -29,7 +30,10 @@ function App() {
         <div className="app-container">
           <header className="app-header">
             <h1>GASTOWN BOY</h1>
-            <RigFilter />
+            <div className="header-controls">
+              <RigFilter />
+              <NuclearPowerButton />
+            </div>
           </header>
 
           <nav className="app-nav">
