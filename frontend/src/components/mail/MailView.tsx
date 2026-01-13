@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { MailList } from './MailList';
 import { MailDetail } from './MailDetail';
@@ -48,6 +48,13 @@ export function MailView({ className = '' }: MailViewProps) {
   const [composing, setComposing] = useState(false);
   const [replyToId, setReplyToId] = useState<string | undefined>(undefined);
   const [replySubject, setReplySubject] = useState<string>('');
+
+  // Auto-select first message when inbox loads
+  useEffect(() => {
+    if (messages.length > 0 && !selectedMessage && !loading && !composing) {
+      void selectMessage(messages[0].id);
+    }
+  }, [messages, selectedMessage, loading, composing, selectMessage]);
 
   const handleMessageSelect = (messageId: string) => {
     void selectMessage(messageId);
