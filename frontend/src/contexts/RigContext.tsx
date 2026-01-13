@@ -56,8 +56,9 @@ export function RigProvider({ children }: { children: ReactNode }) {
 
   // Check if an item matches the current filter
   const matchesFilter = useCallback((rigOrAddress: string | null): boolean => {
-    // If no filter selected, everything matches
-    if (selectedRig === null) return true;
+    // If no filter selected OR rigs haven't loaded yet, everything matches
+    // (prevents stale localStorage filter from hiding all content on startup)
+    if (selectedRig === null || availableRigs.length === 0) return true;
 
     // Extract rig name from address if needed
     const itemRig = rigOrAddress?.includes('/')
@@ -65,7 +66,7 @@ export function RigProvider({ children }: { children: ReactNode }) {
       : rigOrAddress;
 
     return itemRig === selectedRig;
-  }, [selectedRig]);
+  }, [selectedRig, availableRigs.length]);
 
   const value = useMemo(() => ({
     selectedRig,
