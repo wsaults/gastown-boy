@@ -6,3 +6,4 @@ export { agentsRouter } from "./agents.js";
 export { mailRouter } from "./mail.js";
 export { powerRouter } from "./power.js";
 export { statusRouter } from "./status.js";
+export { tunnelRouter } from "./tunnel.js";

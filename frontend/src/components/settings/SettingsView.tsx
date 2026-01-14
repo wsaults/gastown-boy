@@ -1,17 +1,19 @@
 import { useState, useCallback, useEffect, type CSSProperties } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-interface NgrokTunnel {
-  public_url: string;
-  proto: string;
-  config: { addr: string };
+interface TunnelStatusData {
+  state: 'stopped' | 'starting' | 'running' | 'error';
+  publicUrl?: string;
+  error?: string;
 }
 
-interface NgrokApiResponse {
-  tunnels: NgrokTunnel[];
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: { code: string; message: string };
 }
 
-type TunnelStatus = 'loading' | 'connected' | 'not-running' | 'error';
+type TunnelStatus = 'loading' | 'connected' | 'not-running' | 'starting' | 'error';
 
 /**
  * Settings view component.
@@ -23,13 +25,14 @@ export function SettingsView() {
   const [tunnelStatus, setTunnelStatus] = useState<TunnelStatus>('loading');
   const [ngrokUrl, setNgrokUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isToggling, setIsToggling] = useState(false);
 
   // Check if we're already on ngrok
   const currentOrigin = window.location.origin;
   const isOnNgrok = currentOrigin.includes('ngrok');
 
-  // Fetch ngrok tunnel info
-  useEffect(() => {
+  // Fetch tunnel status from backend
+  const fetchTunnelStatus = useCallback(async () => {
     if (isOnNgrok) {
       // Already accessed via ngrok, use current URL
       setNgrokUrl(currentOrigin);
@@ -37,40 +40,91 @@ export function SettingsView() {
       return;
     }
 
-    // Try to fetch from ngrok local API via Vite proxy (avoids CORS)
-    const fetchNgrokUrl = async () => {
-      try {
-        const response = await fetch('/ngrok-api/api/tunnels', {
-          method: 'GET',
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-
-        const data = (await response.json()) as NgrokApiResponse;
-
-        // Find the https tunnel (prefer https over http)
-        const httpsTunnel = data.tunnels.find((t) => t.proto === 'https');
-        const httpTunnel = data.tunnels.find((t) => t.proto === 'http');
-        const tunnel = httpsTunnel ?? httpTunnel;
-
-        if (tunnel) {
-          setNgrokUrl(tunnel.public_url);
-          setTunnelStatus('connected');
-        } else {
-          setTunnelStatus('not-running');
-          setErrorMsg('No tunnels found');
-        }
-      } catch (err) {
-        // ngrok not running or not reachable
-        setTunnelStatus('not-running');
-        setErrorMsg(err instanceof Error ? err.message : 'Failed to connect');
+    try {
+      const response = await fetch('/api/tunnel/status');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
-    };
 
-    fetchNgrokUrl();
+      const result = (await response.json()) as ApiResponse<TunnelStatusData>;
+
+      if (result.success && result.data) {
+        const { state, publicUrl, error } = result.data;
+        switch (state) {
+          case 'running':
+            setNgrokUrl(publicUrl ?? null);
+            setTunnelStatus('connected');
+            break;
+          case 'starting':
+            setTunnelStatus('starting');
+            break;
+          case 'stopped':
+            setTunnelStatus('not-running');
+            setNgrokUrl(null);
+            break;
+          case 'error':
+            setTunnelStatus('error');
+            setErrorMsg(error ?? 'Unknown error');
+            break;
+        }
+      } else {
+        setTunnelStatus('error');
+        setErrorMsg(result.error?.message ?? 'Failed to get status');
+      }
+    } catch (err) {
+      setTunnelStatus('error');
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to connect');
+    }
   }, [isOnNgrok, currentOrigin]);
+
+  // Initial fetch
+  useEffect(() => {
+    fetchTunnelStatus();
+  }, [fetchTunnelStatus]);
+
+  // Handle toggle
+  const handleToggle = useCallback(async () => {
+    if (isToggling || isOnNgrok) return;
+
+    setIsToggling(true);
+    const isCurrentlyRunning = tunnelStatus === 'connected';
+    const endpoint = isCurrentlyRunning ? '/api/tunnel/stop' : '/api/tunnel/start';
+
+    // Optimistic update
+    setTunnelStatus(isCurrentlyRunning ? 'not-running' : 'starting');
+    if (isCurrentlyRunning) {
+      setNgrokUrl(null);
+    }
+
+    try {
+      const response = await fetch(endpoint, { method: 'POST' });
+      const result = (await response.json()) as ApiResponse<TunnelStatusData>;
+
+      if (result.success && result.data) {
+        const { state, publicUrl } = result.data;
+        if (state === 'running') {
+          setTunnelStatus('connected');
+          setNgrokUrl(publicUrl ?? null);
+        } else if (state === 'stopped') {
+          setTunnelStatus('not-running');
+          setNgrokUrl(null);
+        } else if (state === 'starting') {
+          setTunnelStatus('starting');
+          // Poll for completion
+          setTimeout(() => fetchTunnelStatus(), 1000);
+        }
+      } else {
+        // Revert on error
+        await fetchTunnelStatus();
+        setErrorMsg(result.error?.message ?? 'Failed to toggle tunnel');
+      }
+    } catch (err) {
+      await fetchTunnelStatus();
+      setErrorMsg(err instanceof Error ? err.message : 'Failed to toggle tunnel');
+    } finally {
+      setIsToggling(false);
+    }
+  }, [isToggling, isOnNgrok, tunnelStatus, fetchTunnelStatus]);
 
   const displayUrl = ngrokUrl ?? currentOrigin;
 
@@ -97,10 +151,12 @@ export function SettingsView() {
     switch (tunnelStatus) {
       case 'loading':
         return '◐ CHECKING...';
+      case 'starting':
+        return '◐ STARTING...';
       case 'connected':
         return '● TUNNEL ACTIVE';
       case 'not-running':
-        return '○ TUNNEL NOT RUNNING';
+        return '○ TUNNEL OFF';
       case 'error':
         return '✗ ERROR';
     }
@@ -109,6 +165,7 @@ export function SettingsView() {
   const getStatusStyle = () => {
     switch (tunnelStatus) {
       case 'loading':
+      case 'starting':
         return styles.statusLoading;
       case 'connected':
         return styles.statusConnected;
@@ -118,6 +175,9 @@ export function SettingsView() {
     }
   };
 
+  const isToggleOn = tunnelStatus === 'connected' || tunnelStatus === 'starting';
+  const canToggle = !isToggling && !isOnNgrok && tunnelStatus !== 'loading';
+
   return (
     <div style={styles.container}>
       <section style={styles.section}>
@@ -125,7 +185,27 @@ export function SettingsView() {
 
         <div style={styles.field}>
           <span style={styles.label}>TUNNEL:</span>
-          <span style={getStatusStyle()}>{getStatusText()}</span>
+          <div style={styles.toggleRow}>
+            <button
+              type="button"
+              style={{
+                ...styles.toggleButton,
+                ...(isToggleOn ? styles.toggleOn : styles.toggleOff),
+                ...((!canToggle) ? styles.toggleDisabled : {}),
+              }}
+              onClick={handleToggle}
+              disabled={!canToggle}
+              title={isOnNgrok ? 'Cannot toggle while accessed via tunnel' : undefined}
+            >
+              <span
+                style={{
+                  ...styles.toggleKnob,
+                  ...(isToggleOn ? styles.toggleKnobOn : styles.toggleKnobOff),
+                }}
+              />
+            </button>
+            <span style={getStatusStyle()}>{getStatusText()}</span>
+          </div>
         </div>
 
         {tunnelStatus === 'connected' && ngrokUrl && (
@@ -196,12 +276,20 @@ export function SettingsView() {
 
         {tunnelStatus === 'not-running' && (
           <p style={styles.hint}>
-            No tunnel detected. Start ngrok to enable remote access.
+            Toggle ON to enable remote access via ngrok tunnel.
           </p>
         )}
 
+        {tunnelStatus === 'starting' && (
+          <p style={styles.hint}>Starting ngrok tunnel...</p>
+        )}
+
         {tunnelStatus === 'loading' && (
-          <p style={styles.hint}>Checking for ngrok tunnel...</p>
+          <p style={styles.hint}>Checking tunnel status...</p>
+        )}
+
+        {tunnelStatus === 'error' && errorMsg && (
+          <p style={styles.errorHint}>Error: {errorMsg}</p>
         )}
       </section>
 
@@ -269,6 +357,54 @@ const styles = {
 
   statusDisconnected: {
     color: colors.primaryDim,
+  },
+
+  toggleRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+  },
+
+  toggleButton: {
+    width: '44px',
+    height: '24px',
+    borderRadius: '12px',
+    border: 'none',
+    cursor: 'pointer',
+    position: 'relative',
+    transition: 'background-color 0.2s',
+    flexShrink: 0,
+  } as CSSProperties,
+
+  toggleOn: {
+    backgroundColor: colors.primary,
+  },
+
+  toggleOff: {
+    backgroundColor: colors.primaryDim,
+  },
+
+  toggleDisabled: {
+    opacity: 0.5,
+    cursor: 'not-allowed',
+  },
+
+  toggleKnob: {
+    position: 'absolute',
+    top: '2px',
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    backgroundColor: colors.background,
+    transition: 'left 0.2s',
+  } as CSSProperties,
+
+  toggleKnobOn: {
+    left: '22px',
+  },
+
+  toggleKnobOff: {
+    left: '2px',
   },
 
   urlContainer: {
@@ -348,6 +484,14 @@ const styles = {
   hint: {
     fontSize: '0.75rem',
     color: colors.primaryDim,
+    marginTop: '1rem',
+    marginBottom: 0,
+    fontStyle: 'italic',
+  },
+
+  errorHint: {
+    fontSize: '0.75rem',
+    color: colors.red,
     marginTop: '1rem',
     marginBottom: 0,
     fontStyle: 'italic',
