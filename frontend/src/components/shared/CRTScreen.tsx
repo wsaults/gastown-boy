@@ -77,9 +77,6 @@ export function CRTScreen({
             {/* Screen noise */}
             {enableNoise && <div className="crt-noise" />}
 
-            {/* CRT curvature effect */}
-            <div className="crt-curvature" />
-
             {/* Vignette effect */}
             <div className="crt-vignette" />
 

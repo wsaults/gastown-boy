@@ -176,14 +176,13 @@ export function MailView({ className = '' }: MailViewProps) {
   );
 }
 
-// Pip-Boy color palette - authentic phosphor green
+// Pip-Boy color palette (consistent with other mail components)
 const colors = {
-  primary: '#1aff1a',
-  primaryDim: '#0d7a0d',
-  primaryGlow: 'rgba(26, 255, 26, 0.4)',
-  primaryBloom: 'rgba(26, 255, 26, 0.15)',
-  background: '#010301',
-  backgroundDark: '#000100',
+  primary: '#14F07D',
+  primaryDim: '#0A7A3E',
+  primaryGlow: '#14F07D40',
+  background: '#0A0A0A',
+  backgroundDark: '#050505',
   error: '#FF4444',
 } as const;
 
@@ -192,10 +191,9 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
-    fontFamily: '"VT323", "Share Tech Mono", "Courier New", monospace',
+    fontFamily: '"Share Tech Mono", "Courier New", monospace',
     color: colors.primary,
     backgroundColor: colors.background,
-    fontSize: '1.1rem',
   },
 
   header: {

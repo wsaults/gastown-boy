@@ -132,25 +132,23 @@ function formatTimestamp(timestamp: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// Pip-Boy color palette - authentic phosphor green
+// Pip-Boy color palette (matching PipBoyFrame)
 const colors = {
-  primary: '#1aff1a',
-  primaryDim: '#0d7a0d',
-  primaryGlow: 'rgba(26, 255, 26, 0.4)',
-  primaryBloom: 'rgba(26, 255, 26, 0.15)',
-  background: '#010301',
+  primary: '#14F07D',
+  primaryDim: '#0A7A3E',
+  primaryGlow: '#14F07D40',
+  background: '#0A0A0A',
   urgent: '#FF4444',
-  high: '#FFB000',
+  high: '#FFAA00',
 } as const;
 
 const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '4px',
-    fontFamily: '"VT323", "Share Tech Mono", "Courier New", monospace',
+    gap: '2px',
+    fontFamily: '"Share Tech Mono", "Courier New", monospace',
     color: colors.primary,
-    fontSize: '1.1rem',
   },
 
   loadingState: {
@@ -182,11 +180,9 @@ const styles = {
   },
 
   messageItemSelected: {
-    background: `linear-gradient(90deg, ${colors.primaryGlow} 0%, ${colors.primaryBloom} 100%)`,
+    background: colors.primaryGlow,
     borderColor: colors.primary,
-    boxShadow: `0 0 8px ${colors.primaryGlow}, 0 0 16px ${colors.primaryBloom}`,
-    borderLeftWidth: '4px',
-    borderLeftColor: colors.primary,
+    boxShadow: `0 0 8px ${colors.primaryGlow}`,
   },
 
   messageItemUnread: {
