@@ -2,11 +2,12 @@ import { useState } from "react";
 import { CrewStats } from "./components/crew/CrewStats";
 import { MailView } from "./components/mail/MailView";
 import { NuclearPowerButton } from "./components/power/NuclearPowerButton";
+import { SettingsView } from "./components/settings/SettingsView";
 import { CRTScreen } from "./components/shared/CRTScreen";
 import { RigFilter } from "./components/shared/RigFilter";
 import { RigProvider } from "./contexts/RigContext";
 
-type TabId = "mail" | "crew";
+type TabId = "mail" | "crew" | "settings";
 
 interface Tab {
   id: TabId;
@@ -17,6 +18,7 @@ interface Tab {
 const TABS: Tab[] = [
   { id: "mail", label: "MAIL", icon: "📧" },
   { id: "crew", label: "CREW", icon: "👥" },
+  { id: "settings", label: "SETTINGS", icon: "⚙️" },
 ];
 
 function App() {
@@ -51,6 +53,7 @@ function App() {
           <main className="app-content">
             {activeTab === "mail" && <MailView />}
             {activeTab === "crew" && <CrewStats />}
+            {activeTab === "settings" && <SettingsView />}
           </main>
         </div>
       </CRTScreen>
