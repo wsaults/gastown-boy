@@ -99,7 +99,7 @@ export function useMail(options: UseMailOptions = {}): UseMailResult {
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        const response = await api.mail.list();
+        const response = await api.mail.list({ all: true });
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- async safety
         if (mountedRef.current) {
           setMessages(response.items);

@@ -112,9 +112,14 @@ async function resolveThreadId(
 /**
  * Lists all mail messages, sorted by newest first.
  */
-export async function listMail(): Promise<MailServiceResult<Message[]>> {
+export async function listMail(
+  filterIdentity?: string | null
+): Promise<MailServiceResult<Message[]>> {
   const townRoot = resolveTownRoot();
-  const identity = addressToIdentity(resolveMailIdentity());
+  const identity =
+    filterIdentity === undefined
+      ? addressToIdentity(resolveMailIdentity())
+      : filterIdentity;
 
   let issues: RawMessage[];
   try {
@@ -139,7 +144,9 @@ export async function listMail(): Promise<MailServiceResult<Message[]>> {
     };
   }
 
-  const messages = issues.filter((issue) => matchesIdentity(issue, identity));
+  const messages = identity
+    ? issues.filter((issue) => matchesIdentity(issue, identity))
+    : issues;
   const transformed = messages.map(transformMessage);
   const sorted = transformed.sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()

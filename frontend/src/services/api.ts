@@ -147,11 +147,13 @@ export const api = {
       limit?: number;
       offset?: number;
       unreadOnly?: boolean;
+      all?: boolean;
     }): Promise<PaginatedResponse<Message>> {
       const searchParams = new URLSearchParams();
       if (params?.limit) searchParams.set('limit', params.limit.toString());
       if (params?.offset) searchParams.set('offset', params.offset.toString());
       if (params?.unreadOnly) searchParams.set('unreadOnly', 'true');
+      if (params?.all) searchParams.set('all', 'true');
 
       const query = searchParams.toString();
       return apiFetch(`/mail${query ? `?${query}` : ''}`);
