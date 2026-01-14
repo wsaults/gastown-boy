@@ -40,13 +40,19 @@ export function ngrokPlugin(options: NgrokPluginOptions = {}): Plugin {
 
           const port = options.port ?? server.config.server.port ?? 3000;
 
+          // Get authtoken from: 1) options, 2) env var, 3) let SDK find it
+          const authtoken = options.authtoken ?? process.env['NGROK_AUTHTOKEN'];
+
           console.log('\n🚇 Starting ngrok tunnel...');
 
-          // Start the tunnel
-          listener = await ngrok.forward({
-            addr: port,
-            authtoken: options.authtoken,
-          });
+          // Start the tunnel - only pass authtoken if we have one
+          // Otherwise let the SDK read from ngrok config file
+          const forwardOptions: { addr: number; authtoken?: string } = { addr: port };
+          if (authtoken) {
+            forwardOptions.authtoken = authtoken;
+          }
+
+          listener = await ngrok.forward(forwardOptions);
 
           ngrokUrl = (listener as { url: () => string }).url();
 
@@ -54,13 +60,20 @@ export function ngrokPlugin(options: NgrokPluginOptions = {}): Plugin {
           console.log(`📋 View in Settings tab or copy from: http://localhost:4040\n`);
         } catch (err) {
           const errMsg = err instanceof Error ? err.message : String(err);
-          if (errMsg.includes('authtoken')) {
-            console.error('\n❌ ngrok authtoken not configured');
-            console.log('💡 Run: ngrok config add-authtoken <your-token>');
-            console.log('   Get token at: https://dashboard.ngrok.com/get-started/your-authtoken\n');
-          } else {
-            console.error('❌ Failed to start ngrok tunnel:', errMsg);
+          const errLower = errMsg.toLowerCase();
+
+          console.error('\n❌ Failed to start ngrok tunnel');
+
+          if (errLower.includes('authtoken') || errLower.includes('authentication') || errLower.includes('unauthorized')) {
+            console.log('\n   The authtoken may not be configured correctly.');
+            console.log('   Options to fix:');
+            console.log('   1. Set NGROK_AUTHTOKEN environment variable');
+            console.log('   2. Run: ngrok config add-authtoken <your-token>');
+            console.log('   Get token at: https://dashboard.ngrok.com/get-started/your-authtoken');
           }
+
+          // Always show the actual error for debugging
+          console.log(`\n   Error: ${errMsg}\n`);
         }
       });
     },
