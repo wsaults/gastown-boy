@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useMemo } from 'react';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { usePolling } from '../../hooks/usePolling';
 import { api } from '../../services/api';
 import type { CrewMember } from '../../types';
@@ -93,6 +94,8 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
     interval: 5000,
   });
 
+  const isNarrow = useMediaQuery('(max-width: 768px)');
+
   // Group agents into hierarchical structure
   const grouped = useMemo(() => {
     if (!agents) return null;
@@ -101,6 +104,15 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
 
   const totalAgents = agents?.length ?? 0;
   const runningAgents = agents?.filter(a => a.status !== 'offline').length ?? 0;
+  const townGridStyle = isNarrow
+    ? { ...styles.townGrid, gridTemplateColumns: '1fr' }
+    : styles.townGrid;
+  const agentGridStyle = isNarrow
+    ? { ...styles.agentGrid, gridTemplateColumns: '1fr' }
+    : styles.agentGrid;
+  const infraGridStyle = isNarrow
+    ? { ...styles.infraGrid, gridTemplateColumns: '1fr' }
+    : styles.infraGrid;
 
   return (
     <section style={styles.container} className={className}>
@@ -137,12 +149,18 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
           <>
             {/* Town-level agents */}
             {grouped.town.length > 0 && (
-              <TownSection agents={grouped.town} />
+              <TownSection agents={grouped.town} gridStyle={townGridStyle} />
             )}
 
             {/* Per-rig sections */}
             {Array.from(grouped.rigs.entries()).map(([rigName, rigAgents]) => (
-              <RigSection key={rigName} name={rigName} agents={rigAgents} />
+              <RigSection
+                key={rigName}
+                name={rigName}
+                agents={rigAgents}
+                agentGridStyle={agentGridStyle}
+                infraGridStyle={infraGridStyle}
+              />
             ))}
 
             {grouped.rigs.size === 0 && grouped.town.length === 0 && (
@@ -184,9 +202,10 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
 
 interface TownSectionProps {
   agents: CrewMember[];
+  gridStyle: CSSProperties;
 }
 
-function TownSection({ agents }: TownSectionProps) {
+function TownSection({ agents, gridStyle }: TownSectionProps) {
   const mayor = agents.find(a => a.type === 'mayor');
   const deacon = agents.find(a => a.type === 'deacon');
 
@@ -197,7 +216,7 @@ function TownSection({ agents }: TownSectionProps) {
         <span style={styles.sectionTitle}>TOWN COMMAND</span>
         <span style={styles.sectionLine} />
       </div>
-      <div style={styles.townGrid}>
+      <div style={gridStyle}>
         {mayor && <AgentCard agent={mayor} icon="👑" />}
         {deacon && <AgentCard agent={deacon} icon="📋" />}
       </div>
@@ -212,9 +231,11 @@ function TownSection({ agents }: TownSectionProps) {
 interface RigSectionProps {
   name: string;
   agents: RigAgents;
+  agentGridStyle: CSSProperties;
+  infraGridStyle: CSSProperties;
 }
 
-function RigSection({ name, agents }: RigSectionProps) {
+function RigSection({ name, agents, agentGridStyle, infraGridStyle }: RigSectionProps) {
   const allAgents = [
     ...(agents.witness ? [agents.witness] : []),
     ...(agents.refinery ? [agents.refinery] : []),
@@ -242,7 +263,7 @@ function RigSection({ name, agents }: RigSectionProps) {
             <span style={styles.subsectionIcon}>├─</span>
             <span style={styles.subsectionTitle}>CREW</span>
           </div>
-          <div style={styles.agentGrid}>
+          <div style={agentGridStyle}>
             {agents.crew.map((agent) => (
               <AgentCard key={agent.id} agent={agent} icon="👷" />
             ))}
@@ -257,7 +278,7 @@ function RigSection({ name, agents }: RigSectionProps) {
             <span style={styles.subsectionIcon}>├─</span>
             <span style={styles.subsectionTitle}>INFRASTRUCTURE</span>
           </div>
-          <div style={styles.infraGrid}>
+          <div style={infraGridStyle}>
             {agents.witness && <AgentCard agent={agents.witness} icon="👁" />}
             {agents.refinery && <AgentCard agent={agents.refinery} icon="⚙" />}
           </div>
