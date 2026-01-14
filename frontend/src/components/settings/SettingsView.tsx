@@ -183,13 +183,14 @@ export function SettingsView() {
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>REMOTE ACCESS</h2>
 
-        <div style={styles.statusRow}>
+        <div style={styles.field}>
+          <span style={styles.label}>TUNNEL:</span>
           <span style={getStatusStyle()}>{getStatusText()}</span>
         </div>
 
         {tunnelStatus === 'connected' && ngrokUrl && (
           <>
-            <div style={styles.urlRow}>
+            <div style={styles.field}>
               <div style={styles.urlField}>
                 <code style={styles.urlTextInner}>{displayUrl}</code>
                 <button
@@ -301,33 +302,25 @@ const styles = {
   },
 
   sectionTitle: {
-    fontSize: '0.9rem',
-    letterSpacing: '0.15em',
+    fontSize: '1rem',
+    letterSpacing: '0.2em',
     marginTop: 0,
-    marginBottom: '0.75rem',
+    marginBottom: '1rem',
     paddingBottom: '0.5rem',
     borderBottom: `1px solid ${colors.primaryDim}`,
   },
 
-  statusRow: {
-    marginBottom: '0.75rem',
-  },
-
-  urlRow: {
-    marginBottom: '0.75rem',
-  },
-
   field: {
     display: 'flex',
-    flexDirection: 'column',
-    gap: '0.5rem',
+    alignItems: 'flex-start',
+    gap: '1rem',
     marginBottom: '0.75rem',
-  } as CSSProperties,
+  },
 
   label: {
     color: colors.primaryDim,
+    minWidth: '120px',
     letterSpacing: '0.1em',
-    fontSize: '0.8rem',
   },
 
   value: {
@@ -421,6 +414,7 @@ const styles = {
     background: colors.background,
     border: `1px solid ${colors.primaryDim}`,
     borderRadius: '2px',
+    flex: 1,
     width: '100%',
     boxSizing: 'border-box',
   } as CSSProperties,
@@ -554,26 +548,25 @@ const styles = {
 
   qrTitle: {
     margin: 0,
-    fontSize: '1rem',
-    letterSpacing: '0.15em',
+    fontSize: '1.2rem',
+    letterSpacing: '0.2em',
     color: colors.primary,
     textShadow: `0 0 10px ${colors.primaryGlow}`,
-    textAlign: 'center',
-  } as CSSProperties,
+  },
 
   qrContainer: {
-    padding: '0.75rem',
+    padding: '1rem',
     background: colors.background,
     border: `1px solid ${colors.primaryDim}`,
     borderRadius: '4px',
   },
 
   qrUrl: {
-    fontSize: '0.7rem',
+    fontSize: '0.8rem',
     color: colors.primaryDim,
     wordBreak: 'break-all',
     textAlign: 'center',
-    maxWidth: '250px',
+    maxWidth: '280px',
   } as CSSProperties,
 
   qrCloseButton: {
