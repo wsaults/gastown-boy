@@ -62,18 +62,23 @@ interface StatusResponse {
 // ============================================================================
 
 /**
- * Maps raw agent type string to AgentType enum.
+ * Maps raw agent role string to AgentType enum.
+ * Handles both direct type names and role aliases from gt status.
  */
-function mapAgentType(type: string): AgentType {
+function mapAgentType(role: string): AgentType {
   const typeMap: Record<string, AgentType> = {
+    // Direct type names
     mayor: "mayor",
     deacon: "deacon",
     witness: "witness",
     refinery: "refinery",
     crew: "crew",
     polecat: "polecat",
+    // Role aliases from gt status --json
+    coordinator: "mayor",
+    "health-check": "deacon",
   };
-  return typeMap[type.toLowerCase()] ?? "crew";
+  return typeMap[role.toLowerCase()] ?? "crew";
 }
 
 /**
@@ -172,6 +177,9 @@ export async function getAgents(): Promise<AgentsServiceResult<CrewMember[]>> {
   }
 
   const crewMembers = allAgents.map(transformStatusAgent);
+
+  // Sort alphabetically by name
+  crewMembers.sort((a, b) => a.name.localeCompare(b.name));
 
   return { success: true, data: crewMembers };
 }
