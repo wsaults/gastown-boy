@@ -64,7 +64,7 @@ describe("mail-service", () => {
     it("returns a message by ID", async () => {
       vi.mocked(execBd).mockResolvedValue({
         success: true,
-        data: createBeadsMessage({ id: "msg-123" }),
+        data: [createBeadsMessage({ id: "msg-123" })],
         exitCode: 0,
       });
 

@@ -14,28 +14,36 @@ export interface ParsedAgentBead {
   name: string | null;
 }
 
-export function parseAgentBeadId(id: string): ParsedAgentBead | null {
+export function parseAgentBeadId(id: string, defaultRig?: string | null): ParsedAgentBead | null {
   const hyphenIdx = id.indexOf("-");
   if (hyphenIdx < 2 || hyphenIdx > 3) return null;
   const rest = id.slice(hyphenIdx + 1);
   const parts = rest.split("-");
 
+  if (parts.length >= 2 && parts[0].toLowerCase() === "dog") {
+    return { rig: null, role: "dog", name: parts.slice(1).join("-") };
+  }
+
+  const knownRoles = ["mayor", "deacon", "witness", "refinery", "crew", "polecat"];
+
+  if (defaultRig && parts.length >= 1 && knownRoles.includes(parts[0].toLowerCase())) {
+    return {
+      rig: defaultRig,
+      role: parts[0],
+      name: parts.length > 1 ? parts.slice(1).join("-") : null,
+    };
+  }
+
   if (parts.length === 1) {
     return { rig: null, role: parts[0], name: null };
   }
   if (parts.length === 2) {
-    if (parts[0] === "dog") {
-      return { rig: null, role: "dog", name: parts[1] };
-    }
     return { rig: parts[0], role: parts[1], name: null };
   }
   if (parts.length === 3) {
     return { rig: parts[0], role: parts[1], name: parts[2] };
   }
   if (parts.length >= 3) {
-    if (parts[0] === "dog") {
-      return { rig: null, role: "dog", name: parts.slice(1).join("-") };
-    }
     return { rig: parts[0], role: parts[1], name: parts.slice(2).join("-") };
   }
   return null;
