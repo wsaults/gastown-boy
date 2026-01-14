@@ -7,6 +7,7 @@
 
 import { randomBytes } from "crypto";
 import { execBd, resolveBeadsDir, type BeadsIssue } from "./bd-client.js";
+import { gt } from "./gt-executor.js";
 import { resolveTownRoot } from "./gastown-workspace.js";
 import { addressToIdentity, beadsIssueToMessage, parseMessageLabels } from "./gastown-utils.js";
 import { listMailIssues } from "./mail-data.js";
@@ -230,14 +231,39 @@ export async function sendMail(
     };
   }
 
-  const townRoot = resolveTownRoot();
-  const beadsDir = resolveBeadsDir(townRoot);
   const to = request.to ?? "mayor/";
   const from = resolveMailIdentity();
-  const toIdentity = addressToIdentity(to);
-  const fromIdentity = addressToIdentity(from);
   const priority = mapPriority(request.priority);
   const replyTo = request.replyTo;
+
+  // Try using gt mail send first (ensures notifications trigger)
+  try {
+    const result = await gt.mail.send(to, request.subject, request.body, {
+      type: request.type as 'notification' | 'task' | 'scavenge' | 'reply' | undefined,
+      priority,
+      replyTo,
+      permanent: true, // Default to permanent
+    }, {
+      env: {
+        BD_ACTOR: from, // Override actor with current identity
+      }
+    });
+
+    if (result.success) {
+      return { success: true };
+    }
+    
+    // If gt failed (e.g. command not found), fall back to bd create
+    console.warn("gt mail send failed, falling back to bd create", result.error);
+  } catch (err) {
+    console.warn("gt mail send exception, falling back to bd create", err);
+  }
+
+  // Fallback: bd create
+  const townRoot = resolveTownRoot();
+  const beadsDir = resolveBeadsDir(townRoot);
+  const toIdentity = addressToIdentity(to);
+  const fromIdentity = addressToIdentity(from);
   const threadId = (await resolveThreadId(townRoot, beadsDir, replyTo)) ?? generateThreadId();
 
   const labels = [`from:${fromIdentity}`, `thread:${threadId}`];

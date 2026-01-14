@@ -462,6 +462,8 @@ export const gt = {
         args.push('--reply-to', sendOptions.replyTo);
       }
 
+      const actor = options?.env?.['BD_ACTOR'] ?? process.env['BD_ACTOR'] ?? 'gastown_boy/ui';
+
       // Run from gastown_boy rig with explicit actor identity
       return execGt<string>(args, {
         ...options,
@@ -469,7 +471,8 @@ export const gt = {
         cwd: GT_RIG_ROOT,
         env: {
           ...process.env,
-          BD_ACTOR: 'gastown_boy/ui',
+          ...options?.env,
+          BD_ACTOR: actor,
         },
       });
     },

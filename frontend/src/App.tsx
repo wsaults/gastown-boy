@@ -4,6 +4,7 @@ import { MailView } from "./components/mail/MailView";
 import { NuclearPowerButton } from "./components/power/NuclearPowerButton";
 import { SettingsView } from "./components/settings/SettingsView";
 import { CRTScreen } from "./components/shared/CRTScreen";
+import { QuickInput } from "./components/shared/QuickInput";
 import { RigFilter } from "./components/shared/RigFilter";
 import { RigProvider } from "./contexts/RigContext";
 
@@ -73,6 +74,8 @@ function App() {
               <SettingsView />
             </section>
           </main>
+
+          <QuickInput />
         </div>
       </CRTScreen>
     </RigProvider>
