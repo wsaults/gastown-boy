@@ -223,19 +223,31 @@ export const gt = {
   mail: {
     /**
      * Get inbox messages.
+     * Runs from the gastown_boy rig root to get the rig's mail.
      */
     async inbox<T = unknown>(options?: GtExecOptions): Promise<GtResult<T>> {
-      return execGt<T>(['mail', 'inbox', '--json'], options);
+      return execGt<T>(['mail', 'inbox', '--json'], {
+        ...options,
+        cwd: process.env['GT_TOWN_ROOT']
+          ? `${process.env['GT_TOWN_ROOT']}/gastown_boy`
+          : '/Users/will/gt/gastown_boy',
+      });
     },
 
     /**
      * Read a specific message.
+     * Runs from the gastown_boy rig root for consistent context.
      */
     async read<T = unknown>(
       messageId: string,
       options?: GtExecOptions
     ): Promise<GtResult<T>> {
-      return execGt<T>(['mail', 'read', messageId, '--json'], options);
+      return execGt<T>(['mail', 'read', messageId, '--json'], {
+        ...options,
+        cwd: process.env['GT_TOWN_ROOT']
+          ? `${process.env['GT_TOWN_ROOT']}/gastown_boy`
+          : '/Users/will/gt/gastown_boy',
+      });
     },
 
     /**
@@ -286,6 +298,7 @@ export const gt = {
 
     /**
      * Mark a message as read.
+     * Runs from the gastown_boy rig root for consistent context.
      */
     async markRead(
       messageId: string,
@@ -294,17 +307,26 @@ export const gt = {
       return execGt<string>(['mail', 'mark-read', messageId], {
         ...options,
         parseJson: false,
+        cwd: process.env['GT_TOWN_ROOT']
+          ? `${process.env['GT_TOWN_ROOT']}/gastown_boy`
+          : '/Users/will/gt/gastown_boy',
       });
     },
 
     /**
      * Get a thread of messages.
+     * Runs from the gastown_boy rig root for consistent context.
      */
     async thread<T = unknown>(
       threadId: string,
       options?: GtExecOptions
     ): Promise<GtResult<T>> {
-      return execGt<T>(['mail', 'thread', threadId, '--json'], options);
+      return execGt<T>(['mail', 'thread', threadId, '--json'], {
+        ...options,
+        cwd: process.env['GT_TOWN_ROOT']
+          ? `${process.env['GT_TOWN_ROOT']}/gastown_boy`
+          : '/Users/will/gt/gastown_boy',
+      });
     },
   },
 
