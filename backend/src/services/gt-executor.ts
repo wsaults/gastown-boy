@@ -33,6 +33,10 @@ const DEFAULT_TIMEOUT = 30000;
 // GT commands must run from the town root to work correctly
 const GT_TOWN_ROOT = process.env['GT_TOWN_ROOT'] ?? '/Users/will/gt';
 
+// Use full path to gt binary to avoid PATH issues in subprocess spawns
+// (e.g., when run from hooks or startup scripts where PATH isn't fully set)
+const GT_BIN = process.env['GT_BIN'] ?? `${process.env['HOME'] ?? '/Users/will'}/go/bin/gt`;
+
 /**
  * Executes a GT command and returns the result.
  *
@@ -47,7 +51,7 @@ export async function execGt<T = unknown>(
   const { cwd = GT_TOWN_ROOT, timeout = DEFAULT_TIMEOUT, parseJson = true, env } = options;
 
   return new Promise((resolve) => {
-    const child = spawn('gt', args, {
+    const child = spawn(GT_BIN, args, {
       cwd,
       timeout,
       env: { ...process.env, ...env },
