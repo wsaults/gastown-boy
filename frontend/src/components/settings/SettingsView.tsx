@@ -185,7 +185,27 @@ export function SettingsView() {
 
         <div style={styles.field}>
           <span style={styles.label}>TUNNEL:</span>
-          <span style={getStatusStyle()}>{getStatusText()}</span>
+          <div style={styles.toggleRow}>
+            <button
+              type="button"
+              style={{
+                ...styles.toggleButton,
+                ...(isToggleOn ? styles.toggleOn : styles.toggleOff),
+                ...((!canToggle) ? styles.toggleDisabled : {}),
+              }}
+              onClick={handleToggle}
+              disabled={!canToggle}
+              title={isOnNgrok ? 'Cannot toggle while accessed via tunnel' : undefined}
+            >
+              <span
+                style={{
+                  ...styles.toggleKnob,
+                  ...(isToggleOn ? styles.toggleKnobOn : styles.toggleKnobOff),
+                }}
+              />
+            </button>
+            <span style={getStatusStyle()}>{getStatusText()}</span>
+          </div>
         </div>
 
         {tunnelStatus === 'connected' && ngrokUrl && (
