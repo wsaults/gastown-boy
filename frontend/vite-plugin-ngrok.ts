@@ -1,13 +1,20 @@
 /**
  * Vite plugin to automatically start ngrok tunnel in development mode.
- * The tunnel URL can be retrieved from the ngrok API at http://127.0.0.1:4040/api/tunnels
+ *
+ * Authentication:
+ * The @ngrok/ngrok SDK does NOT read from the ngrok CLI config file.
+ * You must provide the authtoken via one of these methods:
+ *   1. Set NGROK_AUTHTOKEN environment variable (recommended)
+ *   2. Pass authtoken directly in plugin options
+ *
+ * Get your authtoken at: https://dashboard.ngrok.com/get-started/your-authtoken
  */
 import type { Plugin } from 'vite';
 
 interface NgrokPluginOptions {
   /** Port to tunnel (defaults to Vite server port) */
   port?: number;
-  /** ngrok authtoken (optional, uses ngrok config if not provided) */
+  /** ngrok authtoken - if not provided, uses NGROK_AUTHTOKEN env var */
   authtoken?: string;
   /** Enable/disable ngrok (defaults to true) */
   enabled?: boolean;
@@ -15,7 +22,6 @@ interface NgrokPluginOptions {
 
 export function ngrokPlugin(options: NgrokPluginOptions = {}): Plugin {
   const { enabled = true } = options;
-  let ngrokUrl: string | null = null;
   let listener: unknown = null;
 
   return {
@@ -32,47 +38,53 @@ export function ngrokPlugin(options: NgrokPluginOptions = {}): Plugin {
           let ngrok;
           try {
             ngrok = await import('@ngrok/ngrok');
-          } catch (importErr) {
-            console.log('\n⚠️  ngrok package not installed. Run: npm install');
+          } catch {
+            console.log('\n  ngrok package not installed. Run: npm install @ngrok/ngrok');
             console.log('   Skipping ngrok tunnel - app will work locally only.\n');
             return;
           }
 
           const port = options.port ?? server.config.server.port ?? 3000;
 
-          // Get authtoken from: 1) options, 2) env var, 3) let SDK find it
-          const authtoken = options.authtoken ?? process.env['NGROK_AUTHTOKEN'];
+          console.log('\n  Starting ngrok tunnel...');
 
-          console.log('\n🚇 Starting ngrok tunnel...');
+          // Build forward options
+          // The SDK requires explicit authtoken - it does NOT read from ngrok CLI config
+          const forwardOptions: {
+            addr: number;
+            authtoken?: string;
+            authtoken_from_env?: boolean;
+          } = { addr: port };
 
-          // Start the tunnel - only pass authtoken if we have one
-          // Otherwise let the SDK read from ngrok config file
-          const forwardOptions: { addr: number; authtoken?: string } = { addr: port };
-          if (authtoken) {
-            forwardOptions.authtoken = authtoken;
+          if (options.authtoken) {
+            // Explicit authtoken provided in options
+            forwardOptions.authtoken = options.authtoken;
+          } else {
+            // Tell SDK to read from NGROK_AUTHTOKEN env var
+            forwardOptions.authtoken_from_env = true;
           }
 
           listener = await ngrok.forward(forwardOptions);
 
-          ngrokUrl = (listener as { url: () => string }).url();
+          const url = (listener as { url: () => string }).url();
 
-          console.log(`✅ ngrok tunnel active: ${ngrokUrl}`);
-          console.log(`📋 View in Settings tab or copy from: http://localhost:4040\n`);
+          console.log(`  ngrok tunnel active: ${url}`);
+          console.log(`   View tunnel status at: http://localhost:4040\n`);
         } catch (err) {
           const errMsg = err instanceof Error ? err.message : String(err);
-          const errLower = errMsg.toLowerCase();
 
-          console.error('\n❌ Failed to start ngrok tunnel');
+          console.error('\n  Failed to start ngrok tunnel');
 
-          if (errLower.includes('authtoken') || errLower.includes('authentication') || errLower.includes('unauthorized')) {
-            console.log('\n   The authtoken may not be configured correctly.');
-            console.log('   Options to fix:');
-            console.log('   1. Set NGROK_AUTHTOKEN environment variable');
-            console.log('   2. Run: ngrok config add-authtoken <your-token>');
-            console.log('   Get token at: https://dashboard.ngrok.com/get-started/your-authtoken');
+          if (errMsg.includes('authtoken') || errMsg.includes('ERR_NGROK_4018')) {
+            console.log('\n   The @ngrok/ngrok SDK requires NGROK_AUTHTOKEN environment variable.');
+            console.log('   (Note: The SDK does NOT read from ngrok CLI config file)');
+            console.log('\n   To fix:');
+            console.log('   1. Get your token at: https://dashboard.ngrok.com/get-started/your-authtoken');
+            console.log('   2. Set the environment variable:');
+            console.log('      export NGROK_AUTHTOKEN=your_token_here');
+            console.log('   3. Or add to your shell profile (~/.zshrc or ~/.bashrc)');
           }
 
-          // Always show the actual error for debugging
           console.log(`\n   Error: ${errMsg}\n`);
         }
       });
@@ -83,7 +95,7 @@ export function ngrokPlugin(options: NgrokPluginOptions = {}): Plugin {
       if (listener && typeof (listener as { close?: () => Promise<void> }).close === 'function') {
         try {
           await (listener as { close: () => Promise<void> }).close();
-          console.log('🚇 ngrok tunnel closed');
+          console.log('  ngrok tunnel closed');
         } catch {
           // Ignore cleanup errors
         }

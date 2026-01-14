@@ -8,7 +8,8 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    ngrokPlugin({ enabled: process.env['NGROK'] !== 'false' }),
+    // ngrok tunnel - only enabled when NGROK_AUTHTOKEN env var is set
+    ngrokPlugin({ enabled: !!process.env["NGROK_AUTHTOKEN"] }),
   ],
   server: {
     port: 3000,
