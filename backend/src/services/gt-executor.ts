@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { spawn, execFileSync } from 'child_process';
 
 /**
  * Result of executing a GT command.
@@ -33,9 +33,45 @@ const DEFAULT_TIMEOUT = 30000;
 // GT commands must run from the town root to work correctly
 const GT_TOWN_ROOT = process.env['GT_TOWN_ROOT'] ?? '/Users/will/gt';
 
-// Use full path to gt binary to avoid PATH issues in subprocess spawns
-// (e.g., when run from hooks or startup scripts where PATH isn't fully set)
-const GT_BIN = process.env['GT_BIN'] ?? `${process.env['HOME'] ?? '/Users/will'}/go/bin/gt`;
+/**
+ * Resolves the gt binary path dynamically.
+ * Priority: GT_BIN env var > `which gt` > $HOME/go/bin/gt > 'gt' (PATH lookup)
+ */
+function resolveGtBinary(): string {
+  // 1. Explicit env var takes precedence
+  if (process.env['GT_BIN']) {
+    return process.env['GT_BIN'];
+  }
+
+  // 2. Try to find gt in PATH using 'which' (Unix) or 'where' (Windows)
+  try {
+    const whichCmd = process.platform === 'win32' ? 'where' : 'which';
+    const resolved = execFileSync(whichCmd, ['gt'], {
+      encoding: 'utf8',
+      timeout: 5000,
+    }).trim();
+    if (resolved) {
+      // 'where' on Windows may return multiple lines; take the first
+      const firstLine = resolved.split('\n')[0];
+      if (firstLine) {
+        return firstLine.trim();
+      }
+    }
+  } catch {
+    // which/where failed, continue to fallbacks
+  }
+
+  // 3. Try $HOME/go/bin/gt (common Go install location)
+  if (process.env['HOME']) {
+    return `${process.env['HOME']}/go/bin/gt`;
+  }
+
+  // 4. Last resort: let spawn try PATH resolution
+  return 'gt';
+}
+
+// Cache the resolved binary path at module load time
+const GT_BIN = resolveGtBinary();
 
 /**
  * Executes a GT command and returns the result.

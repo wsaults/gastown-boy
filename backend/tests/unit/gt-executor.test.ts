@@ -5,10 +5,15 @@ import type { ChildProcess } from "child_process";
 // Mock child_process before importing the module under test
 vi.mock("child_process", () => ({
   spawn: vi.fn(),
+  // Mock execFileSync to return 'gt' so the module uses 'gt' as the binary path
+  execFileSync: vi.fn(() => "gt"),
 }));
 
 import { spawn } from "child_process";
 import { execGt, gt } from "../../src/services/gt-executor.js";
+
+// Custom matcher for gt binary - accepts 'gt' or any path ending with '/gt'
+const gtBinaryMatcher = expect.stringMatching(/^(gt|.*\/gt)$/);
 
 /**
  * Creates a mock ChildProcess that emits events like a real spawned process.
@@ -80,7 +85,7 @@ describe("gt-executor", () => {
       expect(result.data).toEqual({ status: "running" });
       expect(result.exitCode).toBe(0);
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["status", "--json"],
         expect.objectContaining({ timeout: 30000 })
       );
@@ -163,7 +168,7 @@ describe("gt-executor", () => {
       await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["status"],
         expect.objectContaining({ cwd: "/custom/path" })
       );
@@ -176,7 +181,7 @@ describe("gt-executor", () => {
       await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["status"],
         expect.objectContaining({ timeout: 5000 })
       );
@@ -208,7 +213,7 @@ describe("gt-executor", () => {
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["status", "--json"],
         expect.any(Object)
       );
@@ -224,7 +229,7 @@ describe("gt-executor", () => {
 
       const result = await resultPromise;
 
-      expect(mockSpawn).toHaveBeenCalledWith("gt", ["up"], expect.any(Object));
+      expect(mockSpawn).toHaveBeenCalledWith(gtBinaryMatcher, ["up"], expect.any(Object));
       expect(result.success).toBe(true);
       expect(result.data).toBe("Started");
     });
@@ -238,7 +243,7 @@ describe("gt-executor", () => {
 
       const result = await resultPromise;
 
-      expect(mockSpawn).toHaveBeenCalledWith("gt", ["down"], expect.any(Object));
+      expect(mockSpawn).toHaveBeenCalledWith(gtBinaryMatcher, ["down"], expect.any(Object));
       expect(result.success).toBe(true);
       expect(result.data).toBe("Stopped");
     });
@@ -253,7 +258,7 @@ describe("gt-executor", () => {
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["mail", "inbox", "--json"],
         expect.any(Object)
       );
@@ -270,7 +275,7 @@ describe("gt-executor", () => {
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["mail", "read", "msg-123", "--json"],
         expect.any(Object)
       );
@@ -287,8 +292,8 @@ describe("gt-executor", () => {
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
-        ["mail", "send", "mayor/", "-s", "Test Subject", "-m", "Test body"],
+        gtBinaryMatcher,
+        ["mail", "send", "mayor/", "-s", "Test Subject", "-m", "Test body", "--permanent"],
         expect.any(Object)
       );
       expect(result.success).toBe(true);
@@ -303,7 +308,7 @@ describe("gt-executor", () => {
       await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         expect.arrayContaining(["--type", "task"]),
         expect.any(Object)
       );
@@ -318,7 +323,7 @@ describe("gt-executor", () => {
       await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         expect.arrayContaining(["--priority", "1"]),
         expect.any(Object)
       );
@@ -333,7 +338,7 @@ describe("gt-executor", () => {
       await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         expect.arrayContaining(["--reply-to", "msg-456"]),
         expect.any(Object)
       );
@@ -349,7 +354,7 @@ describe("gt-executor", () => {
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["mail", "mark-read", "msg-123"],
         expect.any(Object)
       );
@@ -366,7 +371,7 @@ describe("gt-executor", () => {
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["mail", "thread", "thread-123", "--json"],
         expect.any(Object)
       );
@@ -390,7 +395,7 @@ describe("gt-executor", () => {
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["agents", "list", "--all"],
         expect.any(Object)
       );
@@ -418,7 +423,7 @@ describe("gt-executor", () => {
       const result = await resultPromise;
 
       expect(mockSpawn).toHaveBeenCalledWith(
-        "gt",
+        gtBinaryMatcher,
         ["agents", "check", "--json"],
         expect.any(Object)
       );
