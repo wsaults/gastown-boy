@@ -7,10 +7,10 @@
    Color Variables
    ============================================ */
 .power-toggle {
-  --switch-green: #20C20E;
-  --switch-green-bright: #33FF33;
-  --switch-green-dim: #0A5F07;
-  --switch-green-glow: rgba(32, 194, 14, 0.5);
+  --switch-green: var(--crt-phosphor);
+  --switch-green-bright: var(--crt-phosphor-bright);
+  --switch-green-dim: var(--crt-phosphor-dim);
+  --switch-green-glow: var(--crt-phosphor-glow);
 
   --switch-red: #FF4444;
   --switch-red-dim: #AA2222;
@@ -19,8 +19,8 @@
   --switch-amber: #FFB000;
   --switch-amber-glow: rgba(255, 176, 0, 0.5);
 
-  --track-bg: #0a0f0a;
-  --track-border: #1a3a1a;
+  --track-bg: #000;
+  --track-border: var(--crt-phosphor-dim);
   --thumb-metal: #3a3a36;
   --thumb-metal-light: #5a5a54;
 

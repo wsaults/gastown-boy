@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ConvoysView } from "./components/convoys/ConvoysView";
 import { CrewStats } from "./components/crew/CrewStats";
 import { MailView } from "./components/mail/MailView";
@@ -8,6 +8,8 @@ import { CRTScreen } from "./components/shared/CRTScreen";
 import { QuickInput } from "./components/shared/QuickInput";
 import { RigFilter } from "./components/shared/RigFilter";
 import { RigProvider } from "./contexts/RigContext";
+
+export type ThemeId = 'green' | 'red' | 'blue' | 'tan' | 'pink' | 'purple';
 
 type TabId = "mail" | "convoys" | "crew" | "settings";
 
@@ -26,6 +28,15 @@ const TABS: Tab[] = [
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>("mail");
+  const [theme, setTheme] = useState<ThemeId>(
+    (localStorage.getItem('gt-theme') as ThemeId) || 'green'
+  );
+
+  // Apply theme to body globally
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('gt-theme', theme);
+  }, [theme]);
 
   return (
     <RigProvider>
@@ -80,7 +91,7 @@ function App() {
               hidden={activeTab !== "settings"}
               aria-hidden={activeTab !== "settings"}
             >
-              <SettingsView />
+              <SettingsView theme={theme} setTheme={setTheme} />
             </section>
           </main>
 

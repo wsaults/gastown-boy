@@ -57,9 +57,9 @@ export function PipBoyFrame({
 
 // Pip-Boy color palette
 const colors = {
-  primary: '#14F07D',      // Classic Pip-Boy green
-  primaryDim: '#0A7A3E',   // Dimmed green for borders
-  primaryGlow: '#14F07D40', // Green with transparency for glow
+  primary: 'var(--crt-phosphor)',      // Classic Pip-Boy green
+  primaryDim: 'var(--crt-phosphor-dim)',   // Dimmed green for borders
+  primaryGlow: 'var(--crt-phosphor-glow)', // Green with transparency for glow
   background: '#0A0A0A',   // Near-black background
   backgroundDark: '#050505', // Darker background for depth
   error: '#FF6B35',        // Amber-orange for errors (CRT warning color)

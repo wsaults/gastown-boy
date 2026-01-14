@@ -230,9 +230,9 @@ export function RecipientSelector({
 
 // Pip-Boy color palette (matching ComposeMessage)
 const colors = {
-  primary: '#14F07D',
-  primaryDim: '#0A7A3E',
-  primaryGlow: '#14F07D40',
+  primary: 'var(--crt-phosphor)',
+  primaryDim: 'var(--crt-phosphor-dim)',
+  primaryGlow: 'var(--crt-phosphor-glow)',
   background: '#0A0A0A',
   backgroundDark: '#050505',
   error: '#FF4444',

@@ -7,12 +7,13 @@
    Color Variables - Authentic Phosphor Colors
    ============================================ */
 :root {
-  /* Classic Pip-Boy amber-green (P1 phosphor inspired) */
-  --crt-phosphor: #20C20E;
-  --crt-phosphor-bright: #33FF33;
-  --crt-phosphor-dim: #0A5F07;
-  --crt-phosphor-glow: rgba(32, 194, 14, 0.6);
-  --crt-phosphor-bloom: rgba(32, 194, 14, 0.2);
+  /* Default Theme (Green) */
+  --theme-primary-rgb: 32, 194, 14;
+  --theme-primary: rgb(var(--theme-primary-rgb));
+  --theme-bright: #33FF33;
+  --theme-dim: #0A5F07;
+  --theme-glow: rgba(var(--theme-primary-rgb), 0.6);
+  --theme-bloom: rgba(var(--theme-primary-rgb), 0.2);
 
   /* Amber variant for warnings */
   --crt-amber: #FFB000;
@@ -26,6 +27,61 @@
   --crt-bezel: #1a1a18;
   --crt-bezel-highlight: #2a2a26;
   --crt-bezel-shadow: #0a0a08;
+}
+
+body {
+  /* Dynamic mapping - ensures theme overrides are picked up */
+  --crt-phosphor-rgb: var(--theme-primary-rgb);
+  --crt-phosphor: var(--theme-primary);
+  --crt-phosphor-bright: var(--theme-bright);
+  --crt-phosphor-dim: var(--theme-dim);
+  --crt-phosphor-glow: var(--theme-glow);
+  --crt-phosphor-bloom: var(--theme-bloom);
+}
+
+[data-theme='red'] {
+  --theme-primary-rgb: 255, 51, 51;
+  --theme-primary: rgb(var(--theme-primary-rgb));
+  --theme-bright: #FF6666;
+  --theme-dim: #880000;
+  --theme-glow: rgba(var(--theme-primary-rgb), 0.6);
+  --theme-bloom: rgba(var(--theme-primary-rgb), 0.2);
+}
+
+[data-theme='blue'] {
+  --theme-primary-rgb: 0, 170, 255;
+  --theme-primary: rgb(var(--theme-primary-rgb));
+  --theme-bright: #33CCFF;
+  --theme-dim: #004488;
+  --theme-glow: rgba(var(--theme-primary-rgb), 0.6);
+  --theme-bloom: rgba(var(--theme-primary-rgb), 0.2);
+}
+
+[data-theme='tan'] {
+  --theme-primary-rgb: 210, 180, 140;
+  --theme-primary: rgb(var(--theme-primary-rgb));
+  --theme-bright: #F5DEB3;
+  --theme-dim: #8B4513;
+  --theme-glow: rgba(var(--theme-primary-rgb), 0.6);
+  --theme-bloom: rgba(var(--theme-primary-rgb), 0.2);
+}
+
+[data-theme='pink'] {
+  --theme-primary-rgb: 255, 105, 180;
+  --theme-primary: rgb(var(--theme-primary-rgb));
+  --theme-bright: #FFB6C1;
+  --theme-dim: #C71585;
+  --theme-glow: rgba(var(--theme-primary-rgb), 0.6);
+  --theme-bloom: rgba(var(--theme-primary-rgb), 0.2);
+}
+
+[data-theme='purple'] {
+  --theme-primary-rgb: 191, 148, 255;
+  --theme-primary: rgb(var(--theme-primary-rgb));
+  --theme-bright: #DABFFF;
+  --theme-dim: #6A0DAD;
+  --theme-glow: rgba(var(--theme-primary-rgb), 0.6);
+  --theme-bloom: rgba(var(--theme-primary-rgb), 0.2);
 }
 
 /* ============================================
@@ -87,7 +143,7 @@
     0 0 40px var(--crt-phosphor-bloom);
 
   /* Subtle barrel distortion for CRT curvature */
-  border: 2px solid rgba(32, 194, 14, 0.15);
+  border: 2px solid var(--crt-phosphor-bloom);
 }
 
 /* Active flicker effect */
@@ -189,9 +245,9 @@
   background: linear-gradient(
     180deg,
     transparent 0%,
-    rgba(32, 194, 14, 0.1) 40%,
-    rgba(32, 194, 14, 0.15) 50%,
-    rgba(32, 194, 14, 0.1) 60%,
+    rgba(var(--crt-phosphor-rgb), 0.1) 40%,
+    rgba(var(--crt-phosphor-rgb), 0.15) 50%,
+    rgba(var(--crt-phosphor-rgb), 0.1) 60%,
     transparent 100%
   );
   animation: scan-roll 6s linear infinite;

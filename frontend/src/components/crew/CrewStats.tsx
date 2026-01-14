@@ -436,17 +436,17 @@ function getStatusColor(status: string): string {
 // =============================================================================
 
 const colors = {
-  primary: '#14F07D',
-  primaryBright: '#2BFF96',
-  primaryDim: '#0A7A3E',
-  primaryGlow: 'rgba(20, 240, 125, 0.35)',
+  primary: 'var(--crt-phosphor)',
+  primaryBright: 'var(--crt-phosphor-bright)',
+  primaryDim: 'var(--crt-phosphor-dim)',
+  primaryGlow: 'var(--crt-phosphor-glow)',
   background: '#0A0A0A',
   backgroundDark: '#050505',
-  panelBorder: '#0A7A3E',
+  panelBorder: 'var(--crt-phosphor-dim)',
   offlineBorder: '#333333',
   // Status colors
-  working: '#2BFF96',
-  idle: '#7CFFDD',
+  working: 'var(--crt-phosphor-bright)',
+  idle: 'var(--crt-phosphor)',
   blocked: '#FFB000',
   stuck: '#FF4444',
   offline: '#666666',

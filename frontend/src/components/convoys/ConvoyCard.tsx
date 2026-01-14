@@ -171,13 +171,13 @@ function TrackedIssueRow({ issue }: { issue: TrackedIssue }) {
 }
 
 const colors = {
-  primary: '#14F07D',
-  primaryBright: '#2BFF96',
-  primaryDim: '#0A7A3E',
+  primary: 'var(--crt-phosphor)',
+  primaryBright: 'var(--crt-phosphor-bright)',
+  primaryDim: 'var(--crt-phosphor-dim)',
   background: '#0A0A0A',
   backgroundDark: '#050505',
-  panelBorder: '#0A7A3E',
-  working: '#2BFF96',
+  panelBorder: 'var(--crt-phosphor-dim)',
+  working: 'var(--crt-phosphor-bright)',
   stuck: '#FF4444',
 } as const;
 
@@ -256,7 +256,7 @@ const styles = {
     color: colors.primaryDim,
   },
   metaDivider: {
-    color: 'rgba(10, 122, 62, 0.3)',
+    color: 'var(--crt-phosphor-glow)',
   },
   workerList: {
     display: 'flex',
@@ -265,7 +265,7 @@ const styles = {
   },
   workerChip: {
     color: colors.primaryBright,
-    backgroundColor: 'rgba(20, 240, 125, 0.1)',
+    backgroundColor: 'var(--crt-phosphor-glow)',
     padding: '0 4px',
     fontSize: '0.65rem',
   },
@@ -313,7 +313,7 @@ const styles = {
   },
   detailsArea: {
     padding: '12px 16px',
-    borderTop: `1px solid rgba(10, 122, 62, 0.3)`,
+    borderTop: `1px solid var(--crt-phosphor-dim)`,
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   detailsHeader: {

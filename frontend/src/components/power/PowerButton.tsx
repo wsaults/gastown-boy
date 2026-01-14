@@ -207,14 +207,14 @@ export function PowerButton({ className = '' }: PowerButtonProps) {
 }
 
 const colors = {
-  primary: '#14F07D',
-  primaryBright: '#2BFF96',
-  primaryGlow: 'rgba(20, 240, 125, 0.35)',
+  primary: 'var(--crt-phosphor)',
+  primaryBright: 'var(--crt-phosphor-bright)',
+  primaryGlow: 'var(--crt-phosphor-glow)',
   background: '#0A0A0A',
   backgroundDark: '#050505',
-  panelBorder: '#0A7A3E',
-  neutral: '#7CFFDD',
-  neutralGlow: 'rgba(124, 255, 221, 0.25)',
+  panelBorder: 'var(--crt-phosphor-dim)',
+  neutral: 'var(--crt-phosphor)',
+  neutralGlow: 'var(--crt-phosphor-glow)',
   warning: '#FFB000',
   warningDim: '#D38C00',
   warningGlow: 'rgba(255, 176, 0, 0.35)',

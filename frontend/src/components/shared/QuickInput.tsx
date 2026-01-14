@@ -91,11 +91,11 @@ export function QuickInput() {
 
 // Pip-Boy color palette
 const colors = {
-  primary: '#14F07D',
-  primaryDim: '#0A7A3E',
-  primaryGlow: '#14F07D40',
+  primary: 'var(--crt-phosphor)',
+  primaryDim: 'var(--crt-phosphor-dim)',
+  primaryGlow: 'var(--crt-phosphor-glow)',
   background: 'rgba(10, 10, 10, 0.95)', // Slightly transparent background
-  success: '#14F07D',
+  success: 'var(--crt-phosphor)',
   error: '#FF4444',
 } as const;
 

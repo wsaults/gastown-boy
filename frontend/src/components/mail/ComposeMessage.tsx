@@ -215,9 +215,9 @@ export function ComposeMessage({
 
 // Pip-Boy color palette (matching MailList/MailDetail)
 const colors = {
-  primary: '#14F07D',
-  primaryDim: '#0A7A3E',
-  primaryGlow: '#14F07D40',
+  primary: 'var(--crt-phosphor)',
+  primaryDim: 'var(--crt-phosphor-dim)',
+  primaryGlow: 'var(--crt-phosphor-glow)',
   background: '#0A0A0A',
   error: '#FF4444',
   errorGlow: '#FF444440',

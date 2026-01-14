@@ -6,11 +6,11 @@
  * Using authentic P1/P31 phosphor colors
  */
 @theme {
-  /* Authentic CRT Phosphor colors (P1 phosphor green) */
-  --color-pipboy-green: #20C20E;
-  --color-pipboy-green-dim: #0A5F07;
-  --color-pipboy-green-bright: #33FF33;
-  --color-pipboy-green-glow: rgba(32, 194, 14, 0.4);
+  /* Authentic CRT Phosphor colors (Dynamic) */
+  --color-pipboy-green: var(--crt-phosphor);
+  --color-pipboy-green-dim: var(--crt-phosphor-dim);
+  --color-pipboy-green-bright: var(--crt-phosphor-bright);
+  --color-pipboy-green-glow: var(--crt-phosphor-glow);
 
   /* Pip-Boy amber accent (for warnings/highlights - P3 phosphor) */
   --color-pipboy-amber: #FFB000;
@@ -30,15 +30,15 @@
 
   /* Terminal/panel backgrounds */
   --color-pipboy-panel: #030803;
-  --color-pipboy-panel-border: #0A3A0A;
+  --color-pipboy-panel-border: var(--crt-phosphor-dim);
 
   /* Fonts - VT323 for authentic terminal look */
   --font-mono: "VT323", "Share Tech Mono", "Courier New", monospace;
   --font-display: "Orbitron", "Share Tech Mono", monospace;
 
-  /* Shadows with green phosphor glow */
-  --shadow-pipboy: 0 0 8px rgba(32, 194, 14, 0.4), 0 0 16px rgba(32, 194, 14, 0.2);
-  --shadow-pipboy-strong: 0 0 12px rgba(32, 194, 14, 0.6), 0 0 24px rgba(32, 194, 14, 0.3), 0 0 36px rgba(32, 194, 14, 0.1);
+  /* Shadows with dynamic phosphor glow */
+  --shadow-pipboy: 0 0 8px var(--crt-phosphor-glow), 0 0 16px var(--crt-phosphor-bloom);
+  --shadow-pipboy-strong: 0 0 12px var(--crt-phosphor-glow), 0 0 24px var(--crt-phosphor-glow), 0 0 36px var(--crt-phosphor-bloom);
 
   /* Animation timing */
   --animate-flicker: flicker 0.15s infinite;
@@ -200,7 +200,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
-    border-bottom: 2px solid var(--color-pipboy-green-dim);
+    border-bottom: 2px solid var(--crt-phosphor-dim);
     position: relative;
     flex-shrink: 0;
   }
@@ -220,7 +220,7 @@
     transform: translateX(-50%);
     width: 60%;
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--color-pipboy-green), transparent);
+    background: linear-gradient(90deg, transparent, var(--crt-phosphor), transparent);
   }
 
   .app-header h1 {
@@ -258,27 +258,30 @@
 
   .app-nav {
     display: flex;
-    gap: 4px;
-    padding: 0.75rem 0;
+    gap: 8px;
+    padding: 1rem 0;
     justify-content: center;
     flex-shrink: 0;
   }
 
   .nav-tab {
-    background: var(--color-pipboy-panel);
-    border: 2px solid var(--color-pipboy-green-dim);
-    border-radius: 0;
-    color: var(--color-pipboy-green-dim);
-    padding: 0.95rem 2.5rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid var(--crt-phosphor-dim);
+    border-radius: 2px;
+    color: var(--crt-phosphor-dim);
+    padding: 0.75rem 2.5rem;
     font-family: var(--font-display);
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 1rem;
+    font-weight: 600;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: all 0.1s ease;
+    transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Hover scanline effect */
@@ -289,8 +292,8 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(32, 194, 14, 0.2), transparent);
-    transition: left 0.3s ease;
+    background: linear-gradient(90deg, transparent, var(--crt-phosphor-bloom), transparent);
+    transition: left 0.4s ease;
   }
 
   .nav-tab:hover::before {
@@ -298,25 +301,24 @@
   }
 
   .nav-tab:hover {
-    border-color: var(--color-pipboy-green);
-    color: var(--color-pipboy-green);
-    text-shadow: 0 0 8px var(--color-pipboy-green-glow);
+    border-color: var(--crt-phosphor);
+    color: var(--crt-phosphor);
+    background: rgba(var(--crt-phosphor-rgb), 0.05);
+    box-shadow: 0 0 10px var(--crt-phosphor-bloom);
   }
 
   .nav-tab.active {
-    background: linear-gradient(180deg, var(--color-pipboy-green-dim), var(--color-pipboy-panel));
-    border-color: var(--color-pipboy-green);
-    color: var(--color-pipboy-green-bright);
+    background: linear-gradient(180deg, rgba(var(--crt-phosphor-rgb), 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
+    border-color: var(--crt-phosphor);
+    color: var(--crt-phosphor-bright);
     box-shadow:
-      var(--shadow-pipboy),
-      inset 0 1px 0 rgba(51, 255, 51, 0.3);
-    text-shadow:
-      0 0 4px var(--color-pipboy-green),
-      0 0 8px var(--color-pipboy-green-glow);
+      0 0 15px var(--crt-phosphor-bloom),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    text-shadow: 0 0 8px var(--crt-phosphor-glow);
   }
 
   .nav-tab:active {
-    transform: scale(0.98);
+    transform: scale(0.96);
   }
 
   .app-content {

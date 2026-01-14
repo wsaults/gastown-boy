@@ -91,7 +91,7 @@ const styles = {
   state: {
     padding: '48px',
     textAlign: 'center',
-    color: '#0A7A3E',
+    color: 'var(--crt-phosphor-dim)',
     fontFamily: '"Share Tech Mono", monospace',
     letterSpacing: '0.1em',
   },

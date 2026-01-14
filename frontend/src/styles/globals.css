@@ -7,26 +7,6 @@
    CSS Custom Properties (Design Tokens)
    ============================================ */
 :root {
-  /* Pip-Boy Green Palette */
-  --pipboy-green: #14fe17;
-  --pipboy-green-dim: #0b8c0d;
-  --pipboy-green-bright: #7fff00;
-  --pipboy-green-glow: rgba(20, 254, 23, 0.4);
-
-  /* Background Colors */
-  --pipboy-bg: #0a0a0a;
-  --pipboy-bg-panel: #0d1a0d;
-  --pipboy-bg-input: #050805;
-
-  /* Text Colors */
-  --pipboy-text: #14fe17;
-  --pipboy-text-dim: #0b8c0d;
-  --pipboy-text-bright: #7fff00;
-
-  /* Accent Colors */
-  --pipboy-amber: #fe9614;
-  --pipboy-red: #fe1414;
-
   /* Effects */
   --scanline-opacity: 0.08;
   --flicker-intensity: 0.02;
@@ -56,6 +36,26 @@
   }
 
   body {
+    /* Pip-Boy Palette - Linked to CRT Screen Themes */
+    --pipboy-green: var(--crt-phosphor);
+    --pipboy-green-dim: var(--crt-phosphor-dim);
+    --pipboy-green-bright: var(--crt-phosphor-bright);
+    --pipboy-green-glow: var(--crt-phosphor-glow);
+
+    /* Background Colors */
+    --pipboy-bg: #0a0a0a;
+    --pipboy-bg-panel: #0d1a0d;
+    --pipboy-bg-input: #050805;
+
+    /* Text Colors */
+    --pipboy-text: var(--crt-phosphor);
+    --pipboy-text-dim: var(--crt-phosphor-dim);
+    --pipboy-text-bright: var(--crt-phosphor-bright);
+
+    /* Accent Colors */
+    --pipboy-amber: #fe9614;
+    --pipboy-red: #fe1414;
+
     font-family: var(--font-mono);
     background-color: var(--pipboy-bg);
     color: var(--pipboy-text);
@@ -76,7 +76,7 @@
 
   /* Phosphor glow effect */
   box-shadow:
-    inset 0 0 60px rgba(20, 254, 23, 0.1),
+    inset 0 0 60px var(--pipboy-green-glow),
     0 0 var(--glow-radius) var(--pipboy-green-glow);
 }
 

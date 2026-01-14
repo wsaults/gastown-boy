@@ -55,23 +55,23 @@ function getDisplayName(rig: string): string {
  * Each rig gets a distinct color within the Pip-Boy palette.
  */
 function getRigColor(rig: string): { main: string; glow: string } {
-  // Predefined colors for known rigs
+  // Predefined colors for known rigs - using theme variables for consistency
   const colorMap: Record<string, { main: string; glow: string }> = {
     gastown: {
-      main: '#7CFFDD',      // Cyan-ish green
-      glow: 'rgba(124, 255, 221, 0.4)',
+      main: 'var(--theme-bright)',
+      glow: 'var(--theme-bloom)',
     },
     gastown_boy: {
-      main: '#FFB000',      // Amber/orange
-      glow: 'rgba(255, 176, 0, 0.4)',
+      main: 'var(--theme-primary)',
+      glow: 'var(--theme-bloom)',
     },
     greenplace: {
-      main: '#B8FF7C',      // Lime green
-      glow: 'rgba(184, 255, 124, 0.4)',
+      main: 'var(--theme-bright)',
+      glow: 'var(--theme-bloom)',
     },
     beads: {
-      main: '#FF7CDD',      // Pink/magenta
-      glow: 'rgba(255, 124, 221, 0.4)',
+      main: 'var(--theme-dim)',
+      glow: 'var(--theme-bloom)',
     },
   };
 

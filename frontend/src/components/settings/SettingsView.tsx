@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, type CSSProperties } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { ThemeId } from '../../App';
 
 interface TunnelStatusData {
   state: 'stopped' | 'starting' | 'running' | 'error';
@@ -15,11 +16,31 @@ interface ApiResponse<T> {
 
 type TunnelStatus = 'loading' | 'connected' | 'not-running' | 'starting' | 'error';
 
+interface ThemeOption {
+  id: ThemeId;
+  label: string;
+  color: string;
+}
+
+const THEMES: ThemeOption[] = [
+  { id: 'green', label: 'GAS-BOY', color: '#20C20E' },
+  { id: 'red', label: 'BLOOD-BAG', color: '#FF3333' },
+  { id: 'blue', label: 'VAULT-TEC', color: '#00AAFF' },
+  { id: 'tan', label: 'WASTELAND', color: '#D2B48C' },
+  { id: 'pink', label: 'PINK-MIST', color: '#FF69B4' },
+  { id: 'purple', label: 'RAD-STORM', color: '#BF94FF' },
+];
+
+interface SettingsViewProps {
+  theme: ThemeId;
+  setTheme: (theme: ThemeId) => void;
+}
+
 /**
  * Settings view component.
  * Displays system settings and connection info including the public URL for remote access.
  */
-export function SettingsView() {
+export function SettingsView({ theme, setTheme }: SettingsViewProps) {
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [tunnelStatus, setTunnelStatus] = useState<TunnelStatus>('loading');
@@ -27,7 +48,7 @@ export function SettingsView() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isToggling, setIsToggling] = useState(false);
 
-  // Check if we're already on ngrok
+  // Fetch tunnel status from backend
   const currentOrigin = window.location.origin;
   const isOnNgrok = currentOrigin.includes('ngrok');
 
@@ -255,7 +276,7 @@ export function SettingsView() {
                       value={ngrokUrl}
                       size={256}
                       bgColor="#0A0A0A"
-                      fgColor="#14F07D"
+                      fgColor={colors.primary}
                       level="M"
                     />
                   </div>
@@ -292,16 +313,41 @@ export function SettingsView() {
         )}
       </section>
 
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>SYSTEM THEME</h2>
+        <div style={styles.themeGrid}>
+          {THEMES.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              style={{
+                ...styles.themeButton,
+                borderColor: theme === t.id ? 'var(--crt-phosphor)' : 'var(--crt-phosphor-dim)',
+                backgroundColor: theme === t.id ? 'var(--crt-phosphor-glow)' : 'transparent',
+              }}
+              onClick={() => setTheme(t.id)}
+            >
+              <div style={{ ...styles.themePreview, backgroundColor: t.color }} />
+              <span style={{ 
+                ...styles.themeLabel,
+                color: theme === t.id ? 'var(--crt-phosphor)' : 'var(--crt-phosphor-dim)'
+              }}>
+                {t.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
 
 const colors = {
-  primary: '#14F07D',
-  primaryDim: '#0A7A3E',
-  primaryGlow: '#14F07D40',
+  primary: 'var(--crt-phosphor)',
+  primaryDim: 'var(--crt-phosphor-dim)',
+  primaryGlow: 'var(--crt-phosphor-glow)',
   background: '#0A0A0A',
-  amber: '#FFAA00',
+  amber: 'var(--crt-amber)',
   red: '#FF4444',
 } as const;
 
@@ -312,6 +358,8 @@ const styles = {
     color: colors.primary,
     maxWidth: '100%',
     boxSizing: 'border-box',
+    height: '100%',
+    overflowY: 'auto',
   } as CSSProperties,
 
   section: {
@@ -507,36 +555,35 @@ const styles = {
     fontStyle: 'italic',
   },
 
-  instructions: {
-    marginTop: '1rem',
-    padding: '0.75rem',
-    background: colors.background,
-    border: `1px dashed ${colors.primaryDim}`,
-    borderRadius: '2px',
+  themeGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+    gap: '12px',
   },
 
-  instructionText: {
+  themeButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '8px',
+    border: '1px solid',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    background: 'transparent',
+  } as CSSProperties,
+
+  themePreview: {
+    width: '20px',
+    height: '20px',
+    borderRadius: '2px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+  },
+
+  themeLabel: {
     fontSize: '0.8rem',
-    color: colors.primaryDim,
-    margin: '0 0 0.5rem 0',
-  },
-
-  codeBlock: {
-    display: 'block',
-    padding: '0.5rem',
-    background: '#000',
-    border: `1px solid ${colors.primaryDim}`,
-    borderRadius: '2px',
-    fontSize: '0.85rem',
-    color: colors.primary,
-  },
-
-  errorText: {
-    fontSize: '0.7rem',
-    color: colors.primaryDim,
-    marginTop: '0.5rem',
-    marginBottom: 0,
-    opacity: 0.7,
+    fontWeight: 'bold',
+    letterSpacing: '0.05em',
   },
 
   qrOverlay: {

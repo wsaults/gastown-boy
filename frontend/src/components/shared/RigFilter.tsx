@@ -67,9 +67,9 @@ export function useRigSync(rigs: Array<{ name: string }> | undefined) {
 
 // Pip-Boy color palette
 const colors = {
-  primary: '#14F07D',
-  primaryDim: '#0A7A3E',
-  primaryGlow: 'rgba(20, 240, 125, 0.35)',
+  primary: 'var(--crt-phosphor)',
+  primaryDim: 'var(--crt-phosphor-dim)',
+  primaryGlow: 'var(--crt-phosphor-glow)',
   background: '#050805',
   backgroundHover: '#0A1A0A',
 } as const;
