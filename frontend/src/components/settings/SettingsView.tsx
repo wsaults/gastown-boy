@@ -1,4 +1,16 @@
-import { useState, useCallback, type CSSProperties } from 'react';
+import { useState, useCallback, useEffect, type CSSProperties } from 'react';
+
+interface NgrokTunnel {
+  public_url: string;
+  proto: string;
+  config: { addr: string };
+}
+
+interface NgrokApiResponse {
+  tunnels: NgrokTunnel[];
+}
+
+type TunnelStatus = 'loading' | 'connected' | 'not-running' | 'error';
 
 /**
  * Settings view component.
@@ -6,18 +18,70 @@ import { useState, useCallback, type CSSProperties } from 'react';
  */
 export function SettingsView() {
   const [copied, setCopied] = useState(false);
-  const currentUrl = window.location.origin;
-  const isNgrok = currentUrl.includes('ngrok');
+  const [tunnelStatus, setTunnelStatus] = useState<TunnelStatus>('loading');
+  const [ngrokUrl, setNgrokUrl] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Check if we're already on ngrok
+  const currentOrigin = window.location.origin;
+  const isOnNgrok = currentOrigin.includes('ngrok');
+
+  // Fetch ngrok tunnel info
+  useEffect(() => {
+    if (isOnNgrok) {
+      // Already accessed via ngrok, use current URL
+      setNgrokUrl(currentOrigin);
+      setTunnelStatus('connected');
+      return;
+    }
+
+    // Try to fetch from ngrok local API
+    const fetchNgrokUrl = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:4040/api/tunnels', {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = (await response.json()) as NgrokApiResponse;
+
+        // Find the https tunnel (prefer https over http)
+        const httpsTunnel = data.tunnels.find((t) => t.proto === 'https');
+        const httpTunnel = data.tunnels.find((t) => t.proto === 'http');
+        const tunnel = httpsTunnel ?? httpTunnel;
+
+        if (tunnel) {
+          setNgrokUrl(tunnel.public_url);
+          setTunnelStatus('connected');
+        } else {
+          setTunnelStatus('not-running');
+          setErrorMsg('No tunnels found');
+        }
+      } catch (err) {
+        // ngrok not running or not reachable
+        setTunnelStatus('not-running');
+        setErrorMsg(err instanceof Error ? err.message : 'Failed to connect');
+      }
+    };
+
+    fetchNgrokUrl();
+  }, [isOnNgrok, currentOrigin]);
+
+  const displayUrl = ngrokUrl ?? currentOrigin;
 
   const handleCopy = useCallback(async () => {
+    const urlToCopy = ngrokUrl ?? currentOrigin;
     try {
-      await navigator.clipboard.writeText(currentUrl);
+      await navigator.clipboard.writeText(urlToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback for browsers that don't support clipboard API
       const input = document.createElement('input');
-      input.value = currentUrl;
+      input.value = urlToCopy;
       document.body.appendChild(input);
       input.select();
       document.execCommand('copy');
@@ -25,39 +89,91 @@ export function SettingsView() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [currentUrl]);
+  }, [ngrokUrl, currentOrigin]);
+
+  const getStatusText = () => {
+    switch (tunnelStatus) {
+      case 'loading':
+        return '◐ CHECKING...';
+      case 'connected':
+        return '● TUNNEL ACTIVE';
+      case 'not-running':
+        return '○ TUNNEL NOT RUNNING';
+      case 'error':
+        return '✗ ERROR';
+    }
+  };
+
+  const getStatusStyle = () => {
+    switch (tunnelStatus) {
+      case 'loading':
+        return styles.statusLoading;
+      case 'connected':
+        return styles.statusConnected;
+      case 'not-running':
+      case 'error':
+        return styles.statusDisconnected;
+    }
+  };
 
   return (
     <div style={styles.container}>
       <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>CONNECTION</h2>
+        <h2 style={styles.sectionTitle}>REMOTE ACCESS</h2>
 
         <div style={styles.field}>
-          <span style={styles.label}>STATUS:</span>
-          <span style={isNgrok ? styles.statusRemote : styles.statusLocal}>
-            {isNgrok ? '● REMOTE (NGROK)' : '● LOCAL'}
-          </span>
+          <span style={styles.label}>TUNNEL:</span>
+          <span style={getStatusStyle()}>{getStatusText()}</span>
         </div>
 
+        {tunnelStatus === 'connected' && ngrokUrl && (
+          <>
+            <div style={styles.field}>
+              <span style={styles.label}>PUBLIC URL:</span>
+              <div style={styles.urlContainer}>
+                <code style={styles.urlText}>{displayUrl}</code>
+                <button
+                  type="button"
+                  style={styles.copyButton}
+                  onClick={handleCopy}
+                >
+                  {copied ? '✓ COPIED' : 'COPY'}
+                </button>
+              </div>
+            </div>
+
+            <p style={styles.hint}>
+              Share this URL to access GASTOWN-BOY from other devices.
+            </p>
+          </>
+        )}
+
+        {tunnelStatus === 'not-running' && (
+          <div style={styles.instructions}>
+            <p style={styles.instructionText}>
+              To enable remote access, start the ngrok tunnel:
+            </p>
+            <code style={styles.codeBlock}>./scripts/tunnel.sh</code>
+            {errorMsg && (
+              <p style={styles.errorText}>Debug: {errorMsg}</p>
+            )}
+          </div>
+        )}
+
+        {tunnelStatus === 'loading' && (
+          <p style={styles.hint}>Checking for ngrok tunnel...</p>
+        )}
+      </section>
+
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>LOCAL ACCESS</h2>
+
         <div style={styles.field}>
-          <span style={styles.label}>PUBLIC URL:</span>
+          <span style={styles.label}>LOCAL URL:</span>
           <div style={styles.urlContainer}>
-            <code style={styles.urlText}>{currentUrl}</code>
-            <button
-              type="button"
-              style={styles.copyButton}
-              onClick={handleCopy}
-            >
-              {copied ? '✓ COPIED' : 'COPY'}
-            </button>
+            <code style={styles.urlText}>{currentOrigin}</code>
           </div>
         </div>
-
-        <p style={styles.hint}>
-          {isNgrok
-            ? 'Share this URL to access GASTOWN-BOY from other devices.'
-            : 'Start ngrok tunnel for remote access: ./scripts/tunnel.sh'}
-        </p>
       </section>
 
       <section style={styles.section}>
@@ -83,6 +199,7 @@ const colors = {
   primaryGlow: '#14F07D40',
   background: '#0A0A0A',
   amber: '#FFAA00',
+  red: '#FF4444',
 } as const;
 
 const styles = {
@@ -125,13 +242,17 @@ const styles = {
     color: colors.primary,
   },
 
-  statusLocal: {
-    color: colors.primary,
+  statusLoading: {
+    color: colors.primaryDim,
   },
 
-  statusRemote: {
+  statusConnected: {
     color: colors.amber,
     textShadow: `0 0 8px ${colors.amber}`,
+  },
+
+  statusDisconnected: {
+    color: colors.primaryDim,
   },
 
   urlContainer: {
@@ -171,6 +292,38 @@ const styles = {
     marginTop: '1rem',
     marginBottom: 0,
     fontStyle: 'italic',
+  },
+
+  instructions: {
+    marginTop: '1rem',
+    padding: '0.75rem',
+    background: colors.background,
+    border: `1px dashed ${colors.primaryDim}`,
+    borderRadius: '2px',
+  },
+
+  instructionText: {
+    fontSize: '0.8rem',
+    color: colors.primaryDim,
+    margin: '0 0 0.5rem 0',
+  },
+
+  codeBlock: {
+    display: 'block',
+    padding: '0.5rem',
+    background: '#000',
+    border: `1px solid ${colors.primaryDim}`,
+    borderRadius: '2px',
+    fontSize: '0.85rem',
+    color: colors.primary,
+  },
+
+  errorText: {
+    fontSize: '0.7rem',
+    color: colors.primaryDim,
+    marginTop: '0.5rem',
+    marginBottom: 0,
+    opacity: 0.7,
   },
 } satisfies Record<string, CSSProperties>;
 
