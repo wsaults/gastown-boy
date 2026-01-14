@@ -196,19 +196,23 @@ const styles = {
   container: {
     display: 'flex',
     flexDirection: 'column',
+    flex: 1,
     height: '100%',
+    minHeight: 0,
     fontFamily: '"Share Tech Mono", "Courier New", monospace',
     color: colors.primary,
     backgroundColor: colors.background,
+    overflow: 'hidden',
   },
 
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '12px 16px',
+    padding: '8px 12px',
     borderBottom: `1px solid ${colors.primaryDim}`,
     backgroundColor: colors.backgroundDark,
+    flexShrink: 0,
   },
 
   headerLeft: {
@@ -272,35 +276,38 @@ const styles = {
   splitView: {
     display: 'flex',
     flex: 1,
+    minHeight: 0,
     overflow: 'hidden',
   },
 
   listPanel: {
-    width: '340px',
-    minWidth: '280px',
-    maxWidth: '400px',
+    width: '300px',
+    minWidth: '200px',
+    maxWidth: '350px',
     display: 'flex',
     flexDirection: 'column',
     borderRight: `1px solid ${colors.primaryDim}`,
+    minHeight: 0,
   },
 
   panelHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '8px 12px',
+    padding: '6px 10px',
     borderBottom: `1px solid ${colors.primaryDim}`,
     backgroundColor: colors.backgroundDark,
+    flexShrink: 0,
   },
 
   panelTitle: {
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',
     letterSpacing: '0.1em',
     color: colors.primaryDim,
   },
 
   messageCount: {
-    fontSize: '0.7rem',
+    fontSize: '0.65rem',
     color: colors.primaryDim,
     opacity: 0.7,
   },
@@ -308,12 +315,14 @@ const styles = {
   listContent: {
     flex: 1,
     overflow: 'auto',
-    padding: '8px',
+    padding: '6px',
+    minHeight: 0,
   },
 
   divider: {
     width: '1px',
     backgroundColor: colors.primaryDim,
+    flexShrink: 0,
   },
 
   detailPanel: {
@@ -321,7 +330,8 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     overflow: 'auto',
-    padding: '16px',
+    padding: '12px',
+    minHeight: 0,
   },
 } satisfies Record<string, CSSProperties>;
 

@@ -433,12 +433,15 @@ const styles = {
   container: {
     border: `1px solid ${colors.panelBorder}`,
     backgroundColor: colors.background,
-    padding: '16px',
+    padding: '12px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '12px',
     fontFamily: '"Share Tech Mono", "Courier New", monospace',
     color: colors.primary,
+    flex: 1,
+    minHeight: 0,
+    overflow: 'hidden',
   },
 
   header: {
@@ -446,7 +449,8 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottom: `1px solid ${colors.panelBorder}`,
-    paddingBottom: '12px',
+    paddingBottom: '10px',
+    flexShrink: 0,
   },
 
   title: {
@@ -482,8 +486,10 @@ const styles = {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
-    minHeight: '300px',
+    gap: '16px',
+    minHeight: 0,
+    overflow: 'auto',
+    paddingRight: '4px',
   },
 
   loadingState: {
@@ -774,7 +780,8 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTop: `1px solid ${colors.panelBorder}`,
-    paddingTop: '12px',
+    paddingTop: '10px',
+    flexShrink: 0,
   },
 
   stats: {

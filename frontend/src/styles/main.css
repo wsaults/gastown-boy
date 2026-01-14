@@ -186,26 +186,28 @@
   .app-container {
     display: flex;
     flex-direction: column;
-    min-height: calc(100vh - 112px); /* Account for CRT bezel padding */
+    flex: 1;
+    height: 100%;
     max-width: 100%;
     margin: 0;
     padding: 0;
+    overflow: hidden;
   }
 
   .app-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 1rem 1rem;
+    padding: 0.75rem 1rem;
     border-bottom: 2px solid var(--color-pipboy-green-dim);
-    margin-bottom: 1rem;
     position: relative;
+    flex-shrink: 0;
   }
 
   .header-controls {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
   }
 
   /* Decorative header line */
@@ -222,9 +224,9 @@
 
   .app-header h1 {
     font-family: var(--font-display);
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     font-weight: 500;
-    letter-spacing: 0.4em;
+    letter-spacing: 0.3em;
     text-transform: uppercase;
     color: var(--color-pipboy-green-bright);
     text-shadow:
@@ -256,9 +258,9 @@
   .app-nav {
     display: flex;
     gap: 4px;
-    margin-bottom: 1.5rem;
-    padding: 0;
+    padding: 0.5rem 0;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   .nav-tab {
@@ -266,11 +268,11 @@
     border: 2px solid var(--color-pipboy-green-dim);
     border-radius: 0;
     color: var(--color-pipboy-green-dim);
-    padding: 1.5rem 3rem;
+    padding: 0.75rem 2rem;
     font-family: var(--font-display);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.1s ease;
@@ -320,13 +322,15 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0; /* Allow flex children to shrink */
+    min-height: 0; /* Critical: Allow flex children to shrink */
+    overflow: hidden;
   }
 
   /* Ensure child views fill the content area */
   .app-content > * {
     flex: 1;
     min-height: 0;
+    overflow: hidden;
   }
 
   .tab-panel {
@@ -345,5 +349,80 @@
     color: var(--color-pipboy-green-dim);
     font-size: 0.875rem;
     margin: 0 0 1rem 0;
+  }
+}
+
+/* Responsive App Layout */
+@layer components {
+  /* Tablet */
+  @media (max-width: 1024px) {
+    .app-header h1 {
+      font-size: 1.5rem;
+      letter-spacing: 0.2em;
+    }
+
+    .nav-tab {
+      padding: 0.6rem 1.5rem;
+      font-size: 0.8rem;
+    }
+
+    .header-controls {
+      gap: 0.75rem;
+    }
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 0.5rem 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .app-header h1 {
+      font-size: 1.25rem;
+      letter-spacing: 0.15em;
+    }
+
+    .header-controls {
+      gap: 0.5rem;
+    }
+
+    .app-nav {
+      padding: 0.25rem 0;
+      gap: 2px;
+    }
+
+    .nav-tab {
+      padding: 0.5rem 1rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+    }
+  }
+
+  /* Small mobile */
+  @media (max-width: 480px) {
+    .app-header {
+      padding: 0.4rem 0.5rem;
+    }
+
+    .app-header h1 {
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+    }
+
+    .header-controls {
+      gap: 0.25rem;
+    }
+
+    .nav-tab {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+    }
+
+    .app-nav {
+      flex-wrap: wrap;
+    }
   }
 }
