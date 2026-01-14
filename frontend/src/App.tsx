@@ -51,9 +51,27 @@ function App() {
           </nav>
 
           <main className="app-content">
-            {activeTab === "mail" && <MailView />}
-            {activeTab === "crew" && <CrewStats />}
-            {activeTab === "settings" && <SettingsView />}
+            <section
+              className="tab-view"
+              hidden={activeTab !== "mail"}
+              aria-hidden={activeTab !== "mail"}
+            >
+              <MailView />
+            </section>
+            <section
+              className="tab-view"
+              hidden={activeTab !== "crew"}
+              aria-hidden={activeTab !== "crew"}
+            >
+              <CrewStats />
+            </section>
+            <section
+              className="tab-view"
+              hidden={activeTab !== "settings"}
+              aria-hidden={activeTab !== "settings"}
+            >
+              <SettingsView />
+            </section>
           </main>
         </div>
       </CRTScreen>

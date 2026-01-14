@@ -333,6 +333,15 @@
     overflow: hidden;
   }
 
+  .tab-view {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tab-view[hidden] {
+    display: none;
+  }
+
   .tab-panel {
     padding: 1rem 0;
   }
