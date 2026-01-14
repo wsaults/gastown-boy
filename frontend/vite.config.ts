@@ -14,6 +14,11 @@ export default defineConfig({
         target: "http://localhost:3001",
         changeOrigin: true,
       },
+      "/ngrok-api": {
+        target: "http://127.0.0.1:4040",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ngrok-api/, ""),
+      },
     },
   },
   test: {

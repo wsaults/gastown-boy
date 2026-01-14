@@ -35,10 +35,10 @@ export function SettingsView() {
       return;
     }
 
-    // Try to fetch from ngrok local API
+    // Try to fetch from ngrok local API via Vite proxy (avoids CORS)
     const fetchNgrokUrl = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:4040/api/tunnels', {
+        const response = await fetch('/ngrok-api/api/tunnels', {
           method: 'GET',
         });
 
