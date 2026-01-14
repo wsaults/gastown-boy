@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { agentsRouter, mailRouter, powerRouter, statusRouter, tunnelRouter } from "./routes/index.js";
+import { agentsRouter, convoysRouter, mailRouter, powerRouter, statusRouter, tunnelRouter } from "./routes/index.js";
 import { logInfo } from "./utils/index.js";
 
 const app = express();
@@ -24,6 +24,7 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use("/api/convoys", convoysRouter);
 app.use("/api/agents", agentsRouter);
 app.use("/api/mail", mailRouter);
 app.use("/api/power", powerRouter);

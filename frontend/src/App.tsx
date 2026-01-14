@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ConvoysView } from "./components/convoys/ConvoysView";
 import { CrewStats } from "./components/crew/CrewStats";
 import { MailView } from "./components/mail/MailView";
 import { NuclearPowerButton } from "./components/power/NuclearPowerButton";
@@ -8,7 +9,7 @@ import { QuickInput } from "./components/shared/QuickInput";
 import { RigFilter } from "./components/shared/RigFilter";
 import { RigProvider } from "./contexts/RigContext";
 
-type TabId = "mail" | "crew" | "settings";
+type TabId = "mail" | "convoys" | "crew" | "settings";
 
 interface Tab {
   id: TabId;
@@ -18,6 +19,7 @@ interface Tab {
 
 const TABS: Tab[] = [
   { id: "mail", label: "MAIL", icon: "📧" },
+  { id: "convoys", label: "CONVOYS", icon: "🚚" },
   { id: "crew", label: "CREW", icon: "👥" },
   { id: "settings", label: "SETTINGS", icon: "⚙️" },
 ];
@@ -30,7 +32,7 @@ function App() {
       <CRTScreen showBootSequence={true} enableFlicker={true} enableScanlines={true} enableNoise={true}>
         <div className="app-container">
           <header className="app-header">
-            <h1>GASTOWN-BOY</h1>
+            <h1 className="crt-glow">GASTOWN-BOY</h1>
             <div className="header-controls">
               <RigFilter />
               <NuclearPowerButton />
@@ -58,6 +60,13 @@ function App() {
               aria-hidden={activeTab !== "mail"}
             >
               <MailView />
+            </section>
+            <section
+              className="tab-view"
+              hidden={activeTab !== "convoys"}
+              aria-hidden={activeTab !== "convoys"}
+            >
+              <ConvoysView />
             </section>
             <section
               className="tab-view"

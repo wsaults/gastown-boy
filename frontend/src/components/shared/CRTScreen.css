@@ -115,10 +115,12 @@
   position: relative;
   overflow: hidden;
 
-  /* Phosphor glow effect */
-  filter: contrast(1.1) brightness(1.05);
+  /* Phosphor glow effect - subtle contrast/brightness boost */
+  filter: contrast(1.05) brightness(1.05);
+}
 
-  /* Subtle color bleed for phosphor persistence */
+/* Specific class for elements that should have a retro glow (Headers, etc) */
+.crt-glow {
   text-shadow:
     0 0 2px var(--crt-phosphor),
     0 0 4px var(--crt-phosphor-glow);
@@ -138,8 +140,8 @@
   font-family: 'VT323', 'Share Tech Mono', monospace;
   overflow: hidden;
 
-  /* Text rendering for CRT look */
-  -webkit-font-smoothing: none;
+  /* Improved text rendering for better legibility while keeping retro feel */
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
@@ -158,13 +160,13 @@
   pointer-events: none;
   z-index: 10;
 
-  /* Dense scanlines */
+  /* Subtle scanlines - reduced opacity for better legibility of small text */
   background: repeating-linear-gradient(
     0deg,
     transparent 0px,
     transparent 1px,
-    rgba(0, 0, 0, 0.3) 1px,
-    rgba(0, 0, 0, 0.3) 2px
+    rgba(0, 0, 0, 0.15) 1px,
+    rgba(0, 0, 0, 0.15) 2px
   );
 
   /* Slight movement */
@@ -374,22 +376,21 @@
 @keyframes chromatic-shift {
   0%, 100% {
     text-shadow:
-      -0.5px 0 rgba(255, 0, 0, 0.1),
-      0.5px 0 rgba(0, 255, 255, 0.1),
+      -0.5px 0 rgba(255, 0, 0, 0.15),
+      0.5px 0 rgba(0, 255, 255, 0.15),
       0 0 2px var(--crt-phosphor),
       0 0 4px var(--crt-phosphor-glow);
   }
   50% {
     text-shadow:
-      -0.3px 0 rgba(255, 0, 0, 0.08),
-      0.3px 0 rgba(0, 255, 255, 0.08),
+      -0.3px 0 rgba(255, 0, 0, 0.1),
+      0.3px 0 rgba(0, 255, 255, 0.1),
       0 0 2px var(--crt-phosphor),
       0 0 4px var(--crt-phosphor-glow);
   }
 }
 
-.crt-content h1,
-.crt-content h2 {
+.crt-glow {
   animation: chromatic-shift 4s ease-in-out infinite;
 }
 

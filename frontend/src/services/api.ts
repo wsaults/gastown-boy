@@ -10,6 +10,7 @@ import type {
   SendMessageRequest,
   PaginatedResponse,
   PowerState,
+  Convoy,
 } from '../types';
 
 // =============================================================================
@@ -188,6 +189,15 @@ export const api = {
 
     async check(): Promise<{ healthy: boolean; issues: string[] }> {
       return apiFetch('/agents/health');
+    },
+  },
+
+  /**
+   * Convoy operations.
+   */
+  convoys: {
+    async list(): Promise<Convoy[]> {
+      return apiFetch('/convoys');
     },
   },
 };

@@ -1,7 +1,7 @@
 import { existsSync } from "fs";
 import { join, basename, resolve, dirname } from "path";
-import { execBd, resolveBeadsDir, type BeadsIssue } from "./bd-client.js";
-import { listRigNames } from "./gastown-workspace.js";
+import { execBd, type BeadsIssue } from "./bd-client.js";
+import { listAllBeadsDirs } from "./gastown-workspace.js";
 import {
   addressToIdentity,
   parseAgentBeadId,
@@ -84,77 +84,15 @@ export async function collectAgentSnapshot(
 ): Promise<AgentSnapshot> {
   const sessions = await listTmuxSessions();
   const foundIssues: { issue: BeadsIssue; sourceRig: string | null }[] = [];
-  const errors: string[] = [];
-  const scannedPaths = new Set<string>();
+  const beadsDirs = await listAllBeadsDirs();
 
-  const townBeadsDir = resolveBeadsDir(townRoot);
-  const townAgents = await fetchAgents(townRoot, townBeadsDir);
-  scannedPaths.add(resolve(townRoot));
-
-  if (townAgents.length > 0) {
-    foundIssues.push(...townAgents.map((issue) => ({ issue, sourceRig: null })));
-  } else {
-    // We only treat empty town agents as an error if we found NOTHING at all later
-    // But for now, let's keep the existing error semantics roughly similar
-    // errors.push("Failed to list town agent beads"); 
-    // Actually, fetchAgents suppresses errors, so we might miss the error message.
-    // However, getting 0 agents from town root is suspicious.
+  for (const dirInfo of beadsDirs) {
+    const agents = await fetchAgents(dirInfo.workDir, dirInfo.path);
+    foundIssues.push(...agents.map((issue) => ({ issue, sourceRig: dirInfo.rig })));
   }
 
-  const rigNames = await listRigNames(townRoot);
-  for (const rigName of rigNames) {
-    const rigPath = join(townRoot, rigName);
-    if (!existsSync(rigPath)) continue;
-    scannedPaths.add(resolve(rigPath));
-    const rigAgents = await fetchAgents(rigPath, resolveBeadsDir(rigPath));
-    foundIssues.push(...rigAgents.map((issue) => ({ issue, sourceRig: rigName })));
-  }
-
-  // Scan extra rigs from environment variable GT_EXTRA_RIGS
-  // Format: "path/to/rig1,path/to/rig2"
-  const extraRigs = process.env["GT_EXTRA_RIGS"];
-  if (extraRigs) {
-    const paths = extraRigs.split(",").map((p) => p.trim()).filter(Boolean);
-    for (const p of paths) {
-      const rigPath = resolve(process.cwd(), p);
-      if (!existsSync(rigPath) || scannedPaths.has(rigPath)) continue;
-      
-      scannedPaths.add(rigPath);
-      const rigName = basename(rigPath);
-      
-      // Try local .beads first
-      let agents = await fetchAgents(rigPath, resolveBeadsDir(rigPath));
-
-      // Fallback: try using town beads if local failed (e.g. no local DB)
-      if (agents.length === 0) {
-        agents = await fetchAgents(rigPath, townBeadsDir);
-      }
-      
-      foundIssues.push(...agents.map((issue) => ({ issue, sourceRig: rigName })));
-    }
-  }
-
-  // Heuristic: search up from CWD for a .beads directory to handle cases where
-  // we are running inside a rig directory that isn't known to the town (e.g.
-  // missing config or running in a detached rig).
-  let current = process.cwd();
-  while (true) {
-    if (scannedPaths.has(resolve(current))) break;
-
-    if (existsSync(join(current, ".beads"))) {
-      const rigName = basename(current);
-      const agents = await fetchAgents(current, resolveBeadsDir(current));
-      foundIssues.push(...agents.map((issue) => ({ issue, sourceRig: rigName })));
-      break; // Stop after finding the closest beads dir
-    }
-
-    const parent = dirname(current);
-    if (parent === current) break;
-    current = parent;
-  }
-
-  if (foundIssues.length === 0 && errors.length > 0) {
-    throw new Error(errors[0]);
+  if (foundIssues.length === 0) {
+    // If no agents found at all, we'll rely on tmux synthesis later
   }
 
   const identities = new Set(extraIdentities.map(addressToIdentity));

@@ -117,7 +117,7 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
   return (
     <section style={styles.container} className={className}>
       <header style={styles.header}>
-        <h2 style={styles.title}>CREW MANIFEST</h2>
+        <h2 style={styles.title} className="crt-glow">CREW MANIFEST</h2>
         <div style={styles.syncStatus}>
           <span style={styles.syncIndicator}>
             {loading ? '◌' : error ? '✕' : '●'}
@@ -213,7 +213,7 @@ function TownSection({ agents, gridStyle }: TownSectionProps) {
     <div style={styles.section}>
       <div style={styles.sectionHeader}>
         <span style={styles.sectionIcon}>◈</span>
-        <span style={styles.sectionTitle}>TOWN COMMAND</span>
+        <span style={styles.sectionTitle} className="crt-glow">TOWN COMMAND</span>
         <span style={styles.sectionLine} />
       </div>
       <div style={gridStyle}>
@@ -249,7 +249,7 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle }: RigSection
     <div style={styles.section}>
       <div style={styles.sectionHeader}>
         <span style={styles.sectionIcon}>◇</span>
-        <span style={styles.sectionTitle}>RIG: {name.toUpperCase()}</span>
+        <span style={styles.sectionTitle} className="crt-glow">RIG: {name.toUpperCase()}</span>
         <span style={styles.rigStats}>
           {runningInRig}/{totalInRig} ACTIVE
         </span>
@@ -276,7 +276,7 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle }: RigSection
         <div style={styles.subsection}>
           <div style={styles.subsectionHeader}>
             <span style={styles.subsectionIcon}>├─</span>
-            <span style={styles.subsectionTitle}>INFRASTRUCTURE</span>
+            <span style={styles.subsectionTitle} className="crt-glow">INFRASTRUCTURE</span>
           </div>
           <div style={infraGridStyle}>
             {agents.witness && <AgentCard agent={agents.witness} icon="👁" />}
@@ -289,7 +289,7 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle }: RigSection
       <div style={styles.subsection}>
         <div style={styles.subsectionHeader}>
           <span style={styles.subsectionIcon}>└─</span>
-          <span style={styles.subsectionTitle}>POLECATS</span>
+          <span style={styles.subsectionTitle} className="crt-glow">POLECATS</span>
           <span style={styles.polecatCount}>
             {agents.polecats.length > 0
               ? `${agents.polecats.filter(p => p.status !== 'offline').length} ACTIVE`
@@ -482,7 +482,6 @@ const styles = {
     letterSpacing: '0.2em',
     textTransform: 'uppercase',
     color: colors.primary,
-    textShadow: `0 0 10px ${colors.primaryGlow}`,
   },
 
   syncStatus: {

@@ -20,6 +20,7 @@ export interface BeadsIssue {
   agent_state?: string | null;
   pinned?: boolean;
   wisp?: boolean;
+  dependencies?: { issue_id: string; depends_on_id: string; type: string }[];
 }
 
 export interface BdResult<T = unknown> {
