@@ -88,7 +88,6 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
     data: agents,
     loading,
     error,
-    refresh,
     lastUpdated,
   } = usePolling<CrewMember[]>(() => api.agents.list(), {
     interval: 5000,
@@ -154,14 +153,6 @@ export function CrewStats({ className = '' }: CrewStatsProps) {
       </div>
 
       <footer style={styles.footer}>
-        <button
-          type="button"
-          style={styles.refreshButton}
-          onClick={() => void refresh()}
-          disabled={loading}
-        >
-          {loading ? '◌ REFRESH' : '↻ REFRESH'}
-        </button>
         <div style={styles.stats}>
           <span style={styles.statItem}>
             <span style={styles.statLabel}>AGENTS</span>
@@ -764,19 +755,6 @@ const styles = {
     alignItems: 'center',
     borderTop: `1px solid ${colors.panelBorder}`,
     paddingTop: '12px',
-  },
-
-  refreshButton: {
-    padding: '8px 16px',
-    fontSize: '0.8rem',
-    letterSpacing: '0.15em',
-    textTransform: 'uppercase',
-    backgroundColor: 'transparent',
-    border: `1px solid ${colors.primaryDim}`,
-    color: colors.primary,
-    cursor: 'pointer',
-    fontFamily: 'inherit',
-    transition: 'all 0.2s ease',
   },
 
   stats: {
