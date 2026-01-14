@@ -267,12 +267,13 @@ const styles = {
   },
 
   unreadBadge: {
-    padding: '2px 8px',
+    padding: '1px 7px',
     fontSize: '0.75rem',
-    border: `1px solid ${colors.primary}`,
+    border: `2px solid ${colors.primary}`,
     borderRadius: '2px',
-    backgroundColor: colors.primaryGlow,
+    backgroundColor: 'transparent',
     letterSpacing: '0.05em',
+    boxShadow: `0 0 8px ${colors.primaryGlow}`,
   },
 
   headerRight: {
@@ -282,10 +283,10 @@ const styles = {
   },
 
   composeButton: {
-    padding: '6px 12px',
-    border: `1px solid ${colors.primary}`,
+    padding: '5px 11px',
+    border: `2px solid ${colors.primary}`,
     borderRadius: '2px',
-    background: colors.primaryGlow,
+    background: 'transparent',
     color: colors.primary,
     fontFamily: 'inherit',
     fontSize: '0.8rem',
@@ -293,7 +294,7 @@ const styles = {
     cursor: 'pointer',
     letterSpacing: '0.05em',
     transition: 'background-color 0.1s, box-shadow 0.1s',
-    boxShadow: `0 0 6px ${colors.primaryGlow}`,
+    boxShadow: `0 0 8px ${colors.primaryGlow}`,
   },
 
   refreshButton: {

@@ -402,9 +402,9 @@ const styles = {
   },
 
   sendButton: {
-    padding: '8px 20px',
-    background: colors.primaryGlow,
-    border: `1px solid ${colors.primary}`,
+    padding: '7px 19px',
+    background: 'transparent',
+    border: `2px solid ${colors.primary}`,
     borderRadius: '2px',
     color: colors.primary,
     fontFamily: 'inherit',
@@ -413,7 +413,7 @@ const styles = {
     cursor: 'pointer',
     transition: 'background-color 0.1s, box-shadow 0.1s',
     letterSpacing: '0.05em',
-    boxShadow: `0 0 8px ${colors.primaryGlow}`,
+    boxShadow: `0 0 10px ${colors.primaryGlow}`,
   },
 
   buttonDisabled: {

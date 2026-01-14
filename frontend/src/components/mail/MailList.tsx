@@ -185,8 +185,10 @@ const styles = {
   },
 
   messageItemSelected: {
-    background: colors.primaryGlow,
+    background: 'transparent',
     borderColor: colors.primary,
+    borderWidth: '2px',
+    padding: '7px 11px',
     boxShadow: `0 0 8px ${colors.primaryGlow}`,
   },
 

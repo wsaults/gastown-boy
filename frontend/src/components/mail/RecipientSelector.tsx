@@ -275,7 +275,7 @@ const styles = {
 
   dropdownButton: {
     padding: '6px 10px',
-    background: colors.primaryGlow,
+    background: 'transparent',
     border: `1px solid ${colors.primaryDim}`,
     borderRadius: '0 2px 2px 0',
     color: colors.primary,
@@ -313,8 +313,10 @@ const styles = {
   },
 
   dropdownItemSelected: {
-    background: colors.primaryGlow,
-    borderLeft: `2px solid ${colors.primary}`,
+    background: 'transparent',
+    borderLeft: `4px solid ${colors.primary}`,
+    paddingLeft: '10px',
+    boxShadow: `inset 4px 0 8px -4px ${colors.primaryGlow}`,
   },
 
   emptyItem: {

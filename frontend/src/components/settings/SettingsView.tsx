@@ -323,7 +323,10 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
               style={{
                 ...styles.themeButton,
                 borderColor: theme === t.id ? 'var(--crt-phosphor)' : 'var(--crt-phosphor-dim)',
-                backgroundColor: theme === t.id ? 'var(--crt-phosphor-glow)' : 'transparent',
+                borderWidth: theme === t.id ? '2px' : '1px',
+                padding: theme === t.id ? '7px' : '8px',
+                backgroundColor: 'transparent',
+                boxShadow: theme === t.id ? '0 0 8px var(--crt-phosphor-glow)' : 'none',
               }}
               onClick={() => setTheme(t.id)}
             >
