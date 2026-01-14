@@ -314,6 +314,9 @@ function AgentCard({ agent, icon }: AgentCardProps) {
       <div style={styles.cardHeader}>
         <span style={styles.typeIcon}>{icon}</span>
         <span style={styles.agentName}>{agent.name.toUpperCase()}</span>
+        {agent.unreadMail > 0 && (
+          <span style={styles.headerMailBadge}>📬{agent.unreadMail}</span>
+        )}
         <span style={styles.typeBadge}>{agent.type.toUpperCase()}</span>
       </div>
 
@@ -331,10 +334,9 @@ function AgentCard({ agent, icon }: AgentCardProps) {
           </span>
         </div>
 
-        {agent.unreadMail > 0 && (
+        {agent.firstMessageSubject && (
           <div style={styles.mailRow}>
-            <span style={styles.mailIcon}>✉</span>
-            <span style={styles.mailCount}>{agent.unreadMail} UNREAD</span>
+            <span style={styles.mailPreview}>📨 "{agent.firstMessageSubject}"</span>
           </div>
         )}
 
@@ -379,7 +381,7 @@ function AgentChip({ agent }: AgentChipProps) {
       />
       <span style={styles.chipName}>{agent.name}</span>
       {agent.unreadMail > 0 && (
-        <span style={styles.chipMail}>✉{agent.unreadMail}</span>
+        <span style={styles.chipMail}>📬{agent.unreadMail}</span>
       )}
     </div>
   );
@@ -660,6 +662,14 @@ const styles = {
     letterSpacing: '0.05em',
   },
 
+  headerMailBadge: {
+    fontSize: '0.75rem',
+    color: colors.primaryBright,
+    marginLeft: 'auto',
+    marginRight: '8px',
+    fontWeight: 'bold',
+  },
+
   cardBody: {
     display: 'flex',
     flexDirection: 'column',
@@ -698,6 +708,16 @@ const styles = {
 
   mailCount: {
     fontWeight: 'bold',
+  },
+
+  mailPreview: {
+    color: colors.primaryDim,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    flex: 1,
+    fontStyle: 'italic',
+    fontSize: '0.7rem',
   },
 
   taskRow: {
