@@ -546,8 +546,14 @@ a:hover {
 /* ============================================
    App Root
    ============================================ */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 #root {
-  min-height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }

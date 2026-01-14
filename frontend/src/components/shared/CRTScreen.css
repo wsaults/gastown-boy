@@ -32,14 +32,21 @@
    Monitor Container
    ============================================ */
 .crt-monitor {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
   width: 100%;
   background: linear-gradient(180deg, #0d0d0b 0%, #1a1a18 50%, #0d0d0b 100%);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 8px;
+  /* Safe area insets for iPhone notch/home indicator */
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  padding-left: max(8px, env(safe-area-inset-left));
+  padding-right: max(8px, env(safe-area-inset-right));
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* ============================================
@@ -47,26 +54,28 @@
    ============================================ */
 .crt-bezel {
   position: relative;
-  width: 100%;
-  max-width: 1200px;
-  min-height: calc(100vh - 40px);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(145deg, var(--crt-bezel-highlight), var(--crt-bezel-shadow));
-  border-radius: 20px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 8px;
   box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.8),
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  overflow: hidden;
 }
 
 /* ============================================
    Glass Layer (Screen Surface)
    ============================================ */
 .crt-glass {
-  width: 100%;
-  min-height: calc(100vh - 72px);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   background: var(--crt-bg);
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
   position: relative;
 
@@ -100,8 +109,11 @@
    Phosphor Layer (Glowing Screen)
    ============================================ */
 .crt-phosphor {
-  min-height: calc(100vh - 72px);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   position: relative;
+  overflow: hidden;
 
   /* Phosphor glow effect */
   filter: contrast(1.1) brightness(1.05);
@@ -116,12 +128,15 @@
    Content Layer
    ============================================ */
 .crt-content {
-  min-height: calc(100vh - 72px);
-  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
   position: relative;
   z-index: 1;
   color: var(--crt-phosphor);
   font-family: 'VT323', 'Share Tech Mono', monospace;
+  overflow: hidden;
 
   /* Text rendering for CRT look */
   -webkit-font-smoothing: none;
@@ -381,26 +396,76 @@
 /* ============================================
    Responsive Adjustments
    ============================================ */
-@media (max-width: 768px) {
+
+/* Tablet */
+@media (max-width: 1024px) {
   .crt-monitor {
-    padding: 10px;
+    padding: 6px;
   }
 
   .crt-bezel {
-    padding: 10px;
-    border-radius: 12px;
-  }
-
-  .crt-glass {
-    border-radius: 8px;
+    padding: 6px;
+    border-radius: 10px;
   }
 
   .crt-content {
-    padding: 12px;
+    padding: 10px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .crt-monitor {
+    padding: 4px;
+  }
+
+  .crt-bezel {
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .crt-glass {
+    border-radius: 6px;
+  }
+
+  .crt-content {
+    padding: 8px;
   }
 
   .crt-bezel::before,
   .crt-bezel::after {
     display: none;
+  }
+
+  .boot-sequence {
+    font-size: 18px;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .crt-monitor {
+    padding: 2px;
+  }
+
+  .crt-bezel {
+    padding: 2px;
+    border-radius: 4px;
+  }
+
+  .crt-glass {
+    border-radius: 4px;
+  }
+
+  .crt-content {
+    padding: 6px;
+  }
+
+  .boot-sequence {
+    font-size: 14px;
+  }
+
+  .boot-line {
+    margin-bottom: 4px;
   }
 }
