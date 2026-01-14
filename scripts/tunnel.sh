@@ -2,14 +2,14 @@
 # tunnel.sh - Expose gastown_boy UI via ngrok for remote access
 #
 # Usage:
-#   ./scripts/tunnel.sh        # Start tunnel (requires dev server running)
-#   ./scripts/tunnel.sh --help # Show this help
+#   ./scripts/tunnel.sh           # Start tunnel (checks if server is running)
+#   ./scripts/tunnel.sh --no-wait # Start tunnel without checking (for concurrently)
+#   ./scripts/tunnel.sh --help    # Show this help
 #
 # Prerequisites:
 #   1. Install ngrok: brew install ngrok
 #   2. Sign up at ngrok.com and get your authtoken
 #   3. Configure: ngrok config add-authtoken <your-token>
-#   4. Start the dev server: npm run dev
 #
 # How it works:
 #   - Tunnels the frontend (port 3000) to a public ngrok URL
@@ -20,6 +20,7 @@ set -e
 
 PORT=3000
 NGROK_CMD="ngrok"
+NO_WAIT=false
 
 # Colors for output
 RED='\033[0;31m'
@@ -33,9 +34,16 @@ show_help() {
 }
 
 # Parse arguments
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-    show_help
-fi
+for arg in "$@"; do
+    case $arg in
+        --help|-h)
+            show_help
+            ;;
+        --no-wait)
+            NO_WAIT=true
+            ;;
+    esac
+done
 
 # Check if ngrok is installed
 if ! command -v $NGROK_CMD &> /dev/null; then
@@ -51,24 +59,29 @@ if ! command -v $NGROK_CMD &> /dev/null; then
     exit 1
 fi
 
-# Check if dev server is running
-if ! lsof -i:$PORT &> /dev/null; then
-    echo -e "${YELLOW}Warning: Dev server doesn't appear to be running on port $PORT${NC}"
-    echo ""
-    echo "Start the dev server first:"
-    echo "  npm run dev"
-    echo ""
-    read -p "Continue anyway? [y/N] " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
+# Check if dev server is running (skip with --no-wait)
+if [[ "$NO_WAIT" == "false" ]]; then
+    if ! lsof -i:$PORT &> /dev/null; then
+        echo -e "${YELLOW}Warning: Dev server doesn't appear to be running on port $PORT${NC}"
+        echo ""
+        echo "Start the dev server first:"
+        echo "  npm run dev"
+        echo ""
+        read -p "Continue anyway? [y/N] " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
     fi
+else
+    # Wait a moment for the dev server to start when running with concurrently
+    echo -e "${YELLOW}Waiting for dev server to start...${NC}"
+    sleep 3
 fi
 
-echo -e "${GREEN}Starting ngrok tunnel...${NC}"
+echo -e "${GREEN}Starting ngrok tunnel on port $PORT...${NC}"
 echo ""
 echo "The tunnel URL will appear below. Share it to access gastown_boy remotely."
-echo "Press Ctrl+C to stop the tunnel."
 echo ""
 echo "---"
 

@@ -170,14 +170,23 @@ Access gastown_boy from your phone, another computer, or anywhere with an intern
 ### Quick Start
 
 ```bash
-# Terminal 1: Start the dev server
-npm run dev
-
-# Terminal 2: Start the tunnel
-npm run tunnel
+# One command starts everything (backend + frontend + ngrok)
+npm run dev:remote
 ```
 
 The tunnel will display a public URL like `https://abc123.ngrok-free.app`. Open that URL on any device to access gastown_boy.
+
+### Alternative: Separate Terminals
+
+If you prefer running ngrok in a separate terminal (for easier URL visibility):
+
+```bash
+# Terminal 1: Start dev server
+npm run dev
+
+# Terminal 2: Start tunnel
+npm run tunnel
+```
 
 ### How It Works
 

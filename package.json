@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "npm run kill && npx concurrently -k -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:remote": "npm run kill && npx concurrently -k -n backend,frontend,ngrok -c blue,green,yellow \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run tunnel:auto\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
     "kill": "lsof -ti:3000,3001 | xargs kill -9 2>/dev/null || true",
@@ -15,7 +16,8 @@
     "start:backend": "cd backend && npm start",
     "start:frontend": "cd frontend && npm run preview",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "tunnel": "./scripts/tunnel.sh"
+    "tunnel": "./scripts/tunnel.sh",
+    "tunnel:auto": "./scripts/tunnel.sh --no-wait"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
