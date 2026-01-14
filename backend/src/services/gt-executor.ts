@@ -167,7 +167,7 @@ function parseAgentsListOutput(output: string): ParsedAgent[] {
 
     // Check for rig header: "── gastown ──"
     const rigMatch = trimmed.match(/^──\s+(.+?)\s+──$/);
-    if (rigMatch) {
+    if (rigMatch?.[1]) {
       currentRig = rigMatch[1];
       continue;
     }

@@ -110,12 +110,16 @@ export async function listMail(): Promise<MailServiceResult<Message[]>> {
   // Handle edge cases:
   // - Empty/null data: treat as empty inbox
   // - Non-array data: return error
-  const messages = result.data;
-  if (!messages || (typeof messages === 'string' && messages.trim() === '')) {
-    // No messages or empty response - return empty array
+  const rawData = result.data;
+  if (!rawData) {
+    // No messages - return empty array
     return { success: true, data: [] };
   }
-  if (!Array.isArray(messages)) {
+  // Handle case where gt returns empty string instead of array
+  if (typeof rawData === 'string') {
+    if ((rawData as string).trim() === '') {
+      return { success: true, data: [] };
+    }
     return {
       success: false,
       error: {
@@ -124,6 +128,16 @@ export async function listMail(): Promise<MailServiceResult<Message[]>> {
       },
     };
   }
+  if (!Array.isArray(rawData)) {
+    return {
+      success: false,
+      error: {
+        code: "INVALID_RESPONSE",
+        message: "Invalid response from mail inbox",
+      },
+    };
+  }
+  const messages = rawData as RawMessage[];
 
   // Transform and sort messages by timestamp, newest first
   const transformed = messages.map(transformMessage);
