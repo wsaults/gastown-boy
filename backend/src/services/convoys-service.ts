@@ -15,6 +15,7 @@ export async function listConvoys(): Promise<ConvoysServiceResult<Convoy[]>> {
   try {
     const beadsDirs = await listAllBeadsDirs();
     const allConvoys: BeadsIssue[] = [];
+    const dirToIds = new Map<string, string[]>();
     
     // 1. Fetch convoys from all discovered databases
     for (const dirInfo of beadsDirs) {
@@ -24,6 +25,8 @@ export async function listConvoys(): Promise<ConvoysServiceResult<Convoy[]>> {
       );
       if (result.success && result.data) {
         allConvoys.push(...result.data);
+        const ids = result.data.map(c => c.id);
+        dirToIds.set(dirInfo.path, ids);
       }
     }
 
@@ -31,15 +34,15 @@ export async function listConvoys(): Promise<ConvoysServiceResult<Convoy[]>> {
       return { success: true, data: [] };
     }
 
-    // Deduplicate convoys by ID
-    const uniqueConvoyIds = Array.from(new Set(allConvoys.map(c => c.id)));
-
     // 2. Fetch details for each convoy to get dependencies (tracks)
     const fullConvoysMap = new Map<string, BeadsIssue>();
 
     for (const dirInfo of beadsDirs) {
+        const idsInDir = dirToIds.get(dirInfo.path);
+        if (!idsInDir || idsInDir.length === 0) continue;
+
         const result = await execBd<any[]>(
-            ["show", ...uniqueConvoyIds, "-q", "--json"],
+            ["show", ...idsInDir, "-q", "--json"],
             { cwd: dirInfo.workDir, beadsDir: dirInfo.path }
         );
         

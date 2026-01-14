@@ -143,6 +143,10 @@ export async function execBd<T = unknown>(
       const stderrTrimmed = stderr.trim();
       const stdoutTrimmed = stdout.trim();
 
+      // Failure if:
+      // 1. Non-zero exit code
+      // 2. Or: Both stdout and stderr are empty (nothing happened)
+      // 3. Or: stdout is empty but stderr has content (pure error)
       if (exitCode !== 0 || (stdoutTrimmed === "" && stderrTrimmed !== "")) {
         logError("bd exec failed", {
           args: fullArgs,
