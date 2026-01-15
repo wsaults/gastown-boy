@@ -99,9 +99,13 @@ export function SettingsView({ theme, setTheme }: SettingsViewProps) {
     }
   }, [isOnNgrok, currentOrigin]);
 
-  // Initial fetch
+  // Initial fetch and polling
   useEffect(() => {
     fetchTunnelStatus();
+
+    // Poll every 5 seconds to catch external tunnel changes
+    const interval = setInterval(fetchTunnelStatus, 5000);
+    return () => clearInterval(interval);
   }, [fetchTunnelStatus]);
 
   // Handle toggle
