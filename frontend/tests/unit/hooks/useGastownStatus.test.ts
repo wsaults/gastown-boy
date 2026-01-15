@@ -176,7 +176,7 @@ describe("useGastownStatus", () => {
       expect(mockGetStatus).toHaveBeenCalledTimes(3);
     });
 
-    it("should use default poll interval of 10 seconds", async () => {
+    it("should use default poll interval of 60 seconds", async () => {
       mockGetStatus.mockResolvedValue(createMockGastownStatus());
 
       renderHook(() => useGastownStatus());
@@ -186,8 +186,8 @@ describe("useGastownStatus", () => {
       });
       expect(mockGetStatus).toHaveBeenCalledTimes(1);
 
-      // Advance by less than default (10s)
-      vi.advanceTimersByTime(9000);
+      // Advance by less than default (60s)
+      vi.advanceTimersByTime(59000);
       expect(mockGetStatus).toHaveBeenCalledTimes(1);
 
       // Advance past default interval

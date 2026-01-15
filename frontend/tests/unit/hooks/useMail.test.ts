@@ -197,7 +197,7 @@ describe("useMail", () => {
       expect(mockList).toHaveBeenCalledTimes(3);
     });
 
-    it("should use default poll interval of 30 seconds", async () => {
+    it("should use default poll interval of 60 seconds", async () => {
       mockList.mockResolvedValue({ items: [], total: 0, hasMore: false });
 
       renderHook(() => useMail());
@@ -207,13 +207,13 @@ describe("useMail", () => {
       });
       expect(mockList).toHaveBeenCalledTimes(1);
 
-      // Advance by less than default (30s)
-      vi.advanceTimersByTime(25000);
+      // Advance by less than default (60s)
+      vi.advanceTimersByTime(59000);
       expect(mockList).toHaveBeenCalledTimes(1);
 
       // Advance past default interval
       await act(async () => {
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(1000);
         await Promise.resolve();
       });
 

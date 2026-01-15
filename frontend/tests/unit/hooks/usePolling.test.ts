@@ -186,7 +186,7 @@ describe("usePolling", () => {
     expect(result.current.data).toEqual({ value: "success" });
   });
 
-  it("should use default interval of 5000ms", async () => {
+  it("should use default interval of 60000ms", async () => {
     const fetchFn = vi.fn().mockResolvedValue({ value: "test" });
 
     const { result } = renderHook(() => usePolling(fetchFn));
@@ -197,8 +197,8 @@ describe("usePolling", () => {
     expect(result.current.loading).toBe(false);
     expect(fetchFn).toHaveBeenCalledTimes(1);
 
-    // Advance by less than default interval
-    vi.advanceTimersByTime(4000);
+    // Advance by less than default interval (60s)
+    vi.advanceTimersByTime(59000);
     expect(fetchFn).toHaveBeenCalledTimes(1);
 
     // Advance past default interval
