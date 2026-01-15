@@ -2,6 +2,8 @@
   font-family: "Share Tech Mono", "Courier New", monospace;
   color: var(--crt-phosphor);
   padding: 20px;
+  height: 100%;
+  overflow-y: auto;
 }
 
 .dashboard-view-main-title {
@@ -77,4 +79,239 @@
 
 .dashboard-widget-content {
   flex-grow: 1;
+}
+
+/* Stats row */
+.dashboard-stats-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 12px;
+}
+
+.dashboard-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dashboard-stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--crt-phosphor-bright);
+}
+
+.dashboard-stat-highlight {
+  color: var(--crt-phosphor);
+  text-shadow: 0 0 8px var(--crt-phosphor-glow);
+}
+
+.dashboard-stat-label {
+  font-size: 0.7rem;
+  color: var(--crt-phosphor-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Empty state text */
+.dashboard-empty-text {
+  color: var(--crt-phosphor-dim);
+  font-style: italic;
+}
+
+/* Mail item styles */
+.dashboard-mail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dashboard-mail-subject {
+  color: var(--crt-phosphor);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-mail-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 0.75rem;
+  color: var(--crt-phosphor-dim);
+}
+
+.dashboard-mail-from {
+  text-transform: capitalize;
+}
+
+.dashboard-mail-time {
+  opacity: 0.7;
+}
+
+/* Crew status breakdown */
+.dashboard-status-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dashboard-status-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dashboard-status-working {
+  background: rgba(0, 255, 0, 0.15);
+  color: var(--crt-phosphor);
+  border: 1px solid var(--crt-phosphor-dim);
+}
+
+.dashboard-status-idle {
+  background: rgba(100, 100, 100, 0.15);
+  color: var(--crt-phosphor-dim);
+  border: 1px solid var(--crt-phosphor-dim);
+}
+
+.dashboard-status-blocked {
+  background: rgba(255, 170, 0, 0.15);
+  color: #FFAA00;
+  border: 1px solid #FFAA00;
+}
+
+.dashboard-status-stuck {
+  background: rgba(255, 68, 68, 0.15);
+  color: var(--crt-red);
+  border: 1px solid var(--crt-red);
+}
+
+.dashboard-status-offline {
+  background: rgba(100, 100, 100, 0.15);
+  color: #666;
+  border: 1px solid #666;
+}
+
+/* Crew item styles */
+.dashboard-crew-name {
+  color: var(--crt-phosphor);
+  font-weight: bold;
+}
+
+.dashboard-crew-status {
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  margin-left: 8px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.dashboard-crew-task {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--crt-phosphor-dim);
+  margin-left: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-crew-mail {
+  font-size: 0.7rem;
+  color: var(--crt-phosphor);
+  margin-left: 8px;
+  opacity: 0.8;
+}
+
+/* Convoy styles */
+.dashboard-convoy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dashboard-convoy-item {
+  padding: 10px;
+  border: 1px solid var(--crt-phosphor-dim);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-convoy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.dashboard-convoy-title {
+  font-weight: bold;
+  color: var(--crt-phosphor);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.dashboard-convoy-status {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 2px;
+  margin-left: 8px;
+}
+
+.dashboard-convoy-status-active,
+.dashboard-convoy-status-in_progress {
+  background: rgba(0, 255, 0, 0.2);
+  color: var(--crt-phosphor);
+  border: 1px solid var(--crt-phosphor);
+}
+
+.dashboard-convoy-status-completed,
+.dashboard-convoy-status-done {
+  background: rgba(100, 100, 100, 0.2);
+  color: var(--crt-phosphor-dim);
+  border: 1px solid var(--crt-phosphor-dim);
+}
+
+.dashboard-convoy-status-pending {
+  background: rgba(255, 170, 0, 0.15);
+  color: #FFAA00;
+  border: 1px solid #FFAA00;
+}
+
+.dashboard-convoy-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-progress-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--crt-phosphor-dim);
+  overflow: hidden;
+}
+
+.dashboard-progress-fill {
+  height: 100%;
+  background: var(--crt-phosphor);
+  box-shadow: 0 0 4px var(--crt-phosphor-glow);
+  transition: width 0.3s ease;
+}
+
+.dashboard-progress-text {
+  font-size: 0.75rem;
+  color: var(--crt-phosphor-dim);
+  min-width: 80px;
+  text-align: right;
+}
+
+.dashboard-convoy-issues {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--crt-phosphor-dim);
+  margin-top: 6px;
 }

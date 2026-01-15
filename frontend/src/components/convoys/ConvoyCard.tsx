@@ -23,7 +23,8 @@ export function ConvoyCard({ convoy }: ConvoyCardProps) {
       if (issue.assignee) {
         // Extract short name: "rig/polecats/nux" -> "nux"
         const parts = issue.assignee.split('/');
-        workers.add(parts[parts.length - 1]);
+        const shortName = parts[parts.length - 1];
+        if (shortName) workers.add(shortName);
       }
       if (issue.updatedAt) {
         const d = new Date(issue.updatedAt);

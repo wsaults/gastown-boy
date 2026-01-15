@@ -21,7 +21,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: "dashboard", label: "DASHBOARD", icon: "📊" },
+  { id: "dashboard", label: "OVERVIEW", icon: "📊" },
   { id: "mail", label: "MAIL", icon: "📧" },
   { id: "convoys", label: "CONVOYS", icon: "🚚" },
   { id: "crew", label: "CREW", icon: "👥" },
