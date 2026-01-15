@@ -119,7 +119,7 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 git clone https://github.com/wsaults/gastown-boy.git
 cd gastown-boy
 npm run install:all
-npm run dev
+npm run dev  # Uses ~/gt by default, starts ngrok automatically
 ```
 
 **Custom Gastown directory:**
