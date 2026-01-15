@@ -10,22 +10,11 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
-  - [Custom Gastown Directory](#custom-gastown-directory)
-  - [Alternative: Run in separate terminals](#alternative-run-in-separate-terminals-for-more-control)
 - [Configuration](#configuration)
-  - [Backend Environment Variables](#backend-environment-variables)
-  - [Frontend Environment Variables](#frontend-environment-variables)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
-- [Remote Access (ngrok)](#remote-access-ngrok)
-  - [Prerequisites](#prerequisites-1)
-  - [Quick Start](#quick-start-1)
-  - [How It Works](#how-it-works)
-  - [UI Control](#ui-control)
-  - [Free Tier Limitations](#free-tier-limitations)
+- [Remote Access](#remote-access)
 - [Development](#development)
-  - [Commands](#commands)
-  - [Constitution](#constitution)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 - [Links](#links)
@@ -37,22 +26,17 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 - Mail widget with recent messages and unread count
 - Crew & Polecats widget showing active agents
 - Unfinished convoys with progress tracking
-- Responsive design for mobile/desktop
 
 ### ✉️ Mail
 - Split-view inbox/outbox interface
 - Thread-based message grouping
 - Quick reply and compose
 - Rig-based filtering
-- Handoff message filtering
-- Unread message badges
 
 ### 🚚 Convoys
 - Track multi-issue work packages
 - Priority-based sorting (P0-P4)
 - Progress visualization
-- Activity timestamps
-- Worker assignments
 - Expandable issue details
 
 ### 👷 Crew & Polecats
@@ -60,18 +44,10 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 - Real-time status indicators (working/idle/blocked/stuck/offline)
 - Unread mail badges per agent
 - Current task display
-- Compact polecat chips
 
 ### ⚙️ Settings
-- **6 Theme Options**: GAS-BOY (green), BLOOD-BAG (red), VAULT-TEC (blue), WASTELAND (tan), PINK-MIST (pink), RAD-STORM (purple)
-- **Remote Access**: Toggle ngrok tunnel with QR code sharing
-- **Developer Support**: Coffee/donation link
-
-### Shared Features
-- Retro CRT/Pip-Boy aesthetic with scanline effects
-- Quick input FAB (collapsible compose widget)
-- Rig filtering across all tabs
-- Nuclear power button (UI only, coming soon)
+- **6 Themes**: GAS-BOY, BLOOD-BAG, VAULT-TEC, WASTELAND, PINK-MIST, RAD-STORM
+- **Remote Access**: Toggle ngrok tunnel with QR code
 - Fully responsive (mobile/tablet/desktop)
 
 ## Screenshot
@@ -94,8 +70,6 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 │                    ░░░ PIP-BOY 3000 ░░░                       │
 └──────────────────────────────────────────────────────────────┘
 ```
-
-*Retro-futuristic Pip-Boy interface with glowing green terminal aesthetic.*
 
 ## Architecture
 
@@ -120,129 +94,79 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 
 ## Tech Stack
 
-**Frontend:**
-- React 19+ with TypeScript
-- Tailwind CSS 4+ for styling
-- Vite 7+ for build tooling
-- QRCode.react for QR generation
-- Responsive design (mobile-first)
+**Frontend:** React 19+, TypeScript, Tailwind CSS 4+, Vite 7+
 
-**Backend:**
-- Node.js 20+ (ESM modules)
-- Express 5+ web framework
-- TypeScript with strict mode
-- Zod for runtime validation
+**Backend:** Node.js 20+, Express 5+, TypeScript, Zod
 
-**Integration:**
-- Gastown CLI (gt) via child_process
-- Beads (bd) for issue tracking
-- Tmux session monitoring
-- ngrok for remote access
+**Integration:** Gastown CLI (gt), Beads (bd), ngrok
 
-**Testing:**
-- Vitest for unit tests
-- React Testing Library for components
-- Supertest for API tests
+**Testing:** Vitest, React Testing Library, Supertest
 
 ## Prerequisites
 
-- Node.js 20+
-- [Gastown](https://github.com/steveyegge/gastown) installed with `gt` in PATH
-- A Gastown town initialized (`gt install <path>`)
-- [ngrok](https://ngrok.com) installed and configured (for remote access tunnel)
+1. **Node.js 20+**
+2. **[Gastown](https://github.com/steveyegge/gastown)** installed with `gt` in PATH
+3. **A Gastown town** initialized (`gt install <path>`)
+4. **[ngrok](https://ngrok.com)** for remote access:
+   ```bash
+   brew install ngrok
+   ngrok config add-authtoken <your-token>  # Get token from ngrok.com
+   ```
 
 ## Quick Start
 
 ```bash
-# Clone repository
 git clone https://github.com/wsaults/gastown-boy.git
 cd gastown-boy
-
-# Install all dependencies (one command)
 npm run install:all
-
-# Start everything (backend + frontend + ngrok tunnel)
 npm run dev
 ```
 
-Open http://localhost:5173 in your browser, or use the ngrok URL for remote access.
+Open http://localhost:5173 locally, or use the ngrok URL for remote access.
 
-### Custom Gastown Directory
-
-By default, gastown-boy looks for your town at `~/gt`. To use a different location:
-
+**Custom Gastown directory:**
 ```bash
 npm run dev -- /path/to/your/town
-npm run dev -- ~/my-gastown
-```
-
-### Alternative: Run in separate terminals for more control
-
-```bash
-GT_TOWN_ROOT=~/gt npm run dev:backend   # Terminal 1 - Backend on :3001
-npm run dev:frontend                     # Terminal 2 - Frontend on :5173
 ```
 
 ## Configuration
 
 ### Backend Environment Variables
 
-Create `backend/.env` to customize (all optional):
+Create `backend/.env` (all optional):
 
 ```env
-PORT=3001              # API server port (default: 3001)
-GT_PATH=gt             # Path to gt binary for power controls (default: uses PATH)
-GT_BIN=gt              # Alternate gt binary override (same as GT_PATH)
+PORT=3001                          # API server port
+GT_TOWN_ROOT=~/gt                  # Gastown town root (set by npm run dev)
+GT_MAIL_IDENTITY=overseer          # Mailbox identity for the UI
 CORS_ORIGIN=http://localhost:5173  # Allowed CORS origin
-NODE_ENV=development   # Environment mode
-GT_TOWN_ROOT=~/gt         # Gastown town root (default: ~/gt, set by npm run dev)
-GT_MAIL_IDENTITY=overseer  # Mailbox identity for the UI (default: overseer)
 ```
-
-**Note on GT_TOWN_ROOT:** The `npm run dev` command automatically sets `GT_TOWN_ROOT`
-to `~/gt` by default. Use `npm run dev -- /path/to/town` for a custom location.
-The backend also auto-detects the town root when running from within a town structure.
 
 ### Frontend Environment Variables
 
-Create `frontend/.env` to customize (all optional):
+Create `frontend/.env` (all optional):
 
 ```env
-# Only needed if connecting to a different backend (e.g., production)
-VITE_API_URL=https://api.example.com
+VITE_API_URL=https://api.example.com  # Only for non-local backend
 ```
 
-By default, the frontend uses the Vite proxy which forwards `/api` requests to `localhost:3001`. This also enables seamless ngrok tunneling - see [Remote Access](#remote-access-ngrok).
-
-See `backend/.env.example` and `frontend/.env.example` for full documentation.
+See `.env.example` files for full documentation.
 
 ## Project Structure
 
 ```
 gastown-boy/
-├── backend/
-│   ├── src/
-│   │   ├── routes/        # Express route handlers
-│   │   ├── services/      # bd/tmux data access + gt power controls
-│   │   ├── middleware/    # Error handling, etc.
-│   │   ├── types/         # TypeScript types + Zod schemas
-│   │   └── utils/         # Response helpers
-│   └── tests/unit/
-├── frontend/
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── services/      # API client
-│   │   ├── styles/        # Tailwind + Pip-Boy theme
-│   │   └── types/         # Frontend types
-│   └── tests/unit/
-├── specs/                 # Feature specifications
-│   └── 001-pipboy-ui/
-│       ├── spec.md        # Feature specification
-│       ├── plan.md        # Implementation plan
-│       ├── tasks.md       # Task breakdown
-│       └── ...
-└── .specify/              # Speckit templates
+├── backend/src/
+│   ├── routes/      # Express route handlers
+│   ├── services/    # GT CLI wrappers
+│   ├── types/       # TypeScript + Zod schemas
+│   └── utils/       # Response helpers
+├── frontend/src/
+│   ├── components/  # React components
+│   ├── hooks/       # Custom React hooks
+│   ├── services/    # API client
+│   └── styles/      # Tailwind + theme
+└── specs/           # Feature specifications
 ```
 
 ## API Endpoints
@@ -262,120 +186,50 @@ gastown-boy/
 | `/api/tunnel/start` | POST | Start ngrok tunnel |
 | `/api/tunnel/stop` | POST | Stop ngrok tunnel |
 
-See [OpenAPI spec](specs/001-pipboy-ui/contracts/openapi.yaml) for full details.
+## Remote Access
 
-## Remote Access (ngrok)
+`npm run dev` automatically starts an ngrok tunnel. You'll see three services:
+- **Backend** (blue) - port 3001
+- **Frontend** (green) - port 5173
+- **ngrok** (magenta) - public URL like `https://abc123.ngrok-free.app`
 
-The `npm run dev` command automatically starts an ngrok tunnel for remote access.
+You can also control the tunnel from the **Settings** tab (toggle, QR code, copy URL).
 
-### Prerequisites
-
-1. Install ngrok: `brew install ngrok`
-2. Sign up at [ngrok.com](https://ngrok.com) (free)
-3. Add your authtoken: `ngrok config add-authtoken <your-token>`
-
-### Accessing Remotely
-
-When you run `npm run dev`, you'll see three services start:
-- **Backend** (blue) - API server on port 3001
-- **Frontend** (green) - UI on port 5173
-- **ngrok** (magenta) - Tunnel with a public URL like `https://abc123.ngrok-free.app`
-
-Share the ngrok URL to access gastown_boy from any device.
-
-### Alternative: Run ngrok separately
-
-If you prefer to run ngrok in a separate terminal:
-
-```bash
-# Terminal 1: Backend + Frontend only
-GT_TOWN_ROOT=~/gt npm run dev:backend & npm run dev:frontend
-
-# Terminal 2: Tunnel
-npm run tunnel
-```
-
-### How It Works
-
-- Only the frontend needs to be tunneled (free tier compatible!)
-- The Vite dev server proxies `/api` requests to the backend automatically
-- No environment variables needed - it just works
-
-### UI Control
-
-You can also control the tunnel directly from the **Settings** tab in the UI:
-- Toggle tunnel on/off with a button
-- View tunnel status and public URL
-- Generate QR code for easy mobile access
-- Copy URL to clipboard
-
-This provides a graphical alternative to the command-line tunnel management.
-
-### Free Tier Limitations
-
-- **2-hour session limit** - URL changes when restarted
-- **Interstitial page** - First-time visitors see an ngrok warning page
-- **1 tunnel at a time** - But that's all we need!
-
-For longer sessions or custom domains, consider [ngrok paid plans](https://ngrok.com/pricing) or alternatives like [Tailscale Funnel](https://tailscale.com/kb/1223/funnel) or [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/).
+**Free tier limits:** 2-hour sessions, interstitial page on first visit, 1 tunnel at a time.
 
 ## Development
 
-### Commands
-
 ```bash
+# Run from project root
+npm run dev           # Start all services
+npm run kill          # Kill processes on ports 3000/3001
+
 # Backend
-cd backend
-npm run dev      # Start dev server
-npm test         # Run tests
-npm run lint     # Lint code
+cd backend && npm test && npm run lint
 
 # Frontend
-cd frontend
-npm run dev      # Start dev server
-npm test         # Run tests
-npm run build    # Production build
+cd frontend && npm test && npm run build
 ```
 
 ### Constitution
 
-This project follows a [constitution](.specify/memory/constitution.md) with 5 core principles:
-
-1. **Type Safety First** - TypeScript strict mode, Zod validation at boundaries
+This project follows a [constitution](.specify/memory/constitution.md):
+1. **Type Safety First** - TypeScript strict mode, Zod validation
 2. **Test-First Development** - TDD for services and hooks
 3. **UI Performance** - 60fps animations, proper memoization
-4. **Documentation** - JSDoc for public APIs
-5. **Simplicity** - YAGNI, no premature abstraction
+4. **Simplicity** - YAGNI, no premature abstraction
 
 ## Troubleshooting
 
-### Common Issues
+**`gt command not found`** - Ensure Gastown is installed: `which gt`
 
-**`gt command not found`**
-- Ensure Gastown is installed: `which gt`
-- If not in PATH, set `GT_TOWN_ROOT` in `backend/.env`
+**Port already in use** - Run `npm run kill`
 
-**Port 3000 or 3001 already in use**
-- Run `npm run kill` to stop existing processes
-- Or manually: `lsof -ti:3000,3001 | xargs kill -9`
+**ngrok won't start** - Run `ngrok config add-authtoken <token>`
 
-**CORS errors in browser**
-- Check `CORS_ORIGIN` in `backend/.env` matches your frontend URL
-- Default is `http://localhost:5173`
+**Messages not loading** - Verify Gastown is running: `gt status`
 
-**ngrok tunnel won't start**
-- Install: `brew install ngrok`
-- Get authtoken from https://dashboard.ngrok.com
-- Configure: `ngrok config add-authtoken <token>`
-
-**Messages not loading**
-- Verify Gastown is running: `gt status`
-- Check backend logs for errors
-- Ensure `GT_TOWN_ROOT` points to valid town directory
-
-**Frontend can't reach backend**
-- Verify backend is running on port 3001
-- Check Vite proxy configuration in `frontend/vite.config.ts`
+**Frontend can't reach backend** - Check backend is running on port 3001
 
 ## License
 
