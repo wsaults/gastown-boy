@@ -2,13 +2,49 @@
 
 A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gastown) multi-agent orchestration.
 
-## Overview
+## Features
 
-Gastown-Boy provides a retro-futuristic interface for interacting with your Gastown workspace:
+### 📊 Dashboard (Overview)
+- Real-time snapshot of system status
+- Mail widget with recent messages and unread count
+- Crew & Polecats widget showing active agents
+- Unfinished convoys with progress tracking
+- Responsive design for mobile/desktop
 
-- **Mail** - Split-view inbox/outbox for Mayor communication
-- **Power** - Start/stop Gastown with visual state indication
-- **Crew Stats** - Monitor agent activity and workload
+### ✉️ Mail
+- Split-view inbox/outbox interface
+- Thread-based message grouping
+- Quick reply and compose
+- Rig-based filtering
+- Handoff message filtering
+- Unread message badges
+
+### 🚚 Convoys
+- Track multi-issue work packages
+- Priority-based sorting (P0-P4)
+- Progress visualization
+- Activity timestamps
+- Worker assignments
+- Expandable issue details
+
+### 👷 Crew & Polecats
+- Hierarchical agent display (Town → Rigs)
+- Real-time status indicators (working/idle/blocked/stuck/offline)
+- Unread mail badges per agent
+- Current task display
+- Compact polecat chips
+
+### ⚙️ Settings
+- **6 Theme Options**: GAS-BOY (green), BLOOD-BAG (red), VAULT-TEC (blue), WASTELAND (tan), PINK-MIST (pink), RAD-STORM (purple)
+- **Remote Access**: Toggle ngrok tunnel with QR code sharing
+- **Developer Support**: Coffee/donation link
+
+### Shared Features
+- Retro CRT/Pip-Boy aesthetic with scanline effects
+- Quick input FAB (collapsible compose widget)
+- Rig filtering across all tabs
+- Nuclear power button (UI only, coming soon)
+- Fully responsive (mobile/tablet/desktop)
 
 ## Screenshot
 
@@ -56,10 +92,29 @@ Gastown-Boy provides a retro-futuristic interface for interacting with your Gast
 
 ## Tech Stack
 
-- **Frontend**: React 18+, TypeScript, Tailwind CSS, Vite
-- **Backend**: Node.js, Express, TypeScript
-- **Validation**: Zod
-- **Testing**: Vitest
+**Frontend:**
+- React 19+ with TypeScript
+- Tailwind CSS 4+ for styling
+- Vite 7+ for build tooling
+- QRCode.react for QR generation
+- Responsive design (mobile-first)
+
+**Backend:**
+- Node.js 20+ (ESM modules)
+- Express 5+ web framework
+- TypeScript with strict mode
+- Zod for runtime validation
+
+**Integration:**
+- Gastown CLI (gt) via child_process
+- Beads (bd) for issue tracking
+- Tmux session monitoring
+- ngrok for remote access
+
+**Testing:**
+- Vitest for unit tests
+- React Testing Library for components
+- Supertest for API tests
 
 ## Prerequisites
 
@@ -70,21 +125,24 @@ Gastown-Boy provides a retro-futuristic interface for interacting with your Gast
 ## Quick Start
 
 ```bash
-# Clone and install
+# Clone repository
 git clone https://github.com/wsaults/gastown-boy.git
 cd gastown-boy
 
-# Install dependencies
-cd backend && npm install
-cd ../frontend && npm install
+# Install all dependencies (one command)
+npm run install:all
 
-# Start backend (terminal 1)
-cd backend && npm run dev
-
-# Start frontend (terminal 2)
-cd frontend && npm run dev
+# Start everything (backend + frontend in one command)
+npm run dev
 
 # Open http://localhost:5173
+```
+
+### Alternative: Run in separate terminals for more control
+
+```bash
+npm run dev:backend   # Terminal 1 - Backend on :3001
+npm run dev:frontend  # Terminal 2 - Frontend on :5173
 ```
 
 ## Configuration
@@ -155,13 +213,17 @@ gastown-boy/
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/status` | GET | Gastown status and power state |
-| `/api/mail` | GET | List inbox messages |
+| `/api/power/up` | POST | Start Gastown |
+| `/api/power/down` | POST | Stop Gastown |
+| `/api/mail` | GET | List messages (`?all=true` for full history) |
 | `/api/mail` | POST | Send message to Mayor |
 | `/api/mail/:id` | GET | Get message details |
 | `/api/mail/:id/read` | POST | Mark message as read |
-| `/api/power/up` | POST | Start Gastown |
-| `/api/power/down` | POST | Stop Gastown |
-| `/api/agents` | GET | List crew members |
+| `/api/agents` | GET | List all crew members and agents |
+| `/api/convoys` | GET | List active convoys with progress |
+| `/api/tunnel/status` | GET | Check ngrok tunnel status |
+| `/api/tunnel/start` | POST | Start ngrok tunnel |
+| `/api/tunnel/stop` | POST | Stop ngrok tunnel |
 
 See [OpenAPI spec](specs/001-pipboy-ui/contracts/openapi.yaml) for full details.
 
@@ -202,6 +264,16 @@ npm run tunnel
 - The Vite dev server proxies `/api` requests to the backend automatically
 - No environment variables needed - it just works
 
+### UI Control
+
+You can also control the tunnel directly from the **Settings** tab in the UI:
+- Toggle tunnel on/off with a button
+- View tunnel status and public URL
+- Generate QR code for easy mobile access
+- Copy URL to clipboard
+
+This provides a graphical alternative to the command-line tunnel management.
+
 ### Free Tier Limitations
 
 - **2-hour session limit** - URL changes when restarted
@@ -237,6 +309,36 @@ This project follows a [constitution](.specify/memory/constitution.md) with 5 co
 3. **UI Performance** - 60fps animations, proper memoization
 4. **Documentation** - JSDoc for public APIs
 5. **Simplicity** - YAGNI, no premature abstraction
+
+## Troubleshooting
+
+### Common Issues
+
+**`gt command not found`**
+- Ensure Gastown is installed: `which gt`
+- If not in PATH, set `GT_TOWN_ROOT` in `backend/.env`
+
+**Port 3000 or 3001 already in use**
+- Run `npm run kill` to stop existing processes
+- Or manually: `lsof -ti:3000,3001 | xargs kill -9`
+
+**CORS errors in browser**
+- Check `CORS_ORIGIN` in `backend/.env` matches your frontend URL
+- Default is `http://localhost:5173`
+
+**ngrok tunnel won't start**
+- Install: `brew install ngrok`
+- Get authtoken from https://dashboard.ngrok.com
+- Configure: `ngrok config add-authtoken <token>`
+
+**Messages not loading**
+- Verify Gastown is running: `gt status`
+- Check backend logs for errors
+- Ensure `GT_TOWN_ROOT` points to valid town directory
+
+**Frontend can't reach backend**
+- Verify backend is running on port 3001
+- Check Vite proxy configuration in `frontend/vite.config.ts`
 
 ## License
 
