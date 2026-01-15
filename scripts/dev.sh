@@ -9,11 +9,15 @@
 #   GT_DIR  Path to gastown town directory (default: ~/gt)
 #
 # Examples:
-#   npm run dev                    # Uses ~/gt + ngrok
+#   npm run dev                    # Uses ~/gt + ngrok (if installed)
 #   npm run dev -- /path/to/town   # Uses custom path + ngrok
 #   npm run dev -- ~/my-gastown    # Uses ~/my-gastown + ngrok
 
 set -e
+
+# Colors
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
 # Get GT directory from argument or default to ~/gt
 GT_DIR="${1:-$HOME/gt}"
@@ -34,15 +38,27 @@ if [ ! -f "$GT_DIR/mayor/town.json" ]; then
     echo "Continuing anyway..."
 fi
 
-echo "Starting gastown-boy with GT_TOWN_ROOT=$GT_DIR + ngrok tunnel"
-echo ""
-
 # Kill any existing processes on our ports
 lsof -ti:3000,3001 | xargs kill -9 2>/dev/null || true
 
-# Export GT_TOWN_ROOT and start all three services
+# Export GT_TOWN_ROOT
 export GT_TOWN_ROOT="$GT_DIR"
-npx concurrently -k -n backend,frontend,ngrok -c blue,green,magenta \
-    "cd backend && npm run dev" \
-    "cd frontend && npm run dev" \
-    "./scripts/tunnel.sh --no-wait"
+
+# Check if ngrok is installed
+if command -v ngrok &> /dev/null; then
+    echo "Starting gastown-boy with GT_TOWN_ROOT=$GT_DIR + ngrok tunnel"
+    echo ""
+    npx concurrently -k -n backend,frontend,ngrok -c blue,green,magenta \
+        "cd backend && npm run dev" \
+        "cd frontend && npm run dev" \
+        "./scripts/tunnel.sh --no-wait"
+else
+    echo -e "${YELLOW}ngrok not installed - starting without remote access${NC}"
+    echo "To enable remote access: brew install ngrok && ngrok config add-authtoken <token>"
+    echo ""
+    echo "Starting gastown-boy with GT_TOWN_ROOT=$GT_DIR"
+    echo ""
+    npx concurrently -k -n backend,frontend -c blue,green \
+        "cd backend && npm run dev" \
+        "cd frontend && npm run dev"
+fi

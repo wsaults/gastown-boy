@@ -107,7 +107,7 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 1. **Node.js 20+**
 2. **[Gastown](https://github.com/steveyegge/gastown)** installed with `gt` in PATH
 3. **A Gastown town** initialized (`gt install <path>`)
-4. **[ngrok](https://ngrok.com)** for remote access:
+4. **[ngrok](https://ngrok.com)** (optional, for remote access):
    ```bash
    brew install ngrok
    ngrok config add-authtoken <your-token>  # Get token from ngrok.com
@@ -119,7 +119,7 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 git clone https://github.com/wsaults/gastown-boy.git
 cd gastown-boy
 npm run install:all
-npm run dev  # Uses ~/gt by default, starts ngrok automatically
+npm run dev  # Uses ~/gt, starts ngrok if installed
 ```
 
 **Custom Gastown directory:**
