@@ -122,8 +122,6 @@ npm run install:all
 npm run dev
 ```
 
-Open http://localhost:5173 locally, or use the ngrok URL for remote access.
-
 **Custom Gastown directory:**
 ```bash
 npm run dev -- /path/to/your/town
