@@ -156,31 +156,41 @@ export async function getStatus(): Promise<TunnelServiceResult<TunnelStatus>> {
 }
 
 /**
+ * Safely kill a child process without throwing.
+ */
+function safeKill(proc: ChildProcess | null): void {
+  if (!proc) return;
+  try {
+    proc.kill();
+  } catch {
+    // Process already dead or other error - ignore
+  }
+}
+
+/**
  * Start the ngrok tunnel.
  */
 export async function startTunnel(): Promise<TunnelServiceResult<TunnelStatus>> {
-  // Check if already running
-  const status = await getStatus();
-  if (status.data?.state === "running") {
-    return {
-      success: false,
-      error: {
-        code: "ALREADY_RUNNING",
-        message: "Tunnel is already running",
-      },
-    };
-  }
-
-  // Clean up any existing process
-  if (ngrokProcess) {
-    ngrokProcess.kill();
-    ngrokProcess = null;
-  }
-
-  currentState = "starting";
-  lastError = null;
-
   try {
+    // Check if already running
+    const status = await getStatus();
+    if (status.data?.state === "running") {
+      return {
+        success: false,
+        error: {
+          code: "ALREADY_RUNNING",
+          message: "Tunnel is already running",
+        },
+      };
+    }
+
+    // Clean up any existing process
+    safeKill(ngrokProcess);
+    ngrokProcess = null;
+
+    currentState = "starting";
+    lastError = null;
+
     // Spawn ngrok process
     ngrokProcess = spawn("ngrok", ["http", "3000"], {
       detached: false,
@@ -266,10 +276,8 @@ export async function stopTunnel(): Promise<TunnelServiceResult<TunnelStatus>> {
   }
 
   // Kill the process
-  if (ngrokProcess) {
-    ngrokProcess.kill();
-    ngrokProcess = null;
-  }
+  safeKill(ngrokProcess);
+  ngrokProcess = null;
 
   // Also try to kill any ngrok processes we didn't start
   try {
