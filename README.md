@@ -6,7 +6,6 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
-- [Global Installation](#global-installation)
 - [Features](#features)
 - [Screenshot](#screenshot)
 - [Architecture](#architecture)
@@ -15,8 +14,8 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
 - [Remote Access](#remote-access)
-- [Development](#development)
 - [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 - [License](#license)
 - [Links](#links)
 
@@ -34,28 +33,13 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 ## Quick Start
 
 ```bash
-git clone https://github.com/wsaults/gastown-boy.git
-cd gastown-boy
-npm run install:all
-npm run dev  # Uses ~/gt, starts ngrok if installed
-```
-
-**Custom Gastown directory:**
-```bash
-npm run dev -- /path/to/your/town
-```
-
-> **Note:** Make sure Gastown is running (`gt up`) or start it from the UI. The app requires an active Gastown instance to display data.
-
-## Global Installation
-
-Install globally via npm to use `gt-boy` from anywhere:
-
-```bash
 npm install -g gastown-boy
+gt-boy
 ```
 
-**Usage:**
+That's it! The UI opens at `http://localhost:3000`.
+
+**Options:**
 
 ```bash
 gt-boy                    # Uses ~/gt, starts ngrok if installed
@@ -66,12 +50,13 @@ gt-boy --api-port 8081    # Custom backend port (default: 3001)
 gt-boy --help             # Show all options
 ```
 
-**One-time run with npx:**
+**One-time run without installing:**
 
 ```bash
-npx gastown-boy           # Run without installing
-npx gastown-boy ~/my-town --no-tunnel
+npx gastown-boy
 ```
+
+> **Note:** Make sure Gastown is running (`gt up`) or start it from the UI. The app requires an active Gastown instance to display data.
 
 ## Features
 
@@ -224,28 +209,6 @@ You can also control the tunnel from the **Settings** tab (toggle, QR code, copy
 
 **Free tier limits:** 2-hour sessions, interstitial page on first visit, 1 tunnel at a time.
 
-## Development
-
-```bash
-# Run from project root
-npm run dev           # Start all services
-npm run kill          # Kill processes on ports 3000/3001
-
-# Backend
-cd backend && npm test && npm run lint
-
-# Frontend
-cd frontend && npm test && npm run build
-```
-
-### Constitution
-
-This project follows a [constitution](.specify/memory/constitution.md):
-1. **Type Safety First** - TypeScript strict mode, Zod validation
-2. **Test-First Development** - TDD for services and hooks
-3. **UI Performance** - 60fps animations, proper memoization
-4. **Simplicity** - YAGNI, no premature abstraction
-
 ## Troubleshooting
 
 **`gt command not found`** - Ensure Gastown is installed: `which gt`
@@ -257,6 +220,40 @@ This project follows a [constitution](.specify/memory/constitution.md):
 **Messages not loading** - Verify Gastown is running: `gt status` or `gt up`
 
 **Frontend can't reach backend** - Check backend is running on port 3001
+
+## Contributing
+
+```bash
+git clone https://github.com/wsaults/gastown-boy.git
+cd gastown-boy
+npm run install:all
+npm run dev           # Start all services (Mac/Linux)
+```
+
+**Custom Gastown directory:**
+```bash
+npm run dev -- /path/to/your/town
+```
+
+**Running tests:**
+```bash
+cd backend && npm test && npm run lint
+cd frontend && npm test && npm run build
+```
+
+**Other commands:**
+```bash
+npm run kill          # Kill processes on ports 3000/3001
+npm run build         # Build for production
+```
+
+### Project Principles
+
+This project follows a [constitution](.specify/memory/constitution.md):
+1. **Type Safety First** - TypeScript strict mode, Zod validation
+2. **Test-First Development** - TDD for services and hooks
+3. **UI Performance** - 60fps animations, proper memoization
+4. **Simplicity** - YAGNI, no premature abstraction
 
 ## License
 
