@@ -138,11 +138,20 @@ npm run dev
 # Open http://localhost:5173
 ```
 
+### Custom Gastown Directory
+
+By default, gastown-boy looks for your town at `~/gt`. To use a different location:
+
+```bash
+npm run dev -- /path/to/your/town
+npm run dev -- ~/my-gastown
+```
+
 ### Alternative: Run in separate terminals for more control
 
 ```bash
-npm run dev:backend   # Terminal 1 - Backend on :3001
-npm run dev:frontend  # Terminal 2 - Frontend on :5173
+GT_TOWN_ROOT=~/gt npm run dev:backend   # Terminal 1 - Backend on :3001
+npm run dev:frontend                     # Terminal 2 - Frontend on :5173
 ```
 
 ## Configuration
@@ -157,14 +166,13 @@ GT_PATH=gt             # Path to gt binary for power controls (default: uses PAT
 GT_BIN=gt              # Alternate gt binary override (same as GT_PATH)
 CORS_ORIGIN=http://localhost:5173  # Allowed CORS origin
 NODE_ENV=development   # Environment mode
-GT_TOWN_ROOT=/path/to/gt  # Gastown town root (auto-detected if running inside town)
+GT_TOWN_ROOT=~/gt         # Gastown town root (default: ~/gt, set by npm run dev)
 GT_MAIL_IDENTITY=overseer  # Mailbox identity for the UI (default: overseer)
 ```
 
-**Note on GT_TOWN_ROOT:** If running the dev server from a directory that's NOT inside
-your Gastown town (e.g., a separate clone), you must set `GT_TOWN_ROOT` to point to
-your town's root directory. The backend auto-detects this when running from within
-a town structure.
+**Note on GT_TOWN_ROOT:** The `npm run dev` command automatically sets `GT_TOWN_ROOT`
+to `~/gt` by default. Use `npm run dev -- /path/to/town` for a custom location.
+The backend also auto-detects the town root when running from within a town structure.
 
 ### Frontend Environment Variables
 
