@@ -12,6 +12,14 @@ vi.mock("../../src/services/mail-data.js", () => ({
   listMailIssues: vi.fn(),
 }));
 
+vi.mock("../../src/services/gt-executor.js", () => ({
+  gt: {
+    mail: {
+      send: vi.fn().mockResolvedValue({ success: false, error: { code: "GT_NOT_AVAILABLE", message: "gt not found" } }),
+    },
+  },
+}));
+
 import { execBd } from "../../src/services/bd-client.js";
 import { listMailIssues } from "../../src/services/mail-data.js";
 import { getMessage, listMail, markRead, sendMail } from "../../src/services/mail-service.js";

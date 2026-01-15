@@ -332,9 +332,9 @@ describe("usePolling", () => {
       });
       expect(fetchFn).toHaveBeenCalledTimes(1);
 
-      // Default interval should be 5000ms
+      // Default interval should be 60000ms (1 minute)
       await act(async () => {
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(60000);
         await Promise.resolve();
       });
 

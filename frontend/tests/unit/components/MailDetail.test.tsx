@@ -1,7 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MailDetail } from '../../../src/components/mail/MailDetail';
 import type { Message } from '../../../src/types';
+
+// Mock the useIsMobile hook - close button only shows on mobile
+vi.mock('../../../src/hooks/useMediaQuery', () => ({
+  useIsMobile: vi.fn(() => true),
+}));
 
 // =============================================================================
 // Test Fixtures
