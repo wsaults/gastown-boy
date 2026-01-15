@@ -44,10 +44,10 @@ export function QuickInput() {
     try {
       await api.mail.send({
         to: 'mayor/',
-        subject: `Quick Message: ${text.slice(0, 30)}${text.length > 30 ? '...' : ''}`,
+        subject: text.slice(0, 50).trim() + (text.length > 50 ? '...' : ''),
         body: text,
         priority: 2, // Normal
-        type: 'notification',
+        type: 'task',
       });
       
       setText('');
@@ -116,7 +116,7 @@ export function QuickInput() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isMobile ? "Type message..." : "Type message to Mayor... (Ctrl+Enter)"}
+          placeholder={isMobile ? "Type message..." : "Type message to Mayor..."}
           style={styles.textarea}
           rows={isMobile ? 4 : 1}
           disabled={sending}

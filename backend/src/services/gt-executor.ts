@@ -442,6 +442,7 @@ export const gt = {
         priority?: 0 | 1 | 2 | 3 | 4;
         replyTo?: string;
         permanent?: boolean;
+        notify?: boolean;
       },
       options?: GtExecOptions
     ): Promise<GtResult<string>> {
@@ -450,6 +451,10 @@ export const gt = {
       // UI messages should be permanent by default (not wisps)
       if (sendOptions?.permanent !== false) {
         args.push('--permanent');
+      }
+
+      if (sendOptions?.notify) {
+        args.push('--notify');
       }
 
       if (sendOptions?.type) {

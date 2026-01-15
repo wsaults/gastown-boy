@@ -547,7 +547,7 @@ const styles = {
   coffeeButton: {
     position: 'absolute',
     bottom: '12px',
-    right: '12px',
+    left: '12px',
     background: 'transparent',
     border: 'none',
     color: colors.primary,

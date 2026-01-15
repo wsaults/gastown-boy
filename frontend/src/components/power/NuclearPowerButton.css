@@ -56,6 +56,12 @@
   text-shadow: 0 0 4px var(--switch-amber-glow);
 }
 
+@media (max-width: 768px) {
+  .power-label {
+    display: none;
+  }
+}
+
 /* ============================================
    Toggle Switch Button
    ============================================ */

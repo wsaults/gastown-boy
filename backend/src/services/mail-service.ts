@@ -243,6 +243,7 @@ export async function sendMail(
       priority,
       replyTo,
       permanent: true, // Default to permanent
+      notify: true,    // Ensure agent is notified
     }, {
       env: {
         BD_ACTOR: from, // Override actor with current identity
