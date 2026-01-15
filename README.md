@@ -4,12 +4,12 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 
 ## Table of Contents
 
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
 - [Features](#features)
 - [Screenshot](#screenshot)
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
 - [Configuration](#configuration)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
@@ -18,6 +18,33 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 - [Links](#links)
+
+## Prerequisites
+
+1. **Node.js 20+**
+2. **[Gastown](https://github.com/steveyegge/gastown)** installed with `gt` in PATH
+3. **A Gastown town** initialized (`gt install <path>`)
+4. **[ngrok](https://ngrok.com)** (optional, for remote access):
+   ```bash
+   brew install ngrok
+   ngrok config add-authtoken <your-token>  # Get token from ngrok.com
+   ```
+
+## Quick Start
+
+```bash
+git clone https://github.com/wsaults/gastown-boy.git
+cd gastown-boy
+npm run install:all
+npm run dev  # Uses ~/gt, starts ngrok if installed
+```
+
+**Custom Gastown directory:**
+```bash
+npm run dev -- /path/to/your/town
+```
+
+> **Note:** Make sure Gastown is running (`gt up`) or start it from the UI. The app requires an active Gastown instance to display data.
 
 ## Features
 
@@ -102,31 +129,6 @@ A retro terminal themed web UI for [Gastown](https://github.com/steveyegge/gasto
 
 **Testing:** Vitest, React Testing Library, Supertest
 
-## Prerequisites
-
-1. **Node.js 20+**
-2. **[Gastown](https://github.com/steveyegge/gastown)** installed with `gt` in PATH
-3. **A Gastown town** initialized (`gt install <path>`)
-4. **[ngrok](https://ngrok.com)** (optional, for remote access):
-   ```bash
-   brew install ngrok
-   ngrok config add-authtoken <your-token>  # Get token from ngrok.com
-   ```
-
-## Quick Start
-
-```bash
-git clone https://github.com/wsaults/gastown-boy.git
-cd gastown-boy
-npm run install:all
-npm run dev  # Uses ~/gt, starts ngrok if installed
-```
-
-**Custom Gastown directory:**
-```bash
-npm run dev -- /path/to/your/town
-```
-
 ## Configuration
 
 ### Backend Environment Variables
@@ -188,7 +190,7 @@ gastown-boy/
 
 `npm run dev` automatically starts an ngrok tunnel. You'll see three services:
 - **Backend** (blue) - port 3001
-- **Frontend** (green) - port 5173
+- **Frontend** (green) - port 3000
 - **ngrok** (magenta) - public URL like `https://abc123.ngrok-free.app`
 
 You can also control the tunnel from the **Settings** tab (toggle, QR code, copy URL).
@@ -225,7 +227,7 @@ This project follows a [constitution](.specify/memory/constitution.md):
 
 **ngrok won't start** - Run `ngrok config add-authtoken <token>`
 
-**Messages not loading** - Verify Gastown is running: `gt status`
+**Messages not loading** - Verify Gastown is running: `gt status` or `gt up`
 
 **Frontend can't reach backend** - Check backend is running on port 3001
 
