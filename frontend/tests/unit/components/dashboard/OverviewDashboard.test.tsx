@@ -21,8 +21,9 @@ describe('DashboardView', () => {
     vi.clearAllMocks();
     // Default mock implementations for the hooks
     (useDashboardMail as ReturnType<typeof vi.fn>).mockReturnValue({
-      unreadMessages: [],
       recentMessages: [],
+      totalCount: 0,
+      unreadCount: 0,
       loading: false,
       error: null,
     });
@@ -34,17 +35,17 @@ describe('DashboardView', () => {
     (useDashboardCrew as ReturnType<typeof vi.fn>).mockReturnValue({
       totalCrew: 0,
       activeCrew: 0,
+      recentCrew: [],
       crewAlerts: [],
       loading: false,
       error: null,
     });
   });
 
-  it('renders main title and widget headers', () => {
+  it('renders widget headers', () => {
     render(<DashboardView />);
-    expect(screen.getByText('SYSTEM OVERVIEW')).toBeInTheDocument();
     expect(screen.getByText('MAIL')).toBeInTheDocument();
-    expect(screen.getByText('CONVOYS')).toBeInTheDocument();
-    expect(screen.getByText('CREW')).toBeInTheDocument();
+    expect(screen.getByText('CREW & POLECATS')).toBeInTheDocument();
+    expect(screen.getByText('UNFINISHED CONVOYS')).toBeInTheDocument();
   });
 });

@@ -2,33 +2,38 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { useDashboardCrew } from '../../../src/hooks/useDashboardCrew';
 import { api } from '../../../src/services/api';
-import type { CrewMember } from '../../../src/types';
+import type { CrewMember, AgentType, CrewMemberStatus } from '../../../src/types';
 
 // Mock the API service
 vi.mock('../../../src/services/api', () => ({
   api: {
     agents: {
       list: vi.fn(),
-      check: vi.fn(),
     },
   },
 }));
 
-const mockCrewMembers: CrewMember[] = [
-  { id: 'crew1', name: 'Jax' },
-  { id: 'crew2', name: 'Kael' },
-  { id: 'crew3', name: 'Zoe' },
+interface MockAgent {
+  name: string;
+  type: AgentType;
+  status: CrewMemberStatus;
+  rig: string | null;
+  currentTask?: string;
+}
+
+const mockAgents: MockAgent[] = [
+  { name: 'Jax', type: 'crew', status: 'working', rig: 'rig1', currentTask: 'Processing data' },
+  { name: 'Kael', type: 'polecat', status: 'idle', rig: 'rig2' },
+  { name: 'Zoe', type: 'crew', status: 'blocked', rig: null, currentTask: 'Waiting on dependency' },
 ];
 
 describe('useDashboardCrew', () => {
   beforeEach(() => {
-    // Reset mocks before each test
     vi.clearAllMocks();
   });
 
-  it('should fetch crew data and health checks successfully', async () => {
-    (api.agents.list as vi.Mock).mockResolvedValue(mockCrewMembers);
-    (api.agents.check as vi.Mock).mockResolvedValue({ healthy: true, issues: [] });
+  it('should fetch crew data successfully', async () => {
+    (api.agents.list as vi.Mock).mockResolvedValue(mockAgents);
 
     const { result } = renderHook(() => useDashboardCrew());
 
@@ -43,33 +48,35 @@ describe('useDashboardCrew', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     // Assert fetched data
-    expect(result.current.totalCrew).toBe(mockCrewMembers.length);
-    expect(result.current.activeCrew).toBe(mockCrewMembers.length); // As per current implementation
-    expect(result.current.crewAlerts).toEqual([]);
+    expect(result.current.totalCrew).toBe(3); // 3 crew/polecat agents
+    expect(result.current.activeCrew).toBe(2); // Jax (working) + Kael (idle)
+    expect(result.current.recentCrew).toHaveLength(3);
+    // Sorted by status priority: working first, then blocked, then idle
+    expect(result.current.recentCrew[0].name).toBe('Jax'); // working
     expect(result.current.error).toBeNull();
     expect(api.agents.list).toHaveBeenCalledTimes(1);
-    expect(api.agents.check).toHaveBeenCalledTimes(1);
   });
 
-  it('should reflect crew alerts from the health check', async () => {
-    (api.agents.list as vi.Mock).mockResolvedValue(mockCrewMembers);
-    const mockIssues = ['Engine anomaly detected', 'Life support fluctuating'];
-    (api.agents.check as vi.Mock).mockResolvedValue({ healthy: false, issues: mockIssues });
+  it('should generate alerts for blocked and stuck agents', async () => {
+    const agentsWithIssues: MockAgent[] = [
+      { name: 'Alice', type: 'crew', status: 'stuck', rig: 'rig1' },
+      { name: 'Bob', type: 'polecat', status: 'blocked', rig: 'rig2' },
+      { name: 'Charlie', type: 'crew', status: 'working', rig: 'rig3' },
+    ];
+    (api.agents.list as vi.Mock).mockResolvedValue(agentsWithIssues);
 
     const { result } = renderHook(() => useDashboardCrew());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(result.current.totalCrew).toBe(mockCrewMembers.length);
-    expect(result.current.activeCrew).toBe(mockCrewMembers.length);
-    expect(result.current.crewAlerts).toEqual(mockIssues);
-    expect(result.current.error).toBeNull();
+    expect(result.current.crewAlerts).toContain('Alice is STUCK');
+    expect(result.current.crewAlerts).toContain('Bob is blocked');
+    expect(result.current.crewAlerts).toHaveLength(2);
   });
 
-  it('should handle API errors from agent list gracefully', async () => {
+  it('should handle API errors gracefully', async () => {
     const errorMessage = 'Failed to fetch crew list';
     (api.agents.list as vi.Mock).mockRejectedValue(new Error(errorMessage));
-    (api.agents.check as vi.Mock).mockResolvedValue({ healthy: true, issues: [] }); // Ensure check doesn't fail cascade
 
     const { result } = renderHook(() => useDashboardCrew());
 
@@ -81,18 +88,20 @@ describe('useDashboardCrew', () => {
     expect(result.current.crewAlerts).toEqual([]);
   });
 
-  it('should handle API errors from agent check gracefully', async () => {
-    const errorMessage = 'Failed to fetch agent health';
-    (api.agents.list as vi.Mock).mockResolvedValue(mockCrewMembers);
-    (api.agents.check as vi.Mock).mockRejectedValue(new Error(errorMessage));
+  it('should exclude offline polecats from counts', async () => {
+    const agentsWithOffline: MockAgent[] = [
+      { name: 'Active', type: 'polecat', status: 'working', rig: 'rig1' },
+      { name: 'Offline', type: 'polecat', status: 'offline', rig: null },
+      { name: 'Crew', type: 'crew', status: 'offline', rig: null }, // Offline crew still counted
+    ];
+    (api.agents.list as vi.Mock).mockResolvedValue(agentsWithOffline);
 
     const { result } = renderHook(() => useDashboardCrew());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    expect(result.current.error).toBe(errorMessage);
-    expect(result.current.totalCrew).toBe(mockCrewMembers.length);
-    expect(result.current.activeCrew).toBe(mockCrewMembers.length);
-    expect(result.current.crewAlerts).toEqual([]); // Alerts should be empty on error
+    // Offline polecat excluded, offline crew included
+    expect(result.current.totalCrew).toBe(2);
+    expect(result.current.activeCrew).toBe(1); // Only 'Active' polecat
   });
 });

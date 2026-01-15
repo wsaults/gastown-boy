@@ -193,7 +193,6 @@ describe("useGastownStatus", () => {
       // Advance past default interval
       await act(async () => {
         vi.advanceTimersByTime(1000);
-        vi.runAllTimers(); // Run all timers to ensure setInterval callback is executed
         await Promise.resolve(); // Flush microtasks
       });
 
