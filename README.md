@@ -162,9 +162,9 @@ npm run install:all
 
 # Start everything (backend + frontend in one command)
 npm run dev
-
-# Open http://localhost:5173
 ```
+
+Open http://localhost:5173 in your browser.
 
 ### Custom Gastown Directory
 
