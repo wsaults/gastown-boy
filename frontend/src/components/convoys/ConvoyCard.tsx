@@ -1,12 +1,27 @@
-import { useState, useMemo, type CSSProperties } from 'react';
+import { useState, useMemo, useEffect, type CSSProperties } from 'react';
 import type { Convoy, TrackedIssue } from '../../types';
 
 interface ConvoyCardProps {
   convoy: Convoy;
 }
 
+function useIsSmallScreen(breakpoint = 768) {
+  const [isSmall, setIsSmall] = useState(
+    typeof window !== 'undefined' ? window.innerWidth <= breakpoint : false
+  );
+
+  useEffect(() => {
+    const handleResize = () => setIsSmall(window.innerWidth <= breakpoint);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [breakpoint]);
+
+  return isSmall;
+}
+
 export function ConvoyCard({ convoy }: ConvoyCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isSmallScreen = useIsSmallScreen();
   
   const { completed, total } = convoy.progress;
   const percentage = total > 0 ? (completed / total) * 100 : 0;
@@ -66,30 +81,43 @@ export function ConvoyCard({ convoy }: ConvoyCardProps) {
         role="button"
         aria-expanded={isExpanded}
       >
-        {/* Left: ID & Priority */}
-        <div style={styles.leftSection}>
-          <span style={{ 
-            ...styles.statusIcon, 
-            color: isDone ? colors.working : colors.primary 
-          }}>
-            {isDone ? '●' : '○'}
-          </span>
-          <div style={styles.idGroup}>
-            <span style={styles.id}>{convoy.id}</span>
+        {/* Left: ID & Priority (hidden on small screens) */}
+        {!isSmallScreen && (
+          <div style={styles.leftSection}>
             <span style={{
-              ...styles.priority,
-              color: info.priority <= 1 ? colors.stuck : colors.primaryDim
+              ...styles.statusIcon,
+              color: isDone ? colors.working : colors.primary
             }}>
-              P{info.priority}
+              {isDone ? '●' : '○'}
             </span>
+            <div style={styles.idGroup}>
+              <span style={styles.id}>{convoy.id}</span>
+              <span style={{
+                ...styles.priority,
+                color: info.priority <= 1 ? colors.stuck : colors.primaryDim
+              }}>
+                P{info.priority}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Middle: Title & Workers */}
         <div style={styles.middleSection}>
           <div style={styles.titleRow}>
+            {isSmallScreen && (
+              <span style={{
+                ...styles.statusIcon,
+                color: isDone ? colors.working : colors.primary,
+                marginRight: '8px'
+              }}>
+                {isDone ? '●' : '○'}
+              </span>
+            )}
             <span style={styles.title}>{convoy.title}</span>
-            <span style={styles.statusBadge}>{convoy.status.toUpperCase()}</span>
+            {!isSmallScreen && (
+              <span style={styles.statusBadge}>{convoy.status.toUpperCase()}</span>
+            )}
           </div>
           <div style={styles.metadataRow}>
             <span style={styles.activityTime}>{formatRelativeTime(info.lastActive)}</span>
@@ -105,34 +133,50 @@ export function ConvoyCard({ convoy }: ConvoyCardProps) {
         </div>
 
         {/* Right: Progress */}
-        <div style={styles.rightSection}>
+        <div style={{
+          ...styles.rightSection,
+          ...(isSmallScreen ? { flexDirection: 'column', alignItems: 'flex-end', gap: '4px', minWidth: 'auto' } : {})
+        }}>
+          {isSmallScreen && (
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <span style={{
+                ...styles.priority,
+                color: info.priority <= 1 ? colors.stuck : colors.primaryDim
+              }}>
+                P{info.priority}
+              </span>
+              <span style={styles.statusBadge}>{convoy.status.toUpperCase()}</span>
+            </div>
+          )}
           {!isSingle ? (
             <div style={styles.progressContainer}>
               <div style={styles.progressLabel}>
                 {completed}/{total}
               </div>
               <div style={styles.progressBarBg}>
-                <div 
-                  style={{ 
-                    ...styles.progressBarFill, 
+                <div
+                  style={{
+                    ...styles.progressBarFill,
                     width: `${percentage}%`,
                     backgroundColor: isDone ? colors.working : colors.primary
-                  }} 
+                  }}
                 />
               </div>
             </div>
           ) : (
-            <div style={{ 
+            <div style={{
               ...styles.singleProgress,
               color: isDone ? colors.working : colors.primaryDim
             }}>
               {isDone ? 'LANDED' : 'IN FLIGHT'}
             </div>
           )}
-          <span style={{
-            ...styles.expandIcon,
-            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'
-          }}>▶</span>
+          {!isSmallScreen && (
+            <span style={{
+              ...styles.expandIcon,
+              transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'
+            }}>▶</span>
+          )}
         </div>
       </div>
 

@@ -10,11 +10,15 @@ interface DashboardWidgetProps {
   title: string;
   children: React.ReactNode;
   className?: string;
+  headerRight?: React.ReactNode;
 }
 
-const DashboardWidget: React.FC<DashboardWidgetProps> = ({ title, children, className }) => (
+const DashboardWidget: React.FC<DashboardWidgetProps> = ({ title, children, className, headerRight }) => (
   <div className={`dashboard-widget-container ${className || ''}`}>
-    <h3 className="dashboard-widget-title">{title}</h3>
+    <div className="dashboard-widget-header">
+      <h3 className="dashboard-widget-title">{title}</h3>
+      {headerRight && <div className="dashboard-widget-header-right">{headerRight}</div>}
+    </div>
     <div className="dashboard-widget-content">{children}</div>
   </div>
 );
@@ -39,9 +43,9 @@ function formatRelativeTime(timestamp: string): string {
 }
 
 export function DashboardView() {
-  const { unreadMessages, recentMessages, totalCount: mailTotal, unreadCount, loading: mailLoading, error: mailError } = useDashboardMail();
+  const { recentMessages, totalCount: mailTotal, unreadCount, loading: mailLoading, error: mailError } = useDashboardMail();
   const { recentConvoys, loading: convoysLoading, error: convoysError } = useDashboardConvoys();
-  const { totalCrew, activeCrew, statusBreakdown, recentlyActive, idleCrew, totalUnreadMail, crewAlerts, loading: crewLoading, error: crewError } = useDashboardCrew();
+  const { totalCrew, activeCrew, recentCrew, crewAlerts, loading: crewLoading, error: crewError } = useDashboardCrew();
 
 
 
@@ -50,58 +54,36 @@ export function DashboardView() {
 
       <div className="dashboard-view-grid">
         {/* Mail Widget */}
-        <DashboardWidget title="MAIL">
+        <DashboardWidget
+          title="MAIL"
+          headerRight={
+            !mailLoading && !mailError && (
+              <div className="dashboard-header-stats">
+                <span className="dashboard-header-stat">{mailTotal} total</span>
+                <span className={`dashboard-header-stat ${unreadCount > 0 ? 'dashboard-header-stat-highlight' : ''}`}>{unreadCount} unread</span>
+              </div>
+            )
+          }
+        >
           {mailLoading && <p>Loading mail...</p>}
           {mailError && <p className="dashboard-view-error-text">Error: {mailError}</p>}
           {!mailLoading && !mailError && (
             <>
-              <div className="dashboard-stats-row">
-                <span className="dashboard-stat">
-                  <span className="dashboard-stat-value">{mailTotal}</span>
-                  <span className="dashboard-stat-label">TOTAL</span>
-                </span>
-                <span className="dashboard-stat">
-                  <span className={`dashboard-stat-value ${unreadCount > 0 ? 'dashboard-stat-highlight' : ''}`}>{unreadCount}</span>
-                  <span className="dashboard-stat-label">UNREAD</span>
-                </span>
-              </div>
-              {unreadMessages.length > 0 && (
-                <>
-                  <p className="dashboard-view-sub-title">Unread:</p>
-                  <ul className="dashboard-view-list">
-                    {unreadMessages.map((msg) => (
-                      <li key={msg.id} className="dashboard-view-list-item">
-                        <div className="dashboard-mail-item">
-                          <span className="dashboard-mail-subject">{msg.subject}</span>
-                          <span className="dashboard-mail-meta">
-                            <span className="dashboard-mail-from">{msg.from.replace(/\/$/, '')}</span>
-                            <span className="dashboard-mail-time">{formatRelativeTime(msg.timestamp)}</span>
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {(unreadMessages.length === 0 && recentMessages.length > 0) && (
-                <>
-                  <p className="dashboard-view-sub-title">Recent:</p>
-                  <ul className="dashboard-view-list">
-                    {recentMessages.map((msg) => (
-                      <li key={msg.id} className="dashboard-view-list-item">
-                        <div className="dashboard-mail-item">
-                          <span className="dashboard-mail-subject">{msg.subject}</span>
-                          <span className="dashboard-mail-meta">
-                            <span className="dashboard-mail-from">{msg.from.replace(/\/$/, '')}</span>
-                            <span className="dashboard-mail-time">{formatRelativeTime(msg.timestamp)}</span>
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {(unreadMessages.length === 0 && recentMessages.length === 0) && (
+              {recentMessages.length > 0 ? (
+                <ul className="dashboard-view-list">
+                  {recentMessages.map((msg) => (
+                    <li key={msg.id} className="dashboard-view-list-item">
+                      <div className="dashboard-mail-item">
+                        <span className="dashboard-mail-subject">{msg.subject}</span>
+                        <span className="dashboard-mail-meta">
+                          <span className="dashboard-mail-from">{msg.from.replace(/\/$/, '')}</span>
+                          <span className="dashboard-mail-time">{formatRelativeTime(msg.timestamp)}</span>
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
                 <p className="dashboard-empty-text">No messages</p>
               )}
             </>
@@ -109,99 +91,66 @@ export function DashboardView() {
         </DashboardWidget>
 
         {/* Crew Widget */}
-        <DashboardWidget title="CREW">
+        <DashboardWidget
+          title="CREW & POLECATS"
+          headerRight={
+            !crewLoading && !crewError && (
+              <div className="dashboard-header-stats">
+                <span className="dashboard-header-stat">{totalCrew} total</span>
+                <span className={`dashboard-header-stat ${activeCrew > 0 ? 'dashboard-header-stat-highlight' : ''}`}>{activeCrew} active</span>
+              </div>
+            )
+          }
+        >
           {crewLoading && <p>Loading crew data...</p>}
           {crewError && <p className="dashboard-view-error-text">Error: {crewError}</p>}
           {!crewLoading && !crewError && (
             <>
-              <div className="dashboard-stats-row">
-                <span className="dashboard-stat">
-                  <span className="dashboard-stat-value">{totalCrew}</span>
-                  <span className="dashboard-stat-label">TOTAL</span>
-                </span>
-                <span className="dashboard-stat">
-                  <span className="dashboard-stat-value">{activeCrew}</span>
-                  <span className="dashboard-stat-label">ACTIVE</span>
-                </span>
-                {totalUnreadMail > 0 && (
-                  <span className="dashboard-stat">
-                    <span className="dashboard-stat-value dashboard-stat-highlight">{totalUnreadMail}</span>
-                    <span className="dashboard-stat-label">UNREAD MAIL</span>
-                  </span>
-                )}
-              </div>
-              <div className="dashboard-status-breakdown">
-                {statusBreakdown.working > 0 && (
-                  <span className="dashboard-status-badge dashboard-status-working">
-                    {statusBreakdown.working} working
-                  </span>
-                )}
-                {statusBreakdown.idle > 0 && (
-                  <span className="dashboard-status-badge dashboard-status-idle">
-                    {statusBreakdown.idle} idle
-                  </span>
-                )}
-                {statusBreakdown.blocked > 0 && (
-                  <span className="dashboard-status-badge dashboard-status-blocked">
-                    {statusBreakdown.blocked} blocked
-                  </span>
-                )}
-                {statusBreakdown.stuck > 0 && (
-                  <span className="dashboard-status-badge dashboard-status-stuck">
-                    {statusBreakdown.stuck} stuck
-                  </span>
-                )}
-                {statusBreakdown.offline > 0 && (
-                  <span className="dashboard-status-badge dashboard-status-offline">
-                    {statusBreakdown.offline} offline
-                  </span>
-                )}
-              </div>
               {crewAlerts.length > 0 && (
-                <>
-                  <p className="dashboard-view-sub-title dashboard-view-error-text">Alerts:</p>
-                  <ul className="dashboard-view-list">
-                    {crewAlerts.map((alert, index) => (
-                      <li key={index} className="dashboard-view-list-item dashboard-view-error-text">{alert}</li>
-                    ))}
-                  </ul>
-                </>
+                <div className="dashboard-crew-alerts">
+                  {crewAlerts.map((alert, index) => (
+                    <span key={index} className="dashboard-crew-alert">{alert}</span>
+                  ))}
+                </div>
               )}
-              {recentlyActive.length > 0 && (
-                <>
-                  <p className="dashboard-view-sub-title">Working:</p>
-                  <ul className="dashboard-view-list">
-                    {recentlyActive.map((crew) => (
-                      <li key={crew.name} className="dashboard-view-list-item">
-                        <span className="dashboard-crew-name">{crew.name}</span>
-                        <span className={`dashboard-crew-status dashboard-status-${crew.status}`}>
-                          {crew.status}
-                        </span>
+              {recentCrew.length > 0 ? (
+                <div className="dashboard-crew-cards">
+                  {recentCrew.map((crew) => (
+                    <div key={crew.name} className="dashboard-crew-card">
+                      <div className="dashboard-crew-card-header">
+                        <div className="dashboard-crew-card-name-row">
+                          <span className="dashboard-crew-card-name">{crew.name.toUpperCase()}</span>
+                          {crew.status === 'offline' && (
+                            <span className="dashboard-crew-card-indicator dashboard-indicator-offline" title="Offline" />
+                          )}
+                        </div>
+                        <div className="dashboard-crew-card-tags">
+                          <span className="dashboard-crew-card-type">{crew.type.toUpperCase()}</span>
+                          {crew.rig && (
+                            <span className="dashboard-crew-card-rig">{crew.rig}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="dashboard-crew-card-body">
+                        {crew.status !== 'offline' && (
+                          <div className="dashboard-crew-card-status">
+                            <span className={`dashboard-crew-card-indicator dashboard-indicator-${crew.status}`} />
+                            <span className={`dashboard-crew-card-status-text dashboard-text-${crew.status}`}>
+                              {crew.status.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
                         {crew.currentTask && (
-                          <span className="dashboard-crew-task">{crew.currentTask}</span>
+                          <div className="dashboard-crew-card-task">
+                            <span className="dashboard-crew-card-task-label">LAST MSG:</span>
+                            <span className="dashboard-crew-card-task-text">{crew.currentTask}</span>
+                          </div>
                         )}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {recentlyActive.length === 0 && idleCrew.length > 0 && (
-                <>
-                  <p className="dashboard-view-sub-title">Available:</p>
-                  <ul className="dashboard-view-list">
-                    {idleCrew.map((crew) => (
-                      <li key={crew.name} className="dashboard-view-list-item">
-                        <span className="dashboard-crew-name">{crew.name}</span>
-                        <span className="dashboard-crew-status dashboard-status-idle">idle</span>
-                        {crew.unreadMail > 0 && (
-                          <span className="dashboard-crew-mail">{crew.unreadMail} unread</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {totalCrew === 0 && (
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
                 <p className="dashboard-empty-text">No crew members</p>
               )}
             </>

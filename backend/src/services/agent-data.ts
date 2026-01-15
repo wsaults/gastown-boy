@@ -113,13 +113,15 @@ export async function collectAgentSnapshot(
     const address = buildAgentAddress(role, rig, name);
     if (!address) continue;
 
+    const identity = addressToIdentity(address);
+    // Skip if we've already seen this agent (dedup across beads directories)
+    if (identities.has(identity)) continue;
+    identities.add(identity);
+
     const sessionName = sessionNameForAgent(role, rig, name);
     const running = sessionName ? sessions.has(sessionName) : false;
     const state = issue.agent_state ?? fields.agentState;
     const hookBead = issue.hook_bead ?? fields.hookBead;
-
-    const identity = addressToIdentity(address);
-    identities.add(identity);
 
     baseAgents.push({
       id: issue.id,

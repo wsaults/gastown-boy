@@ -4,6 +4,10 @@
   padding: 20px;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
 .dashboard-view-main-title {
@@ -20,6 +24,94 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+  min-width: 0;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .dashboard-view-container {
+    padding: 10px;
+  }
+
+  .dashboard-view-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dashboard-widget-container {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .dashboard-widget-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .dashboard-widget-title {
+    font-size: 0.95rem;
+  }
+
+  .dashboard-header-stats {
+    gap: 8px;
+  }
+
+  .dashboard-header-stat {
+    font-size: 0.65rem;
+  }
+
+  .dashboard-mail-subject {
+    font-size: 0.8rem;
+  }
+
+  .dashboard-mail-meta {
+    font-size: 0.65rem;
+  }
+
+  .dashboard-crew-card {
+    padding: 8px 10px;
+  }
+
+  .dashboard-crew-card-name {
+    font-size: 0.75rem;
+  }
+
+  .dashboard-crew-card-type,
+  .dashboard-crew-card-rig {
+    font-size: 0.55rem;
+  }
+
+  .dashboard-crew-card-status-text {
+    font-size: 0.6rem;
+  }
+
+  .dashboard-crew-card-task-label {
+    display: none;
+  }
+
+  .dashboard-crew-card-task-text {
+    font-size: 0.65rem;
+  }
+
+  .dashboard-convoy-item {
+    padding: 8px;
+  }
+
+  .dashboard-convoy-title {
+    font-size: 0.85rem;
+  }
+
+  .dashboard-convoy-status {
+    font-size: 0.6rem;
+  }
+
+  .dashboard-progress-text {
+    font-size: 0.65rem;
+    min-width: 60px;
+  }
 }
 
 .dashboard-widget-full-width {
@@ -43,12 +135,15 @@
   list-style-type: none;
   padding: 0;
   margin: 0;
+  min-width: 0;
 }
 
 .dashboard-view-list-item {
   font-size: 0.85rem;
   margin-bottom: 3px;
   line-height: 1.4;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .dashboard-view-list-item-label {
@@ -64,6 +159,25 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dashboard-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--crt-phosphor-dim);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.dashboard-widget-content {
+  flex-grow: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .dashboard-widget-title {
@@ -71,14 +185,28 @@
   font-size: 1.1rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  border-bottom: 1px solid var(--crt-phosphor-dim);
-  padding-bottom: 8px;
-  margin-bottom: 10px;
   color: var(--crt-phosphor-bright);
 }
 
-.dashboard-widget-content {
-  flex-grow: 1;
+.dashboard-widget-header-right {
+  display: flex;
+  gap: 12px;
+}
+
+.dashboard-header-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.dashboard-header-stat {
+  font-size: 0.75rem;
+  color: var(--crt-phosphor-dim);
+  text-transform: uppercase;
+}
+
+.dashboard-header-stat-highlight {
+  color: var(--crt-phosphor);
+  text-shadow: 0 0 8px var(--crt-phosphor-glow);
 }
 
 /* Stats row */
@@ -123,6 +251,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .dashboard-mail-subject {
@@ -130,6 +259,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .dashboard-mail-meta {
@@ -218,11 +348,173 @@
   white-space: nowrap;
 }
 
-.dashboard-crew-mail {
-  font-size: 0.7rem;
+.dashboard-crew-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-crew-alerts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.dashboard-crew-alert {
+  font-size: 0.75rem;
+  color: var(--crt-red);
+  padding: 2px 8px;
+  background: rgba(255, 68, 68, 0.15);
+  border: 1px solid var(--crt-red);
+  border-radius: 2px;
+}
+
+/* Crew cards */
+.dashboard-crew-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dashboard-crew-card {
+  border: 1px solid var(--crt-phosphor-dim);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dashboard-crew-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  min-width: 0;
+}
+
+.dashboard-crew-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dashboard-crew-card-name {
   color: var(--crt-phosphor);
-  margin-left: 8px;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.dashboard-crew-card-tags {
+  display: flex;
+  gap: 6px;
+}
+
+.dashboard-crew-card-type {
+  font-size: 0.6rem;
+  padding: 1px 4px;
+  border: 1px solid var(--crt-phosphor-dim);
+  color: var(--crt-phosphor-dim);
+}
+
+.dashboard-crew-card-rig {
+  font-size: 0.6rem;
+  padding: 1px 4px;
+  border: 1px solid var(--crt-phosphor-dim);
+  color: var(--crt-phosphor-dim);
   opacity: 0.8;
+}
+
+.dashboard-crew-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-crew-card-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dashboard-crew-card-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dashboard-indicator-working {
+  background-color: var(--crt-phosphor);
+  box-shadow: 0 0 8px var(--crt-phosphor-glow);
+}
+
+.dashboard-indicator-idle {
+  background-color: var(--crt-phosphor-dim);
+}
+
+.dashboard-indicator-blocked {
+  background-color: #FFAA00;
+  box-shadow: 0 0 8px rgba(255, 170, 0, 0.5);
+}
+
+.dashboard-indicator-stuck {
+  background-color: var(--crt-red);
+  box-shadow: 0 0 8px rgba(255, 68, 68, 0.5);
+}
+
+.dashboard-indicator-offline {
+  background-color: #666;
+}
+
+.dashboard-crew-card-status-text {
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.dashboard-text-working {
+  color: var(--crt-phosphor);
+}
+
+.dashboard-text-idle {
+  color: var(--crt-phosphor-dim);
+}
+
+.dashboard-text-blocked {
+  color: #FFAA00;
+}
+
+.dashboard-text-stuck {
+  color: var(--crt-red);
+}
+
+.dashboard-text-offline {
+  color: #666;
+}
+
+.dashboard-crew-card-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.dashboard-crew-card-task-label {
+  font-size: 0.65rem;
+  color: var(--crt-phosphor-dim);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.dashboard-crew-card-task-text {
+  font-size: 0.75rem;
+  color: var(--crt-phosphor-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Convoy styles */
@@ -230,12 +522,15 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .dashboard-convoy-item {
   padding: 10px;
   border: 1px solid var(--crt-phosphor-dim);
   background: rgba(0, 0, 0, 0.3);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .dashboard-convoy-header {
@@ -243,6 +538,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  min-width: 0;
 }
 
 .dashboard-convoy-title {
@@ -252,6 +548,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   flex: 1;
+  min-width: 0;
 }
 
 .dashboard-convoy-status {

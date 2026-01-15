@@ -3,7 +3,6 @@ import { api } from '../services/api';
 import type { Message } from '../types';
 
 interface DashboardMail {
-  unreadMessages: Message[];
   recentMessages: Message[];
   totalCount: number;
   unreadCount: number;
@@ -15,7 +14,6 @@ interface DashboardMail {
  * Custom hook to fetch mail data for the dashboard.
  */
 export function useDashboardMail(): DashboardMail {
-  const [unreadMessages, setUnreadMessages] = useState<Message[]>([]);
   const [recentMessages, setRecentMessages] = useState<Message[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -34,18 +32,16 @@ export function useDashboardMail(): DashboardMail {
         const threadIds = new Set(allRes.items.map((m) => m.threadId));
         setTotalCount(threadIds.size);
 
-        // Filter unread, sort by most recent, and get top 3
-        const unread = allRes.items
-          .filter((m) => !m.read)
-          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        // Count unread
+        const unread = allRes.items.filter((m) => !m.read);
         setUnreadCount(unread.length);
-        setUnreadMessages(unread.slice(0, 3));
 
-        // Get 3 most recent messages
-        const sorted = [...allRes.items].sort(
+        // Filter out handoff messages, then get 5 most recent
+        const filtered = allRes.items.filter((m) => !m.subject.toUpperCase().includes('HANDOFF'));
+        const sorted = filtered.sort(
           (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
-        setRecentMessages(sorted.slice(0, 3));
+        setRecentMessages(sorted.slice(0, 5));
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch mail');
       } finally {
@@ -56,5 +52,5 @@ export function useDashboardMail(): DashboardMail {
     void fetchMail();
   }, []);
 
-  return { unreadMessages, recentMessages, totalCount, unreadCount, loading, error };
+  return { recentMessages, totalCount, unreadCount, loading, error };
 }

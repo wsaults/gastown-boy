@@ -7,26 +7,18 @@ export interface DashboardCrewMember {
   name: string;
   type: AgentType;
   status: CrewMemberStatus;
+  rig: string | null;
   currentTask?: string | undefined;
-  unreadMail: number;
-}
-
-/** Status counts for crew breakdown */
-export interface StatusBreakdown {
-  idle: number;
-  working: number;
-  blocked: number;
-  stuck: number;
-  offline: number;
 }
 
 interface DashboardCrew {
+  /** Total crew/polecat count */
   totalCrew: number;
+  /** Active (working + idle) count */
   activeCrew: number;
-  statusBreakdown: StatusBreakdown;
-  recentlyActive: DashboardCrewMember[];
-  idleCrew: DashboardCrewMember[];
-  totalUnreadMail: number;
+  /** 3 most recent crew/polecats sorted by status priority */
+  recentCrew: DashboardCrewMember[];
+  /** Alerts for blocked/stuck agents */
   crewAlerts: string[];
   loading: boolean;
   error: string | null;
@@ -50,12 +42,7 @@ const STATUS_PRIORITY: Record<CrewMemberStatus, number> = {
 export function useDashboardCrew(): DashboardCrew {
   const [totalCrew, setTotalCrew] = useState(0);
   const [activeCrew, setActiveCrew] = useState(0);
-  const [statusBreakdown, setStatusBreakdown] = useState<StatusBreakdown>({
-    idle: 0, working: 0, blocked: 0, stuck: 0, offline: 0,
-  });
-  const [recentlyActive, setRecentlyActive] = useState<DashboardCrewMember[]>([]);
-  const [idleCrew, setIdleCrew] = useState<DashboardCrewMember[]>([]);
-  const [totalUnreadMail, setTotalUnreadMail] = useState(0);
+  const [recentCrew, setRecentCrew] = useState<DashboardCrewMember[]>([]);
   const [crewAlerts, setCrewAlerts] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -66,42 +53,28 @@ export function useDashboardCrew(): DashboardCrew {
       setError(null);
       try {
         const crewMembers = await api.agents.list();
-        setTotalCrew(crewMembers.length);
 
-        // Count by status and total unread mail
-        const breakdown: StatusBreakdown = { idle: 0, working: 0, blocked: 0, stuck: 0, offline: 0 };
-        let unreadMail = 0;
-        for (const m of crewMembers) {
-          if (m.status in breakdown) {
-            breakdown[m.status]++;
-          }
-          unreadMail += m.unreadMail;
-        }
-        setStatusBreakdown(breakdown);
-        setActiveCrew(breakdown.working + breakdown.idle);
-        setTotalUnreadMail(unreadMail);
+        // Filter to crew/polecat types, excluding offline polecats
+        const dashboardAgents = crewMembers.filter((m) =>
+          DASHBOARD_AGENT_TYPES.includes(m.type) &&
+          !(m.type === 'polecat' && m.status === 'offline')
+        );
+        setTotalCrew(dashboardAgents.length);
 
-        // Filter to crew/polecat types for display
-        const dashboardAgents = crewMembers.filter((m) => DASHBOARD_AGENT_TYPES.includes(m.type));
+        // Count active (working + idle)
+        const active = dashboardAgents.filter((m) => m.status === 'working' || m.status === 'idle').length;
+        setActiveCrew(active);
 
-        // Get actively working crew (working, blocked, stuck - not idle/offline)
-        const activeAgents = dashboardAgents
-          .filter((m) => m.status === 'working' || m.status === 'blocked' || m.status === 'stuck')
+        // Get 3 most recent crew/polecats sorted by status priority
+        const recent = dashboardAgents
           .sort((a, b) => STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status])
           .slice(0, 3)
-          .map((m) => ({ name: m.name, type: m.type, status: m.status, currentTask: m.currentTask, unreadMail: m.unreadMail }));
-        setRecentlyActive(activeAgents);
-
-        // Get idle crew (shown when no one is actively working)
-        const idle = dashboardAgents
-          .filter((m) => m.status === 'idle')
-          .slice(0, 3)
-          .map((m) => ({ name: m.name, type: m.type, status: m.status, currentTask: m.currentTask, unreadMail: m.unreadMail }));
-        setIdleCrew(idle);
+          .map((m) => ({ name: m.name, type: m.type, status: m.status, rig: m.rig, currentTask: m.currentTask }));
+        setRecentCrew(recent);
 
         // Generate alerts for blocked/stuck agents
         const alerts: string[] = [];
-        for (const m of crewMembers) {
+        for (const m of dashboardAgents) {
           if (m.status === 'stuck') {
             alerts.push(`${m.name} is STUCK`);
           } else if (m.status === 'blocked') {
@@ -119,5 +92,5 @@ export function useDashboardCrew(): DashboardCrew {
     void fetchCrewData();
   }, []);
 
-  return { totalCrew, activeCrew, statusBreakdown, recentlyActive, idleCrew, totalUnreadMail, crewAlerts, loading, error };
+  return { totalCrew, activeCrew, recentCrew, crewAlerts, loading, error };
 }
