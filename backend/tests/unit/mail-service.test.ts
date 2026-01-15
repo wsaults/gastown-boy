@@ -124,6 +124,36 @@ describe("mail-service", () => {
       expect(labelValue).toContain("from:");
       expect(labelValue).toContain("thread:");
     });
+
+    it("includes reply instructions when flag is set", async () => {
+      vi.mocked(execBd).mockResolvedValue({
+        success: true,
+        data: "",
+        exitCode: 0,
+      });
+
+      const result = await sendMail({
+        subject: "Quick message",
+        body: "Please check the convoy status",
+        to: "mayor/",
+        type: "task",
+        includeReplyInstructions: true,
+      });
+
+      expect(result.success).toBe(true);
+      const args = vi.mocked(execBd).mock.calls[0]?.[0] ?? [];
+
+      // Should have explicit --id flag
+      expect(args).toContain("--id");
+
+      // Body should include reply instructions
+      const descIndex = args.indexOf("-d");
+      const bodyValue = descIndex >= 0 ? (args[descIndex + 1] ?? "") : "";
+      expect(bodyValue).toContain("Please check the convoy status");
+      expect(bodyValue).toContain("---");
+      expect(bodyValue).toContain("To reply: gt mail send");
+      expect(bodyValue).toContain("--reply-to");
+    });
   });
 
   describe("markRead", () => {

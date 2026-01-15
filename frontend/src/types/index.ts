@@ -76,6 +76,8 @@ export interface SendMessageRequest {
   type?: MessageType;
   /** ID of message being replied to */
   replyTo?: string;
+  /** If true, append reply instructions with message ID to body */
+  includeReplyInstructions?: boolean;
 }
 
 // ============================================================================

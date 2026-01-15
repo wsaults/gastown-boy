@@ -48,6 +48,7 @@ export function QuickInput() {
         body: text,
         priority: 2, // Normal
         type: 'task',
+        includeReplyInstructions: true,
       });
       
       setText('');

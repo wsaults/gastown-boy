@@ -78,6 +78,8 @@ export interface SendMessageRequest {
   type?: MessageType | undefined;
   /** ID of message being replied to */
   replyTo?: string | undefined;
+  /** If true, append reply instructions with message ID to body */
+  includeReplyInstructions?: boolean | undefined;
 }
 
 // ============================================================================
@@ -275,6 +277,7 @@ export const SendMessageRequestSchema = z.object({
   priority: MessagePrioritySchema.optional(),
   type: MessageTypeSchema.optional(),
   replyTo: z.string().optional(),
+  includeReplyInstructions: z.boolean().optional(),
 });
 
 export const AgentStatusSchema = z.object({
