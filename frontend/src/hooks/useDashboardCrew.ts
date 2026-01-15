@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { api } from '../services/api';
-import type { CrewMember } from '../types';
 
 interface DashboardCrew {
   totalCrew: number;
@@ -27,7 +26,7 @@ export function useDashboardCrew(): DashboardCrew {
       try {
         const crewMembers = await api.agents.list();
         setTotalCrew(crewMembers.length);
-        const active = crewMembers.filter((m) => m.status === 'active').length;
+        const active = crewMembers.filter((m) => m.status === 'working' || m.status === 'idle').length;
         setActiveCrew(active);
         setCrewAlerts([]);
       } catch (err) {

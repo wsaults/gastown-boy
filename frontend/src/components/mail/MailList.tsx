@@ -1,12 +1,13 @@
 import type { CSSProperties } from 'react';
 import type { Message } from '../../types';
+import type { GroupedMessage } from '../../hooks/useMail';
 
 /**
  * Props for the MailList component.
  */
 export interface MailListProps {
-  /** List of messages to display */
-  messages: Message[];
+  /** List of messages to display (can be regular or grouped messages) */
+  messages: (Message | GroupedMessage)[];
   /** ID of currently selected message (if any) */
   selectedId?: string | null;
   /** Callback when a message is selected */
@@ -15,6 +16,11 @@ export interface MailListProps {
   loading?: boolean;
   /** Optional CSS class name */
   className?: string;
+}
+
+/** Type guard to check if message has threadCount */
+function isGroupedMessage(msg: Message | GroupedMessage): msg is GroupedMessage {
+  return 'threadCount' in msg;
 }
 
 /**
@@ -49,6 +55,7 @@ export function MailList({
     <div style={styles.container} className={className} role="listbox" aria-label="Mail messages">
       {messages.map((message) => {
         const isSelected = message.id === selectedId;
+        const threadCount = isGroupedMessage(message) ? message.threadCount : 1;
         return (
           <button
             key={message.id}
@@ -70,6 +77,9 @@ export function MailList({
                 {!message.read && <span style={styles.unreadDot}>●</span>}
                 {message.subject}
               </span>
+              {threadCount > 1 && (
+                <span style={styles.threadCount}>({threadCount})</span>
+              )}
             </div>
             <div style={styles.messageMeta}>
               <div style={styles.fromToStack}>
@@ -225,6 +235,13 @@ const styles = {
     marginRight: '6px',
     color: colors.primary,
     textShadow: `0 0 4px ${colors.primary}`,
+  },
+
+  threadCount: {
+    fontSize: '0.75rem',
+    color: colors.primaryDim,
+    marginLeft: '4px',
+    flexShrink: 0,
   },
 
   messageMeta: {

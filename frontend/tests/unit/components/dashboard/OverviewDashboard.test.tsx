@@ -1,37 +1,37 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { OverviewDashboard } from '../../../src/components/dashboard/OverviewDashboard';
-// import { useDashboardMail } from '../../../src/hooks/useDashboardMail';
-// import { useDashboardConvoys } from '../../../src/hooks/useDashboardConvoys';
-// import { useDashboardCrew } from '../../../src/hooks/useDashboardCrew';
+import { DashboardView } from '../../../../src/components/dashboard/OverviewDashboard';
+import { useDashboardMail } from '../../../../src/hooks/useDashboardMail';
+import { useDashboardConvoys } from '../../../../src/hooks/useDashboardConvoys';
+import { useDashboardCrew } from '../../../../src/hooks/useDashboardCrew';
 
-// Mock the custom hooks explicitly
-// vi.mock('../../../src/hooks/useDashboardMail', () => ({
-//   useDashboardMail: vi.fn(),
-// }));
-// vi.mock('../../../src/hooks/useDashboardConvoys', () => ({
-//   useDashboardConvoys: vi.fn(),
-// }));
-// vi.mock('../../../src/hooks/useDashboardCrew', () => ({
-//   useDashboardCrew: vi.fn(),
-// }));
+// Mock the custom hooks
+vi.mock('../../../../src/hooks/useDashboardMail', () => ({
+  useDashboardMail: vi.fn(),
+}));
+vi.mock('../../../../src/hooks/useDashboardConvoys', () => ({
+  useDashboardConvoys: vi.fn(),
+}));
+vi.mock('../../../../src/hooks/useDashboardCrew', () => ({
+  useDashboardCrew: vi.fn(),
+}));
 
-describe('OverviewDashboard', () => {
+describe('DashboardView', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default mock implementations for the hooks
-    (useDashboardMail as vi.Mock).mockReturnValue({
+    (useDashboardMail as ReturnType<typeof vi.fn>).mockReturnValue({
       unreadMessages: [],
       recentMessages: [],
       loading: false,
       error: null,
     });
-    (useDashboardConvoys as vi.Mock).mockReturnValue({
+    (useDashboardConvoys as ReturnType<typeof vi.fn>).mockReturnValue({
       recentConvoys: [],
       loading: false,
       error: null,
     });
-    (useDashboardCrew as vi.Mock).mockReturnValue({
+    (useDashboardCrew as ReturnType<typeof vi.fn>).mockReturnValue({
       totalCrew: 0,
       activeCrew: 0,
       crewAlerts: [],
@@ -40,10 +40,11 @@ describe('OverviewDashboard', () => {
     });
   });
 
-  it('renders main title and grid', () => {
-    render(<OverviewDashboard />);
+  it('renders main title and widget headers', () => {
+    render(<DashboardView />);
     expect(screen.getByText('SYSTEM OVERVIEW')).toBeInTheDocument();
     expect(screen.getByText('MAIL')).toBeInTheDocument();
-    expect(screen.getByText('CONVOY MANIFESTS')).toBeInTheDocument();
-    expect(screen.getByText('CREW ROSTER & ALERTS')).toBeInTheDocument();
-    expect(screen.getByText('SYSTEM CONFIG')).toBeInTheDocument();
+    expect(screen.getByText('CONVOYS')).toBeInTheDocument();
+    expect(screen.getByText('CREW')).toBeInTheDocument();
+  });
+});

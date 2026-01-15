@@ -6,7 +6,7 @@ import { ComposeMessage } from './ComposeMessage';
 import { useMail } from '../../hooks/useMail';
 import { useIsMobile } from '../../hooks/useMediaQuery';
 import { useRigFilteredItems } from '../../contexts/RigContext';
-import type { Message, SendMessageRequest } from '../../types';
+import type { SendMessageRequest } from '../../types';
 
 /** Mobile navigation view mode */
 type MobileView = 'list' | 'detail';
@@ -27,7 +27,6 @@ export interface MailViewProps {
  */
 export function MailView({ className = '' }: MailViewProps) {
   const {
-    messages,
     loading,
     error,
     selectedMessage,
@@ -40,6 +39,8 @@ export function MailView({ className = '' }: MailViewProps) {
     sending,
     sendError,
     clearSendError,
+    threadMessages,
+    groupedMessages,
   } = useMail();
 
   // Responsive: detect mobile viewport
@@ -48,9 +49,9 @@ export function MailView({ className = '' }: MailViewProps) {
   // Mobile navigation state: which panel to show
   const [mobileView, setMobileView] = useState<MobileView>('list');
 
-  // Filter messages by selected rig (based on 'to' address)
-  const filteredMessages = useRigFilteredItems<Message>(
-    messages,
+  // Filter grouped messages by selected rig (based on 'to' address)
+  const filteredMessages = useRigFilteredItems(
+    groupedMessages,
     (msg) => msg.to // Extract rig from 'to' address (e.g., "gastown_boy/crew/carl")
   );
 
@@ -62,19 +63,19 @@ export function MailView({ className = '' }: MailViewProps) {
 
   // Auto-select first message when inbox loads (desktop only)
   useEffect(() => {
-    const firstMessage = messages[0];
+    const firstMessage = groupedMessages[0];
     if (!isMobile && firstMessage && !selectedMessage && !loading && !composing) {
       void selectMessage(firstMessage.id);
     }
-  }, [messages, selectedMessage, loading, composing, selectMessage, isMobile]);
+  }, [groupedMessages, selectedMessage, loading, composing, selectMessage, isMobile]);
 
   // When switching from mobile to desktop, ensure we have a selection
   useEffect(() => {
-    const firstMessage = messages[0];
+    const firstMessage = groupedMessages[0];
     if (!isMobile && mobileView === 'list' && firstMessage && !selectedMessage) {
       void selectMessage(firstMessage.id);
     }
-  }, [isMobile, mobileView, messages, selectedMessage, selectMessage]);
+  }, [isMobile, mobileView, groupedMessages, selectedMessage, selectMessage]);
 
   const handleMessageSelect = (messageId: string) => {
     void selectMessage(messageId);
@@ -189,7 +190,7 @@ export function MailView({ className = '' }: MailViewProps) {
                 messages={filteredMessages}
                 selectedId={selectedMessage?.id ?? null}
                 onSelect={handleMessageSelect}
-                loading={loading && messages.length === 0}
+                loading={loading && groupedMessages.length === 0}
               />
             </div>
           </aside>
@@ -215,6 +216,7 @@ export function MailView({ className = '' }: MailViewProps) {
             ) : (
               <MailDetail
                 message={selectedMessage}
+                threadMessages={threadMessages}
                 loading={selectedLoading}
                 onClose={isMobile ? handleMobileBack : clearSelection}
                 onReply={handleStartReply}

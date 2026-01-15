@@ -45,7 +45,7 @@ export function DashboardView() {
                   <ul className="dashboard-view-list">
                     {unreadMessages.map((msg) => (
                       <li key={msg.id} className="dashboard-view-list-item">
-                        <span className="dashboard-view-list-item-label">From:</span> {msg.sender} <span className="dashboard-view-list-item-label">Subj:</span> {msg.subject}
+                        <span className="dashboard-view-list-item-label">From:</span> {msg.from} <span className="dashboard-view-list-item-label">Subj:</span> {msg.subject}
                       </li>
                     ))}
                   </ul>
@@ -57,7 +57,7 @@ export function DashboardView() {
                   <ul className="dashboard-view-list">
                     {recentMessages.map((msg) => (
                       <li key={msg.id} className="dashboard-view-list-item">
-                        <span className="dashboard-view-list-item-label">From:</span> {msg.sender} <span className="dashboard-view-list-item-label">Subj:</span> {msg.subject}
+                        <span className="dashboard-view-list-item-label">From:</span> {msg.from} <span className="dashboard-view-list-item-label">Subj:</span> {msg.subject}
                       </li>
                     ))}
                   </ul>

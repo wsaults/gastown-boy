@@ -8,6 +8,8 @@ import { useIsMobile } from '../../hooks/useMediaQuery';
 export interface MailDetailProps {
   /** The message to display */
   message: Message | null;
+  /** All messages in the thread (optional, for thread view) */
+  threadMessages?: Message[];
   /** Whether the message is currently loading */
   loading?: boolean;
   /** Callback when close/back button is clicked */
@@ -24,12 +26,14 @@ export interface MailDetailProps {
  */
 export function MailDetail({
   message,
+  threadMessages = [],
   loading = false,
   onClose,
   onReply,
   className = '',
 }: MailDetailProps) {
   const isMobile = useIsMobile();
+  const hasThread = threadMessages.length > 1;
 
   if (loading) {
     return (
@@ -68,49 +72,95 @@ export function MailDetail({
           <span style={styles.typeBadge} data-type={message.type}>
             [{message.type.toUpperCase()}]
           </span>
+          {hasThread && (
+            <span style={styles.threadBadge}>
+              THREAD ({threadMessages.length})
+            </span>
+          )}
         </div>
       </header>
 
       {/* Subject line */}
       <h1 style={styles.subject}>{message.subject}</h1>
 
-      {/* Message metadata */}
-      <dl style={styles.metadata}>
-        <div style={styles.metaRow}>
-          <dt style={styles.metaLabel}>FROM:</dt>
-          <dd style={styles.metaValue}>{formatAddress(message.from)}</dd>
+      {/* Thread indicator */}
+      {hasThread && (
+        <div style={styles.threadInfo}>
+          Thread: {message.threadId}
         </div>
-        <div style={styles.metaRow}>
-          <dt style={styles.metaLabel}>TO:</dt>
-          <dd style={styles.metaValue}>{formatAddress(message.to)}</dd>
-        </div>
-        {message.cc && message.cc.length > 0 && (
-          <div style={styles.metaRow}>
-            <dt style={styles.metaLabel}>CC:</dt>
-            <dd style={styles.metaValue}>{message.cc.map(formatAddress).join(', ')}</dd>
-          </div>
-        )}
-        <div style={styles.metaRow}>
-          <dt style={styles.metaLabel}>DATE:</dt>
-          <dd style={styles.metaValue}>{formatFullTimestamp(message.timestamp)}</dd>
-        </div>
-        <div style={styles.metaRow}>
-          <dt style={styles.metaLabel}>ID:</dt>
-          <dd style={{ ...styles.metaValue, ...styles.messageId }}>{message.id}</dd>
-        </div>
-      </dl>
+      )}
 
       {/* Divider */}
       <hr style={styles.divider} />
 
-      {/* Message body */}
-      <div style={styles.body}>
-        {(message.body ?? '').split('\n').map((line, i) => (
-          <p key={i} style={styles.bodyParagraph}>
-            {line || '\u00A0'}
-          </p>
-        ))}
-      </div>
+      {/* Thread view or single message */}
+      {hasThread ? (
+        <div style={styles.threadContainer}>
+          {threadMessages.map((msg, index) => (
+            <div
+              key={msg.id}
+              style={{
+                ...styles.threadMessage,
+                ...(msg.id === message.id ? styles.threadMessageSelected : {}),
+              }}
+            >
+              <div style={styles.threadMessageHeader}>
+                <span style={styles.threadMessageFrom}>{formatAddress(msg.from)}</span>
+                <span style={styles.threadMessageDate}>{formatFullTimestamp(msg.timestamp)}</span>
+              </div>
+              <div style={styles.threadMessageBody}>
+                {(msg.body ?? '').split('\n').map((line, i) => (
+                  <p key={i} style={styles.bodyParagraph}>
+                    {line || '\u00A0'}
+                  </p>
+                ))}
+              </div>
+              {index < threadMessages.length - 1 && (
+                <hr style={styles.threadDivider} />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          {/* Single message metadata */}
+          <dl style={styles.metadata}>
+            <div style={styles.metaRow}>
+              <dt style={styles.metaLabel}>FROM:</dt>
+              <dd style={styles.metaValue}>{formatAddress(message.from)}</dd>
+            </div>
+            <div style={styles.metaRow}>
+              <dt style={styles.metaLabel}>TO:</dt>
+              <dd style={styles.metaValue}>{formatAddress(message.to)}</dd>
+            </div>
+            {message.cc && message.cc.length > 0 && (
+              <div style={styles.metaRow}>
+                <dt style={styles.metaLabel}>CC:</dt>
+                <dd style={styles.metaValue}>{message.cc.map(formatAddress).join(', ')}</dd>
+              </div>
+            )}
+            <div style={styles.metaRow}>
+              <dt style={styles.metaLabel}>DATE:</dt>
+              <dd style={styles.metaValue}>{formatFullTimestamp(message.timestamp)}</dd>
+            </div>
+            <div style={styles.metaRow}>
+              <dt style={styles.metaLabel}>ID:</dt>
+              <dd style={{ ...styles.metaValue, ...styles.messageId }}>{message.id}</dd>
+            </div>
+          </dl>
+
+          <hr style={styles.divider} />
+
+          {/* Single message body */}
+          <div style={styles.body}>
+            {(message.body ?? '').split('\n').map((line, i) => (
+              <p key={i} style={styles.bodyParagraph}>
+                {line || '\u00A0'}
+              </p>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Footer with status indicators and actions */}
       <footer style={styles.footer}>
@@ -256,6 +306,15 @@ const styles = {
     letterSpacing: '0.1em',
   },
 
+  threadBadge: {
+    fontSize: '0.7rem',
+    color: colors.primary,
+    letterSpacing: '0.1em',
+    padding: '2px 6px',
+    border: `1px solid ${colors.primary}`,
+    borderRadius: '2px',
+  },
+
   subject: {
     fontSize: '1.1rem',
     fontWeight: 'normal',
@@ -263,6 +322,62 @@ const styles = {
     letterSpacing: '0.05em',
     lineHeight: 1.3,
     textShadow: `0 0 8px ${colors.primaryGlow}`,
+  },
+
+  threadInfo: {
+    fontSize: '0.75rem',
+    color: colors.primaryDim,
+    marginBottom: '8px',
+    fontFamily: 'monospace',
+  },
+
+  threadContainer: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0',
+    overflowY: 'auto',
+  },
+
+  threadMessage: {
+    padding: '12px 0',
+  },
+
+  threadMessageSelected: {
+    borderLeft: `3px solid ${colors.primary}`,
+    paddingLeft: '12px',
+    marginLeft: '-3px',
+  },
+
+  threadMessageHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px',
+  },
+
+  threadMessageFrom: {
+    fontSize: '0.85rem',
+    fontWeight: 'bold',
+    color: colors.primary,
+  },
+
+  threadMessageDate: {
+    fontSize: '0.75rem',
+    color: colors.primaryDim,
+  },
+
+  threadMessageBody: {
+    fontSize: '0.85rem',
+    lineHeight: 1.5,
+    color: colors.primary,
+  },
+
+  threadDivider: {
+    border: 'none',
+    borderTop: `1px dotted ${colors.primaryDim}`,
+    margin: '12px 0 0 0',
+    opacity: 0.5,
   },
 
   metadata: {

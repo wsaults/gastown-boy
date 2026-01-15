@@ -9,6 +9,12 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { api } from "../services/api";
 import type { Message, SendMessageRequest } from "../types";
 
+/** Message with thread count for grouped display */
+export interface GroupedMessage extends Message {
+  /** Number of messages in this thread */
+  threadCount: number;
+}
+
 /** Options for the useMail hook. */
 export interface UseMailOptions {
   /** Polling interval in milliseconds. Default: 60000 (1 minute) */
@@ -53,6 +59,10 @@ export interface UseMailResult {
   clearSelection: () => void;
   /** Count of unread messages */
   unreadCount: number;
+  /** All messages in the same thread as selected message, sorted by timestamp */
+  threadMessages: Message[];
+  /** Messages grouped by thread (one entry per thread with count) */
+  groupedMessages: GroupedMessage[];
 }
 
 const DEFAULT_POLL_INTERVAL = 60000;
@@ -247,6 +257,40 @@ export function useMail(options: UseMailOptions = {}): UseMailResult {
     [messages]
   );
 
+  // Compute thread messages for selected message
+  const threadMessages = useMemo(() => {
+    if (!selectedMessage?.threadId) return [];
+    return messages
+      .filter((msg) => msg.threadId === selectedMessage.threadId)
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  }, [messages, selectedMessage?.threadId]);
+
+  // Group messages by thread, showing only the most recent message per thread
+  const groupedMessages = useMemo((): GroupedMessage[] => {
+    const threadMap = new Map<string, { messages: Message[]; latest: Message }>();
+
+    for (const msg of messages) {
+      const existing = threadMap.get(msg.threadId);
+      if (existing) {
+        existing.messages.push(msg);
+        // Keep the most recent message
+        if (new Date(msg.timestamp).getTime() > new Date(existing.latest.timestamp).getTime()) {
+          existing.latest = msg;
+        }
+      } else {
+        threadMap.set(msg.threadId, { messages: [msg], latest: msg });
+      }
+    }
+
+    // Convert to array of GroupedMessage, sorted by latest timestamp descending
+    return Array.from(threadMap.values())
+      .map(({ messages: threadMsgs, latest }) => ({
+        ...latest,
+        threadCount: threadMsgs.length,
+      }))
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [messages]);
+
   return {
     messages,
     total,
@@ -265,5 +309,7 @@ export function useMail(options: UseMailOptions = {}): UseMailResult {
     selectMessage,
     clearSelection,
     unreadCount,
+    threadMessages,
+    groupedMessages,
   };
 }
