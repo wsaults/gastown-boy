@@ -1,4 +1,4 @@
-import { useState, useCallback, type CSSProperties } from 'react';
+import { useState, useCallback, useEffect, type CSSProperties } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { api } from '../../services/api';
 import type { BeadInfo } from '../../types';
@@ -86,6 +86,7 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
     data: beads,
     loading,
     error,
+    refresh,
   } = usePolling<BeadInfo[]>(
     () => api.beads.list({ rig: 'gastown_boy', status: statusFilter, limit: 50 }),
     {
@@ -93,6 +94,11 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
       enabled: isActive,
     }
   );
+
+  // Refetch immediately when filter changes
+  useEffect(() => {
+    void refresh();
+  }, [statusFilter, refresh]);
 
   const handleSling = useCallback(async (bead: BeadInfo) => {
     setSlingingId(bead.id);
@@ -107,6 +113,8 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
         type: 'task',
       });
       setSlingResult({ id: bead.id, success: true });
+      // Refresh the list to reflect any state changes
+      void refresh();
       // Clear success indicator after 2 seconds
       setTimeout(() => setSlingResult(null), 2000);
     } catch {
@@ -116,7 +124,7 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
     } finally {
       setSlingingId(null);
     }
-  }, []);
+  }, [refresh]);
 
   if (loading && !beads) {
     return (
