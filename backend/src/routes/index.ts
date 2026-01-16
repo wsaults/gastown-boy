@@ -3,6 +3,7 @@
  */
 
 export { agentsRouter } from "./agents.js";
+export { beadsRouter } from "./beads.js";
 export { convoysRouter } from "./convoys.js";
 export { mailRouter } from "./mail.js";
 export { powerRouter } from "./power.js";

@@ -178,6 +178,32 @@ export interface CrewMember {
 }
 
 // ============================================================================
+// Bead Types
+// ============================================================================
+
+/** Bead display info for the UI. */
+export interface BeadInfo {
+  /** Bead ID (e.g., "gb-53tj") */
+  id: string;
+  /** Bead title */
+  title: string;
+  /** Status (open, closed, etc.) */
+  status: string;
+  /** Priority (0-4, lower = higher priority) */
+  priority: number;
+  /** Issue type (feature, bug, task, etc.) */
+  type: string;
+  /** Assignee address or null */
+  assignee: string | null;
+  /** Labels attached to the bead */
+  labels: string[];
+  /** Creation timestamp */
+  createdAt: string;
+  /** Last update timestamp */
+  updatedAt: string | null;
+}
+
+// ============================================================================
 // API Response Types
 // ============================================================================
 

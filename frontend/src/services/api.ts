@@ -11,6 +11,7 @@ import type {
   PaginatedResponse,
   PowerState,
   Convoy,
+  BeadInfo,
 } from '../types';
 
 // =============================================================================
@@ -203,6 +204,25 @@ export const api = {
   convoys: {
     async list(): Promise<Convoy[]> {
       return apiFetch('/convoys');
+    },
+  },
+
+  /**
+   * Beads operations.
+   */
+  beads: {
+    async list(params?: {
+      rig?: string;
+      status?: 'open' | 'closed' | 'all';
+      limit?: number;
+    }): Promise<BeadInfo[]> {
+      const searchParams = new URLSearchParams();
+      if (params?.rig) searchParams.set('rig', params.rig);
+      if (params?.status) searchParams.set('status', params.status);
+      if (params?.limit) searchParams.set('limit', params.limit.toString());
+
+      const query = searchParams.toString();
+      return apiFetch(`/beads${query ? `?${query}` : ''}`);
     },
   },
 };

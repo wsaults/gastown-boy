@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { BeadsView } from "./components/beads/BeadsView";
 import { ConvoysView } from "./components/convoys/ConvoysView";
 import { CrewStats } from "./components/crew/CrewStats";
 import { MailView } from "./components/mail/MailView";
@@ -12,7 +13,7 @@ import { DashboardView } from "./components/dashboard/OverviewDashboard";
 
 export type ThemeId = 'green' | 'red' | 'blue' | 'tan' | 'pink' | 'purple';
 
-type TabId = "dashboard" | "mail" | "convoys" | "crew" | "settings";
+type TabId = "dashboard" | "mail" | "convoys" | "crew" | "beads" | "settings";
 
 interface Tab {
   id: TabId;
@@ -25,6 +26,7 @@ const TABS: Tab[] = [
   { id: "mail", label: "MAIL", icon: "📧" },
   { id: "convoys", label: "CONVOYS", icon: "🚚" },
   { id: "crew", label: "CREW", icon: "👥" },
+  { id: "beads", label: "BEADS", icon: "📿" },
   { id: "settings", label: "SETTINGS", icon: "⚙️" },
 ];
 
@@ -113,6 +115,13 @@ function App() {
               aria-hidden={activeTab !== "crew"}
             >
               <CrewStats isActive={activeTab === "crew"} />
+            </section>
+            <section
+              className="tab-view"
+              hidden={activeTab !== "beads"}
+              aria-hidden={activeTab !== "beads"}
+            >
+              <BeadsView isActive={activeTab === "beads"} />
             </section>
             <section
               className="tab-view"
