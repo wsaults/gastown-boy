@@ -88,7 +88,7 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
     error,
     refresh,
   } = usePolling<BeadInfo[]>(
-    () => api.beads.list({ rig: 'gastown_boy', status: statusFilter, limit: 50 }),
+    () => api.beads.list({ status: statusFilter, type: 'task', limit: 50 }),
     {
       interval: 30000,
       enabled: isActive,

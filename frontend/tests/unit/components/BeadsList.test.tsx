@@ -19,7 +19,7 @@ const mockBeads = [
   {
     id: 'hq-001',
     title: 'Test bead 1',
-    type: 'feature',
+    type: 'task',
     priority: 2,
     status: 'open',
     assignee: null,
@@ -29,7 +29,7 @@ const mockBeads = [
   {
     id: 'hq-002',
     title: 'Test bead 2',
-    type: 'bug',
+    type: 'task',
     priority: 1,
     status: 'closed',
     assignee: 'gastown_boy/dag',
@@ -51,8 +51,8 @@ describe('BeadsList', () => {
 
       await waitFor(() => {
         expect(api.beads.list).toHaveBeenCalledWith({
-          rig: 'gastown_boy',
           status: 'open',
+          type: 'task',
           limit: 50,
         });
       });
@@ -63,8 +63,8 @@ describe('BeadsList', () => {
 
       await waitFor(() => {
         expect(api.beads.list).toHaveBeenCalledWith({
-          rig: 'gastown_boy',
           status: 'open',
+          type: 'task',
           limit: 50,
         });
       });
@@ -76,8 +76,8 @@ describe('BeadsList', () => {
 
       await waitFor(() => {
         expect(api.beads.list).toHaveBeenCalledWith({
-          rig: 'gastown_boy',
           status: 'closed',
+          type: 'task',
           limit: 50,
         });
       });
@@ -99,8 +99,8 @@ describe('BeadsList', () => {
       await waitFor(() => {
         // Should eventually fetch with the final filter value
         expect(api.beads.list).toHaveBeenLastCalledWith({
-          rig: 'gastown_boy',
           status: 'all',
+          type: 'task',
           limit: 50,
         });
       });

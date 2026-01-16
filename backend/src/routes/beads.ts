@@ -18,11 +18,13 @@ export const beadsRouter = Router();
  * Query params:
  * - rig: Filter by rig label (optional, no default - shows all beads)
  * - status: "open" | "closed" | "all" (default: open)
+ * - type: Filter by bead type (e.g., "task", "bug", "feature")
  * - limit: Max results (default: 100)
  */
 beadsRouter.get("/", async (req, res) => {
   const rig = req.query["rig"] as string | undefined;
   const statusParam = req.query["status"] as "open" | "closed" | "all" | undefined;
+  const typeParam = req.query["type"] as string | undefined;
   const limitStr = req.query["limit"] as string | undefined;
   const limit = limitStr ? parseInt(limitStr, 10) : 100;
 
@@ -30,6 +32,7 @@ beadsRouter.get("/", async (req, res) => {
     ...(rig && { rig }),
     limit,
     ...(statusParam && { status: statusParam }),
+    ...(typeParam && { type: typeParam }),
   });
 
   if (!result.success) {
