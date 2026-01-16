@@ -214,11 +214,13 @@ export const api = {
     async list(params?: {
       rig?: string;
       status?: 'open' | 'closed' | 'all';
+      type?: string;
       limit?: number;
     }): Promise<BeadInfo[]> {
       const searchParams = new URLSearchParams();
       if (params?.rig) searchParams.set('rig', params.rig);
       if (params?.status) searchParams.set('status', params.status);
+      if (params?.type) searchParams.set('type', params.type);
       if (params?.limit) searchParams.set('limit', params.limit.toString());
 
       const query = searchParams.toString();

@@ -45,6 +45,7 @@ export interface BeadsServiceResult<T> {
 export interface ListBeadsOptions {
   rig?: string;
   status?: "open" | "closed" | "all";
+  type?: string;
   limit?: number;
 }
 
@@ -95,6 +96,11 @@ export async function listBeads(
       args.push("--status", "closed");
     }
     // Default is open issues only
+
+    // Filter by type if specified
+    if (options.type) {
+      args.push("--type", options.type);
+    }
 
     // Limit results
     if (options.limit) {
