@@ -1,4 +1,4 @@
-import { useState, useCallback, type CSSProperties } from 'react';
+import { useState, useCallback, useEffect, type CSSProperties } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { api } from '../../services/api';
 import type { BeadInfo } from '../../types';
@@ -86,13 +86,21 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
     data: beads,
     loading,
     error,
+    refresh,
   } = usePolling<BeadInfo[]>(
+    // No rig filter - show ALL town beads (gastown_boy is dashboard for all of Gas Town)
+    // Filter to task type only - excludes messages, agents, etc.
     () => api.beads.list({ status: statusFilter, type: 'task', limit: 50 }),
     {
       interval: 30000,
       enabled: isActive,
     }
   );
+
+  // Refetch when status filter changes
+  useEffect(() => {
+    void refresh();
+  }, [statusFilter, refresh]);
 
   const handleSling = useCallback(async (bead: BeadInfo) => {
     setSlingingId(bead.id);
