@@ -1,5 +1,5 @@
-import { execBd, type BeadsIssue } from "./bd-client.js";
-import { listAllBeadsDirs } from "./gastown-workspace.js";
+import { execBd } from "./bd-client.js";
+import { resolveTownRoot, resolveBeadsDir } from "./gastown-workspace.js";
 import type { Convoy, TrackedIssue } from "../types/convoys.js";
 
 export interface ConvoysServiceResult<T> {
@@ -11,130 +11,147 @@ export interface ConvoysServiceResult<T> {
   };
 }
 
+/** Convoy bead from bd list --type=convoy */
+interface ConvoyBead {
+  id: string;
+  title: string;
+  status: string;
+  priority: number;
+  issue_type: string;
+  updated_at?: string;
+}
+
+/** Tracked issue from bd show dependencies */
+interface TrackedDep {
+  id: string;
+  title: string;
+  status: string;
+  priority?: number;
+  issue_type?: string;
+  assignee?: string;
+  updated_at?: string;
+  dependency_type: string;
+}
+
+/** Full convoy detail from bd show */
+interface ConvoyDetail {
+  id: string;
+  title: string;
+  status: string;
+  priority: number;
+  issue_type: string;
+  updated_at?: string;
+  dependencies?: TrackedDep[];
+}
+
 /**
- * Extracts epic ID from a label like "epic:hq-j7l5"
+ * Extracts rig name from assignee path like "gastown_boy/polecats/toecutter"
  */
-function extractEpicId(label: string): string | null {
-  if (label.startsWith("epic:")) {
-    return label.slice(5);
+function extractRigFromAssignee(assignee: string | undefined): string | null {
+  if (!assignee) return null;
+  // Assignee format: "rig/polecats/name" or "rig/crew/name"
+  const parts = assignee.split("/");
+  if (parts.length >= 2 && (parts[1] === "polecats" || parts[1] === "crew")) {
+    return parts[0] ?? null;
   }
   return null;
 }
 
 export async function listConvoys(): Promise<ConvoysServiceResult<Convoy[]>> {
   try {
-    const beadsDirs = await listAllBeadsDirs();
+    const townRoot = resolveTownRoot();
+    const beadsDir = resolveBeadsDir(townRoot);
 
-    // Map: epicId -> { tasks: BeadsIssue[], rig (most common source), dirPath, workDir }
-    const epicToTasks = new Map<string, {
-      tasks: BeadsIssue[],
-      rigCounts: Map<string | null, number>,
-      dirPath: string,
-      workDir: string
-    }>();
+    // 1. List all open convoy-type beads from town level
+    const listResult = await execBd<ConvoyBead[]>(
+      ["list", "--type=convoy", "--status=open", "-q", "--json", "--limit=0"],
+      { cwd: townRoot, beadsDir }
+    );
 
-    // 1. Fetch all open issues from all beads directories and find epic:* labels
-    for (const dirInfo of beadsDirs) {
-      const result = await execBd<BeadsIssue[]>(
-        ["list", "--status=open", "-q", "--json", "--limit=0"],
-        { cwd: dirInfo.workDir, beadsDir: dirInfo.path }
-      );
-
-      if (!result.success || !result.data) continue;
-
-      for (const issue of result.data) {
-        const labels = issue.labels || [];
-        for (const label of labels) {
-          const epicId = extractEpicId(label);
-          if (epicId) {
-            if (!epicToTasks.has(epicId)) {
-              epicToTasks.set(epicId, {
-                tasks: [],
-                rigCounts: new Map(),
-                dirPath: dirInfo.path,
-                workDir: dirInfo.workDir
-              });
-            }
-            const entry = epicToTasks.get(epicId)!;
-            entry.tasks.push(issue);
-            // Track which rig this task came from
-            const currentCount = entry.rigCounts.get(dirInfo.rig) ?? 0;
-            entry.rigCounts.set(dirInfo.rig, currentCount + 1);
-          }
-        }
-      }
-    }
-
-    if (epicToTasks.size === 0) {
+    if (!listResult.success || !listResult.data) {
       return { success: true, data: [] };
     }
 
-    // 2. Fetch epic details for each discovered epic
+    const convoyBeads = listResult.data;
+    if (convoyBeads.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // 2. Fetch full details for each convoy (to get dependencies/tracked issues)
+    const convoyIds = convoyBeads.map(c => c.id);
+    const showResult = await execBd<ConvoyDetail[]>(
+      ["show", ...convoyIds, "-q", "--json"],
+      { cwd: townRoot, beadsDir }
+    );
+
+    const convoyDetails = new Map<string, ConvoyDetail>();
+    if (showResult.success && showResult.data) {
+      for (const detail of showResult.data) {
+        convoyDetails.set(detail.id, detail);
+      }
+    }
+
+    // 3. Build convoy response
     const result: Convoy[] = [];
-    const epicIds = Array.from(epicToTasks.keys());
 
-    // Try to fetch epic details from any beads dir (they route by prefix)
-    const firstDirInfo = beadsDirs[0];
-    if (firstDirInfo) {
-      const epicDetailsResult = await execBd<BeadsIssue[]>(
-        ["show", ...epicIds, "-q", "--json"],
-        { cwd: firstDirInfo.workDir, beadsDir: firstDirInfo.path }
-      );
+    for (const bead of convoyBeads) {
+      const detail = convoyDetails.get(bead.id);
+      const deps = detail?.dependencies ?? [];
 
-      const epicDetails = new Map<string, BeadsIssue>();
-      if (epicDetailsResult.success && epicDetailsResult.data) {
-        for (const epic of epicDetailsResult.data) {
-          epicDetails.set(epic.id, epic);
+      // Filter to only "tracks" dependencies (the tracked issues)
+      const trackedDeps = deps.filter(d => d.dependency_type === "tracks");
+
+      // Determine rig from tracked issues' assignees
+      const rigCounts = new Map<string, number>();
+      for (const dep of trackedDeps) {
+        const rig = extractRigFromAssignee(dep.assignee);
+        if (rig) {
+          rigCounts.set(rig, (rigCounts.get(rig) ?? 0) + 1);
         }
       }
 
-      // 3. Build convoy response for each epic
-      for (const [epicId, { tasks, rigCounts }] of epicToTasks) {
-        const epic = epicDetails.get(epicId);
-
-        // Determine the most common rig for this convoy
-        let convoyRig: string | null = null;
-        let maxCount = 0;
-        for (const [rig, count] of rigCounts) {
-          if (count > maxCount) {
-            maxCount = count;
-            convoyRig = rig;
-          }
+      // Pick the most common rig
+      let convoyRig: string | null = null;
+      let maxCount = 0;
+      for (const [rig, count] of rigCounts) {
+        if (count > maxCount) {
+          maxCount = count;
+          convoyRig = rig;
         }
-
-        // Build tracked issues from tasks
-        const trackedIssues: TrackedIssue[] = [];
-        let completed = 0;
-
-        for (const task of tasks) {
-          const trackedIssue: TrackedIssue = {
-            id: task.id,
-            title: task.title,
-            status: task.status,
-            issueType: task.issue_type,
-            priority: task.priority
-          };
-          if (task.assignee) trackedIssue.assignee = task.assignee;
-          if (task.updated_at) trackedIssue.updatedAt = task.updated_at;
-
-          trackedIssues.push(trackedIssue);
-          if (task.status === "closed") {
-            completed++;
-          }
-        }
-
-        result.push({
-          id: epicId,
-          title: epic?.title || `Epic ${epicId}`,
-          status: epic?.status || "open",
-          rig: convoyRig,
-          progress: {
-            completed,
-            total: trackedIssues.length
-          },
-          trackedIssues
-        });
       }
+
+      // Build tracked issues
+      const trackedIssues: TrackedIssue[] = [];
+      let completed = 0;
+
+      for (const dep of trackedDeps) {
+        const tracked: TrackedIssue = {
+          id: dep.id,
+          title: dep.title,
+          status: dep.status
+        };
+        if (dep.issue_type) tracked.issueType = dep.issue_type;
+        if (dep.priority !== undefined) tracked.priority = dep.priority;
+        if (dep.assignee) tracked.assignee = dep.assignee;
+        if (dep.updated_at) tracked.updatedAt = dep.updated_at;
+
+        trackedIssues.push(tracked);
+        if (dep.status === "closed") {
+          completed++;
+        }
+      }
+
+      result.push({
+        id: bead.id,
+        title: bead.title,
+        status: bead.status,
+        rig: convoyRig,
+        progress: {
+          completed,
+          total: trackedIssues.length
+        },
+        trackedIssues
+      });
     }
 
     return { success: true, data: result };
