@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useState, useCallback, type CSSProperties } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { api } from '../../services/api';
 import type { BeadInfo } from '../../types';
@@ -79,6 +79,9 @@ function formatAssignee(assignee: string | null): string {
 }
 
 export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
+  const [slingingId, setSlingingId] = useState<string | null>(null);
+  const [slingResult, setSlingResult] = useState<{ id: string; success: boolean } | null>(null);
+
   const {
     data: beads,
     loading,
@@ -90,6 +93,30 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
       enabled: isActive,
     }
   );
+
+  const handleSling = useCallback(async (bead: BeadInfo) => {
+    setSlingingId(bead.id);
+    setSlingResult(null);
+
+    try {
+      await api.mail.send({
+        to: 'mayor/',
+        subject: `Sling request: ${bead.id}`,
+        body: `Please sling this bead to a polecat:\n\nID: ${bead.id}\nTitle: ${bead.title}\nType: ${bead.type}\nPriority: P${bead.priority}`,
+        priority: 1,
+        type: 'task',
+      });
+      setSlingResult({ id: bead.id, success: true });
+      // Clear success indicator after 2 seconds
+      setTimeout(() => setSlingResult(null), 2000);
+    } catch {
+      setSlingResult({ id: bead.id, success: false });
+      // Clear error indicator after 3 seconds
+      setTimeout(() => setSlingResult(null), 3000);
+    } finally {
+      setSlingingId(null);
+    }
+  }, []);
 
   if (loading && !beads) {
     return (
@@ -128,6 +155,7 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
             <th style={{ ...styles.th, width: '70px' }}>STATUS</th>
             <th style={{ ...styles.th, width: '80px' }}>ASSIGNEE</th>
             <th style={{ ...styles.th, width: '70px' }}>UPDATED</th>
+            <th style={{ ...styles.th, width: '60px' }}>ACTION</th>
           </tr>
         </thead>
         <tbody>
@@ -135,6 +163,10 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
             const priorityInfo = getPriorityInfo(bead.priority);
             const statusInfo = getStatusInfo(bead.status);
             const isClosed = bead.status.toLowerCase() === 'closed';
+
+            const isSlinging = slingingId === bead.id;
+            const result = slingResult?.id === bead.id ? slingResult : null;
+            const canSling = !isClosed && !bead.assignee;
 
             return (
               <tr
@@ -158,6 +190,23 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
                 <td style={styles.cell}>{formatAssignee(bead.assignee)}</td>
                 <td style={styles.dateCell}>
                   {formatDate(bead.updatedAt ?? bead.createdAt)}
+                </td>
+                <td style={styles.actionCell}>
+                  {canSling && (
+                    <button
+                      style={{
+                        ...styles.slingButton,
+                        ...(isSlinging && styles.slingButtonLoading),
+                        ...(result?.success && styles.slingButtonSuccess),
+                        ...(result && !result.success && styles.slingButtonError),
+                      }}
+                      onClick={() => handleSling(bead)}
+                      disabled={isSlinging || !!result}
+                      title="Request mayor to sling this bead"
+                    >
+                      {isSlinging ? '...' : result?.success ? '✓' : result ? '✗' : 'SLING'}
+                    </button>
+                  )}
                 </td>
               </tr>
             );
@@ -259,5 +308,32 @@ const styles = {
     color: 'var(--crt-phosphor-dim)',
     fontSize: '0.7rem',
     whiteSpace: 'nowrap',
+  },
+  actionCell: {
+    padding: '4px 6px',
+    textAlign: 'center',
+  },
+  slingButton: {
+    backgroundColor: 'transparent',
+    color: 'var(--crt-phosphor)',
+    border: '1px solid var(--crt-phosphor-dim)',
+    fontFamily: '"Share Tech Mono", monospace',
+    fontSize: '0.65rem',
+    padding: '2px 8px',
+    cursor: 'pointer',
+    letterSpacing: '0.05em',
+    transition: 'all 0.15s ease',
+  },
+  slingButtonLoading: {
+    color: 'var(--crt-phosphor-dim)',
+    cursor: 'wait',
+  },
+  slingButtonSuccess: {
+    color: 'var(--crt-phosphor-bright)',
+    borderColor: 'var(--crt-phosphor-bright)',
+  },
+  slingButtonError: {
+    color: '#FF4444',
+    borderColor: '#FF4444',
   },
 } satisfies Record<string, CSSProperties>;
