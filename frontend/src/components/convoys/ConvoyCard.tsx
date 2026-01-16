@@ -185,9 +185,11 @@ export function ConvoyCard({ convoy }: ConvoyCardProps) {
         <div style={styles.detailsArea}>
           <div style={styles.detailsHeader}>TRACKED ISSUES</div>
           <div style={styles.issueList}>
-            {convoy.trackedIssues.map(issue => (
-              <TrackedIssueRow key={issue.id} issue={issue} />
-            ))}
+            {convoy.trackedIssues
+              .filter(issue => issue.issueType?.toLowerCase() !== 'message')
+              .map(issue => (
+                <TrackedIssueRow key={issue.id} issue={issue} />
+              ))}
           </div>
         </div>
       )}
