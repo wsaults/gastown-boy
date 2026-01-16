@@ -67,7 +67,7 @@ export interface ListBeadsOptions {
 /**
  * Default status preset: shows active work (not deferred or closed).
  */
-const DEFAULT_STATUSES: BeadStatus[] = ["open", "hooked", "in_progress", "blocked"];
+const DEFAULT_STATUSES: BeadStatus[] = ["blocked", "in_progress", "hooked", "open"];
 
 /**
  * All valid statuses for filtering.

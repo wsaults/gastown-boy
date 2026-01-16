@@ -22,7 +22,7 @@ export function BeadsView({ isActive = true }: BeadsViewProps) {
             onChange={(e) => setStatusFilter(e.target.value as BeadsStatusFilter)}
             style={styles.select}
           >
-            <option value="default">ACTIVE</option>
+            <option value="default">DEFAULT</option>
             <option value="open">OPEN</option>
             <option value="hooked">HOOKED</option>
             <option value="in_progress">IN PROGRESS</option>
