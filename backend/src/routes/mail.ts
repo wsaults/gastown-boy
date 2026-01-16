@@ -9,7 +9,7 @@
  */
 
 import { Router } from "express";
-import { listMail, getMessage, sendMail, markRead } from "../services/mail-service.js";
+import { listMail, getMessage, sendMail, markRead, getMailIdentity } from "../services/mail-service.js";
 import { SendMessageRequestSchema } from "../types/index.js";
 import {
   success,
@@ -63,6 +63,15 @@ mailRouter.post("/", async (req, res) => {
   }
 
   return res.status(201).json(success({ sent: true }));
+});
+
+/**
+ * GET /api/mail/identity
+ * Get the current mail sender identity.
+ */
+mailRouter.get("/identity", (_req, res) => {
+  const identity = getMailIdentity();
+  return res.json(success({ identity }));
 });
 
 /**

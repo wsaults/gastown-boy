@@ -177,6 +177,11 @@ export const api = {
     async getThread(threadId: string): Promise<Message[]> {
       return apiFetch(`/mail/thread/${encodeURIComponent(threadId)}`);
     },
+
+    async getIdentity(): Promise<string> {
+      const result = await apiFetch<{ identity: string }>('/mail/identity');
+      return result.identity;
+    },
   },
 
   /**

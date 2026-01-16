@@ -12,8 +12,16 @@ export function QuickInput() {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [identity, setIdentity] = useState<string>('overseer');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
+
+  // Fetch mail identity on mount
+  useEffect(() => {
+    api.mail.getIdentity()
+      .then(setIdentity)
+      .catch(() => setIdentity('overseer'));
+  }, []);
 
   // Auto-resize textarea when expanded
   useEffect(() => {
@@ -44,7 +52,7 @@ export function QuickInput() {
     try {
       await api.mail.send({
         to: 'mayor/',
-        from: 'overseer',
+        from: identity,
         subject: text.slice(0, 50).trim() + (text.length > 50 ? '...' : ''),
         body: text,
         priority: 2, // Normal
@@ -101,6 +109,7 @@ export function QuickInput() {
       <div style={styles.header}>
         <div style={styles.headerLeft}>
           <span style={styles.label}>TO: MAYOR</span>
+          <span style={styles.labelFrom}>FROM: {identity.toUpperCase()}</span>
           {status === 'success' && <span style={styles.success}>MESSAGE SENT</span>}
           {status === 'error' && <span style={styles.error}>ERROR SENDING</span>}
         </div>
@@ -219,6 +228,14 @@ const styles = {
     color: '#000',
     padding: '2px 8px',
     borderRadius: '2px',
+  },
+
+  labelFrom: {
+    backgroundColor: 'transparent',
+    color: colors.primaryDim,
+    padding: '2px 8px',
+    borderRadius: '2px',
+    border: `1px solid ${colors.primaryDim}`,
   },
 
   closeButton: {

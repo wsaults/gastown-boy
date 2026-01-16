@@ -67,6 +67,14 @@ function resolveMailIdentity(): string {
   );
 }
 
+/**
+ * Get the current mail sender identity.
+ * Exported for use by the API.
+ */
+export function getMailIdentity(): string {
+  return resolveMailIdentity();
+}
+
 function identityVariants(identity: string): string[] {
   if (identity === "mayor/") return ["mayor/", "mayor"];
   if (identity === "deacon/") return ["deacon/", "deacon"];
