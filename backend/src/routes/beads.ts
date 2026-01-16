@@ -13,21 +13,21 @@ export const beadsRouter = Router();
 
 /**
  * GET /api/beads
- * Returns beads filtered by rig for the beads tab.
+ * Returns all town beads for the beads tab.
  *
  * Query params:
- * - rig: Filter by rig (default: gastown_boy)
+ * - rig: Filter by rig label (optional, no default - shows all beads)
  * - status: "open" | "closed" | "all" (default: open)
  * - limit: Max results (default: 100)
  */
 beadsRouter.get("/", async (req, res) => {
-  const rig = (req.query["rig"] as string) ?? "gastown_boy";
+  const rig = req.query["rig"] as string | undefined;
   const statusParam = req.query["status"] as "open" | "closed" | "all" | undefined;
   const limitStr = req.query["limit"] as string | undefined;
   const limit = limitStr ? parseInt(limitStr, 10) : 100;
 
   const result = await listBeads({
-    rig,
+    ...(rig && { rig }),
     limit,
     ...(statusParam && { status: statusParam }),
   });
