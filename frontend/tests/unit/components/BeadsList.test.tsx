@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { BeadsList } from '../../../src/components/beads/BeadsList';
 import { api } from '../../../src/services/api';
@@ -23,6 +23,8 @@ const mockBeads = [
     priority: 2,
     status: 'open',
     assignee: null,
+    rig: null,
+    labels: [],
     createdAt: '2026-01-15T10:00:00Z',
     updatedAt: '2026-01-15T12:00:00Z',
   },
@@ -33,6 +35,8 @@ const mockBeads = [
     priority: 1,
     status: 'closed',
     assignee: 'gastown_boy/dag',
+    rig: 'gastown_boy',
+    labels: [],
     createdAt: '2026-01-14T10:00:00Z',
     updatedAt: '2026-01-14T14:00:00Z',
   },
@@ -107,8 +111,8 @@ describe('BeadsList', () => {
     });
   });
 
-  describe('reactive updates on sling action', () => {
-    it('should refresh list after successful sling', async () => {
+  describe('action menu', () => {
+    it('should send sling request after clicking SLING in action menu', async () => {
       const user = userEvent.setup();
 
       render(<BeadsList statusFilter="open" isActive={true} />);
@@ -120,9 +124,13 @@ describe('BeadsList', () => {
 
       vi.clearAllMocks();
 
-      // Find and click the SLING button for hq-001 (unassigned bead)
-      const slingButton = screen.getByRole('button', { name: /sling/i });
-      await user.click(slingButton);
+      // Find and click the action menu button (⋮) for hq-001 (unassigned bead)
+      const actionButton = screen.getByTitle('Actions');
+      await user.click(actionButton);
+
+      // Click SLING in the dropdown
+      const slingOption = screen.getByText('SLING');
+      await user.click(slingOption);
 
       // Should send mail to mayor
       await waitFor(() => {
@@ -133,11 +141,51 @@ describe('BeadsList', () => {
           })
         );
       });
+    });
 
-      // Should refresh the beads list
+    it('should send delete request after clicking DELETE in action menu', async () => {
+      const user = userEvent.setup();
+
+      render(<BeadsList statusFilter="open" isActive={true} />);
+
+      // Wait for initial render
       await waitFor(() => {
-        expect(api.beads.list).toHaveBeenCalled();
+        expect(screen.getByText('hq-001')).toBeInTheDocument();
       });
+
+      vi.clearAllMocks();
+
+      // Find and click the action menu button
+      const actionButton = screen.getByTitle('Actions');
+      await user.click(actionButton);
+
+      // Click DELETE in the dropdown
+      const deleteOption = screen.getByText('DELETE');
+      await user.click(deleteOption);
+
+      // Should send delete request mail to mayor
+      await waitFor(() => {
+        expect(api.mail.send).toHaveBeenCalledWith(
+          expect.objectContaining({
+            to: 'mayor/',
+            subject: expect.stringContaining('Delete request'),
+          })
+        );
+      });
+    });
+
+    it('should not show action menu for closed beads', async () => {
+      vi.mocked(api.beads.list).mockResolvedValue([mockBeads[1]]); // Only closed bead
+
+      render(<BeadsList statusFilter="closed" isActive={true} />);
+
+      // Wait for render
+      await waitFor(() => {
+        expect(screen.getByText('hq-002')).toBeInTheDocument();
+      });
+
+      // Should not have action button for closed bead
+      expect(screen.queryByTitle('Actions')).not.toBeInTheDocument();
     });
   });
 

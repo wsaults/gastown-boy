@@ -1,9 +1,11 @@
-import { useState, useCallback, useEffect, useMemo, type CSSProperties } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import { usePolling } from '../../hooks/usePolling';
 import { api } from '../../services/api';
 import type { BeadInfo } from '../../types';
 
 export type BeadsStatusFilter = 'default' | 'open' | 'hooked' | 'in_progress' | 'blocked' | 'deferred' | 'closed' | 'all';
+
+type ActionType = 'sling' | 'delete';
 
 export interface BeadsListProps {
   statusFilter: BeadsStatusFilter;
@@ -125,9 +127,11 @@ function groupBeadsByRig(beads: BeadInfo[]): BeadGroup[] {
 }
 
 export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
-  const [slingingId, setSlingingId] = useState<string | null>(null);
-  const [slingResult, setSlingResult] = useState<{ id: string; success: boolean } | null>(null);
+  const [actionInProgress, setActionInProgress] = useState<{ id: string; type: ActionType } | null>(null);
+  const [actionResult, setActionResult] = useState<{ id: string; type: ActionType; success: boolean } | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string | null>>(new Set());
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const {
     data: beads,
@@ -167,27 +171,50 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
     });
   }, []);
 
-  const handleSling = useCallback(async (bead: BeadInfo) => {
-    setSlingingId(bead.id);
-    setSlingResult(null);
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!openMenuId) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openMenuId]);
+
+  const handleAction = useCallback(async (bead: BeadInfo, action: ActionType) => {
+    setOpenMenuId(null);
+    setActionInProgress({ id: bead.id, type: action });
+    setActionResult(null);
 
     try {
-      await api.mail.send({
-        to: 'mayor/',
-        subject: `Sling request: ${bead.id}`,
-        body: `Please sling this bead to a polecat:\n\nID: ${bead.id}\nTitle: ${bead.title}\nType: ${bead.type}\nPriority: P${bead.priority}`,
-        priority: 1,
-        type: 'task',
-      });
-      setSlingResult({ id: bead.id, success: true });
-      // Clear success indicator after 2 seconds
-      setTimeout(() => setSlingResult(null), 2000);
+      if (action === 'sling') {
+        await api.mail.send({
+          to: 'mayor/',
+          subject: `Sling request: ${bead.id}`,
+          body: `Please sling this bead to a polecat:\n\nID: ${bead.id}\nTitle: ${bead.title}\nType: ${bead.type}\nPriority: P${bead.priority}`,
+          priority: 1,
+          type: 'task',
+        });
+      } else if (action === 'delete') {
+        await api.mail.send({
+          to: 'mayor/',
+          subject: `Delete request: ${bead.id}`,
+          body: `Request to delete this bead:\n\nID: ${bead.id}\nTitle: ${bead.title}\nType: ${bead.type}\n\nIf deletion is not appropriate, please close with a note.`,
+          priority: 2,
+          type: 'task',
+        });
+      }
+      setActionResult({ id: bead.id, type: action, success: true });
+      setTimeout(() => setActionResult(null), 2000);
     } catch {
-      setSlingResult({ id: bead.id, success: false });
-      // Clear error indicator after 3 seconds
-      setTimeout(() => setSlingResult(null), 3000);
+      setActionResult({ id: bead.id, type: action, success: false });
+      setTimeout(() => setActionResult(null), 3000);
     } finally {
-      setSlingingId(null);
+      setActionInProgress(null);
     }
   }, []);
 
@@ -257,12 +284,14 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
                     const priorityInfo = getPriorityInfo(bead.priority);
                     const statusInfo = getStatusInfo(bead.status);
                     const isClosed = bead.status.toLowerCase() === 'closed';
-
-                    const isSlinging = slingingId === bead.id;
-                    const result = slingResult?.id === bead.id ? slingResult : null;
-                    const canSling = !isClosed && !bead.assignee;
-
                     const isDeferred = bead.status.toLowerCase() === 'deferred';
+
+                    const currentAction = actionInProgress?.id === bead.id ? actionInProgress : null;
+                    const result = actionResult?.id === bead.id ? actionResult : null;
+                    const canSling = !isClosed && !bead.assignee;
+                    const canDelete = !isClosed; // Can request delete for any non-closed bead
+                    const hasActions = canSling || canDelete;
+                    const isMenuOpen = openMenuId === bead.id;
 
                     return (
                       <tr
@@ -289,20 +318,56 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
                           {formatDate(bead.updatedAt ?? bead.createdAt)}
                         </td>
                         <td style={styles.actionCell}>
-                          {canSling && (
-                            <button
-                              style={{
-                                ...styles.slingButton,
-                                ...(isSlinging && styles.slingButtonLoading),
-                                ...(result?.success && styles.slingButtonSuccess),
-                                ...(result && !result.success && styles.slingButtonError),
-                              }}
-                              onClick={() => handleSling(bead)}
-                              disabled={isSlinging || !!result}
-                              title="Request mayor to sling this bead"
+                          {hasActions && (
+                            <div
+                              style={styles.actionMenu}
+                              ref={isMenuOpen ? menuRef : null}
                             >
-                              {isSlinging ? '...' : result?.success ? '✓' : result ? '✗' : 'SLING'}
-                            </button>
+                              {/* Show result feedback or menu trigger */}
+                              {currentAction ? (
+                                <span style={styles.actionLoading}>...</span>
+                              ) : result ? (
+                                <span style={{
+                                  ...styles.actionResult,
+                                  color: result.success ? 'var(--crt-phosphor-bright)' : '#FF4444',
+                                }}>
+                                  {result.success ? '✓' : '✗'}
+                                </span>
+                              ) : (
+                                <button
+                                  style={styles.actionButton}
+                                  onClick={() => setOpenMenuId(isMenuOpen ? null : bead.id)}
+                                  title="Actions"
+                                >
+                                  ⋮
+                                </button>
+                              )}
+
+                              {/* Dropdown menu */}
+                              {isMenuOpen && (
+                                <div style={styles.dropdown}>
+                                  {canSling && (
+                                    <button
+                                      style={styles.dropdownItem}
+                                      onClick={() => handleAction(bead, 'sling')}
+                                    >
+                                      SLING
+                                    </button>
+                                  )}
+                                  {canDelete && (
+                                    <button
+                                      style={{
+                                        ...styles.dropdownItem,
+                                        ...styles.dropdownItemDelete,
+                                      }}
+                                      onClick={() => handleAction(bead, 'delete')}
+                                    >
+                                      DELETE
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -447,28 +512,59 @@ const styles = {
   actionCell: {
     padding: '4px 6px',
     textAlign: 'center',
+    position: 'relative',
   },
-  slingButton: {
+  actionMenu: {
+    position: 'relative',
+    display: 'inline-block',
+  },
+  actionButton: {
     backgroundColor: 'transparent',
     color: 'var(--crt-phosphor)',
     border: '1px solid var(--crt-phosphor-dim)',
     fontFamily: '"Share Tech Mono", monospace',
-    fontSize: '0.65rem',
+    fontSize: '0.9rem',
     padding: '2px 8px',
     cursor: 'pointer',
-    letterSpacing: '0.05em',
     transition: 'all 0.15s ease',
+    lineHeight: 1,
   },
-  slingButtonLoading: {
+  actionLoading: {
     color: 'var(--crt-phosphor-dim)',
-    cursor: 'wait',
+    fontSize: '0.8rem',
   },
-  slingButtonSuccess: {
-    color: 'var(--crt-phosphor-bright)',
-    borderColor: 'var(--crt-phosphor-bright)',
+  actionResult: {
+    fontSize: '0.8rem',
+    fontWeight: 'bold',
   },
-  slingButtonError: {
-    color: '#FF4444',
-    borderColor: '#FF4444',
+  dropdown: {
+    position: 'absolute',
+    right: 0,
+    top: '100%',
+    marginTop: '2px',
+    backgroundColor: '#111',
+    border: '1px solid var(--crt-phosphor-dim)',
+    borderRadius: '2px',
+    zIndex: 100,
+    minWidth: '70px',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+  },
+  dropdownItem: {
+    display: 'block',
+    width: '100%',
+    padding: '6px 10px',
+    backgroundColor: 'transparent',
+    color: 'var(--crt-phosphor)',
+    border: 'none',
+    fontFamily: '"Share Tech Mono", monospace',
+    fontSize: '0.7rem',
+    letterSpacing: '0.05em',
+    cursor: 'pointer',
+    textAlign: 'left',
+    transition: 'background-color 0.1s ease',
+  },
+  dropdownItemDelete: {
+    color: '#FF6B35',
+    borderTop: '1px solid #333',
   },
 } satisfies Record<string, CSSProperties>;
