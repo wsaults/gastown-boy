@@ -6,6 +6,7 @@ export interface TrackedIssue {
   issueType?: string;
   updatedAt?: string;
   priority?: number;
+  description?: string;
 }
 
 export interface Convoy {

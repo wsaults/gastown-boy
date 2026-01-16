@@ -196,20 +196,44 @@ export function ConvoyCard({ convoy }: ConvoyCardProps) {
 }
 
 function TrackedIssueRow({ issue }: { issue: TrackedIssue }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const isClosed = issue.status === 'closed';
+  const hasDescription = issue.description && issue.description.trim().length > 0;
+
   return (
-    <div style={styles.issueRow}>
-      <span style={{ 
-        ...styles.issueStatus, 
-        color: isClosed ? colors.working : colors.primaryDim 
-      }}>
-        {isClosed ? '✓' : '…'}
-      </span>
-      <span style={styles.issueId}>{issue.id}</span>
-      <span style={styles.issueType}>[{issue.issueType?.toUpperCase()}]</span>
-      <span style={styles.issueTitle}>{issue.title}</span>
-      {issue.assignee && (
-        <span style={styles.issueAssignee}>@{issue.assignee.split('/').pop()}</span>
+    <div style={styles.issueContainer}>
+      <div
+        style={{
+          ...styles.issueRow,
+          cursor: hasDescription ? 'pointer' : 'default',
+        }}
+        onClick={() => hasDescription && setIsExpanded(!isExpanded)}
+        role={hasDescription ? 'button' : undefined}
+        aria-expanded={hasDescription ? isExpanded : undefined}
+      >
+        <span style={{
+          ...styles.issueStatus,
+          color: isClosed ? colors.working : colors.primaryDim
+        }}>
+          {isClosed ? '✓' : '…'}
+        </span>
+        <span style={styles.issueId}>{issue.id}</span>
+        <span style={styles.issueType}>[{issue.issueType?.toUpperCase()}]</span>
+        <span style={styles.issueTitle}>{issue.title}</span>
+        {issue.assignee && (
+          <span style={styles.issueAssignee}>@{issue.assignee.split('/').pop()}</span>
+        )}
+        {hasDescription && (
+          <span style={{
+            ...styles.issueExpandIcon,
+            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'
+          }}>▶</span>
+        )}
+      </div>
+      {isExpanded && hasDescription && (
+        <div style={styles.issueDescription}>
+          {issue.description}
+        </div>
       )}
     </div>
   );
@@ -401,5 +425,26 @@ const styles = {
   issueAssignee: {
     color: colors.primaryBright,
     fontSize: '0.7rem',
+  },
+  issueContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  issueExpandIcon: {
+    fontSize: '0.6rem',
+    color: colors.primaryDim,
+    transition: 'transform 0.2s ease',
+    marginLeft: 'auto',
+    flexShrink: 0,
+  },
+  issueDescription: {
+    padding: '8px 12px 8px 22px',
+    fontSize: '0.7rem',
+    color: colors.primaryDim,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderLeft: `2px solid var(--crt-phosphor-glow)`,
+    marginLeft: '12px',
+    whiteSpace: 'pre-wrap',
+    lineHeight: '1.4',
   },
 } satisfies Record<string, CSSProperties>;

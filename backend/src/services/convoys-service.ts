@@ -30,6 +30,7 @@ interface TrackedDep {
   issue_type?: string;
   assignee?: string;
   updated_at?: string;
+  description?: string;
   dependency_type: string;
 }
 
@@ -134,6 +135,7 @@ export async function listConvoys(): Promise<ConvoysServiceResult<Convoy[]>> {
         if (dep.priority !== undefined) tracked.priority = dep.priority;
         if (dep.assignee) tracked.assignee = dep.assignee;
         if (dep.updated_at) tracked.updatedAt = dep.updated_at;
+        if (dep.description) tracked.description = dep.description;
 
         trackedIssues.push(tracked);
         if (dep.status === "closed") {
