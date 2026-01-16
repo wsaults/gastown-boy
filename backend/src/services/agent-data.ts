@@ -1,5 +1,8 @@
+import { execFileSync } from "child_process";
+import { existsSync } from "fs";
+import { join } from "path";
 import { execBd, type BeadsIssue } from "./bd-client.js";
-import { listAllBeadsDirs } from "./gastown-workspace.js";
+import { listAllBeadsDirs, resolveTownRoot } from "./gastown-workspace.js";
 import {
   addressToIdentity,
   parseAgentBeadId,
@@ -21,6 +24,7 @@ export interface AgentRuntimeInfo {
   hookBead?: string;
   unreadMail: number;
   firstSubject?: string;
+  branch?: string;
 }
 
 export interface AgentSnapshot {
@@ -49,6 +53,32 @@ function buildAgentAddress(role: string, rig: string | null, name: string | null
       return rig && name ? `${rig}/${name}` : null;
     default:
       return null;
+  }
+}
+
+/**
+ * Gets the current git branch for a polecat from their worktree.
+ * Returns undefined if the worktree doesn't exist or git fails.
+ */
+function getPolecatBranch(rig: string, polecatName: string): string | undefined {
+  try {
+    const townRoot = resolveTownRoot();
+    // Polecat worktrees are at: {townRoot}/{rig}/polecats/{name}/{rig}/
+    const worktreePath = join(townRoot, rig, "polecats", polecatName, rig);
+
+    if (!existsSync(worktreePath)) {
+      return undefined;
+    }
+
+    const branch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
+      cwd: worktreePath,
+      encoding: "utf-8",
+      timeout: 5000,
+    }).trim();
+
+    return branch || undefined;
+  } catch {
+    return undefined;
   }
 }
 
@@ -206,6 +236,13 @@ export async function collectAgentSnapshot(
       unreadMail: mailInfo?.unread ?? 0,
     };
     if (mailInfo?.firstSubject) result.firstSubject = mailInfo.firstSubject;
+
+    // Get branch for polecats
+    if (agent.role === "polecat" && agent.rig) {
+      const branch = getPolecatBranch(agent.rig, agent.name);
+      if (branch) result.branch = branch;
+    }
+
     return result;
   });
 

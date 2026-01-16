@@ -74,6 +74,9 @@ function transformAgent(agent: AgentRuntimeInfo): CrewMember {
   if (agent.firstSubject) {
     result.currentTask = agent.firstSubject;
   }
+  if (agent.branch) {
+    result.branch = agent.branch;
+  }
   return result;
 }
 

@@ -387,6 +387,9 @@ function AgentChip({ agent }: AgentChipProps) {
   const isOnline = agent.status !== 'offline';
   const statusColor = getStatusColor(agent.status);
 
+  // Extract short branch name (e.g., "polecat/dag-mkfuo827" -> "dag-mkfuo827")
+  const shortBranch = agent.branch?.replace(/^polecat\//, '');
+
   return (
     <div
       style={{
@@ -394,7 +397,7 @@ function AgentChip({ agent }: AgentChipProps) {
         borderColor: isOnline ? colors.primaryDim : colors.offlineBorder,
         opacity: isOnline ? 1 : 0.6,
       }}
-      title={`${agent.name} - ${agent.status}`}
+      title={`${agent.name} - ${agent.status}${agent.branch ? ` (${agent.branch})` : ''}`}
       role="listitem"
       aria-label={`${agent.name} - ${agent.status}`}
     >
@@ -406,6 +409,9 @@ function AgentChip({ agent }: AgentChipProps) {
         }}
       />
       <span style={styles.chipName}>{agent.name}</span>
+      {shortBranch && (
+        <span style={styles.chipBranch}>{shortBranch}</span>
+      )}
       {agent.unreadMail > 0 && (
         <span style={styles.chipMail}>📬{agent.unreadMail}</span>
       )}
@@ -797,6 +803,17 @@ const styles = {
     fontSize: '0.65rem',
     color: colors.primaryBright,
     marginLeft: '4px',
+  },
+
+  chipBranch: {
+    fontSize: '0.6rem',
+    color: colors.primaryDim,
+    marginLeft: '6px',
+    fontStyle: 'italic',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    maxWidth: '120px',
   },
 
   // Footer

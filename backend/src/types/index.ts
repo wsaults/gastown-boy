@@ -173,6 +173,8 @@ export interface CrewMember {
   currentTask?: string;
   /** Number of unread messages */
   unreadMail: number;
+  /** Current git branch (for polecats) */
+  branch?: string;
 }
 
 // ============================================================================
