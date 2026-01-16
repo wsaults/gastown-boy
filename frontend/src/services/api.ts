@@ -211,9 +211,16 @@ export const api = {
    * Beads operations.
    */
   beads: {
+    /**
+     * List beads with filtering.
+     * @param params.status - Status filter options:
+     *   - "default": Shows open + in_progress + blocked (active work)
+     *   - "open", "in_progress", "blocked", "deferred", "closed": Single status
+     *   - "all": Shows everything
+     */
     async list(params?: {
       rig?: string;
-      status?: 'open' | 'closed' | 'all';
+      status?: 'default' | 'open' | 'hooked' | 'in_progress' | 'blocked' | 'deferred' | 'closed' | 'all';
       type?: string;
       limit?: number;
     }): Promise<BeadInfo[]> {

@@ -3,7 +3,7 @@ import { usePolling } from '../../hooks/usePolling';
 import { api } from '../../services/api';
 import type { BeadInfo } from '../../types';
 
-export type BeadsStatusFilter = 'open' | 'closed' | 'all';
+export type BeadsStatusFilter = 'default' | 'open' | 'hooked' | 'in_progress' | 'blocked' | 'deferred' | 'closed' | 'all';
 
 export interface BeadsListProps {
   statusFilter: BeadsStatusFilter;
@@ -31,18 +31,22 @@ function getPriorityInfo(priority: number): { label: string; color: string } {
 }
 
 /**
- * Gets status display info.
+ * Gets status display info with distinct colors for each state.
  */
-function getStatusInfo(status: string): { label: string; color: string } {
+function getStatusInfo(status: string): { label: string; color: string; bgColor?: string } {
   switch (status.toLowerCase()) {
     case 'open':
       return { label: 'OPEN', color: 'var(--crt-phosphor)' };
-    case 'closed':
-      return { label: 'DONE', color: '#666666' };
     case 'in_progress':
-      return { label: 'ACTIVE', color: 'var(--crt-phosphor-bright)' };
+      return { label: 'ACTIVE', color: '#00FF88', bgColor: 'rgba(0, 255, 136, 0.1)' }; // Bright cyan-green
+    case 'blocked':
+      return { label: 'BLOCKED', color: '#FF6B35', bgColor: 'rgba(255, 107, 53, 0.1)' }; // Warning orange
+    case 'deferred':
+      return { label: 'DEFER', color: '#888888' }; // Dim gray
+    case 'closed':
+      return { label: 'DONE', color: '#555555' }; // Dark gray
     case 'hooked':
-      return { label: 'HOOKED', color: '#FFB000' };
+      return { label: 'HOOKED', color: '#FFB000', bgColor: 'rgba(255, 176, 0, 0.1)' }; // Amber
     default:
       return { label: status.toUpperCase(), color: 'var(--crt-phosphor-dim)' };
   }
@@ -176,12 +180,15 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
             const result = slingResult?.id === bead.id ? slingResult : null;
             const canSling = !isClosed && !bead.assignee;
 
+            const isDeferred = bead.status.toLowerCase() === 'deferred';
+
             return (
               <tr
                 key={bead.id}
                 style={{
                   ...styles.row,
-                  opacity: isClosed ? 0.5 : 1,
+                  opacity: isClosed || isDeferred ? 0.5 : 1,
+                  backgroundColor: statusInfo.bgColor ?? 'transparent',
                 }}
               >
                 <td style={styles.idCell}>{bead.id}</td>
@@ -192,7 +199,7 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
                 <td style={styles.titleCell} title={bead.title}>
                   {bead.title}
                 </td>
-                <td style={{ ...styles.cell, color: statusInfo.color }}>
+                <td style={{ ...styles.cell, color: statusInfo.color, fontWeight: statusInfo.bgColor ? 'bold' : 'normal' }}>
                   {statusInfo.label}
                 </td>
                 <td style={styles.cell}>{formatAssignee(bead.assignee)}</td>

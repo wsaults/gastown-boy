@@ -7,7 +7,8 @@ export interface BeadsViewProps {
 }
 
 export function BeadsView({ isActive = true }: BeadsViewProps) {
-  const [statusFilter, setStatusFilter] = useState<BeadsStatusFilter>('open');
+  // Default shows active work: open + in_progress + blocked
+  const [statusFilter, setStatusFilter] = useState<BeadsStatusFilter>('default');
 
   return (
     <div style={styles.container}>
@@ -21,7 +22,12 @@ export function BeadsView({ isActive = true }: BeadsViewProps) {
             onChange={(e) => setStatusFilter(e.target.value as BeadsStatusFilter)}
             style={styles.select}
           >
+            <option value="default">ACTIVE</option>
             <option value="open">OPEN</option>
+            <option value="hooked">HOOKED</option>
+            <option value="in_progress">IN PROGRESS</option>
+            <option value="blocked">BLOCKED</option>
+            <option value="deferred">DEFERRED</option>
             <option value="closed">CLOSED</option>
             <option value="all">ALL</option>
           </select>

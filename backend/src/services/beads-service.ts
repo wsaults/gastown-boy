@@ -40,18 +40,60 @@ export interface BeadsServiceResult<T> {
 }
 
 /**
+ * Valid bead status values.
+ * Note: "hooked" indicates work assigned to an agent but not yet started.
+ */
+export type BeadStatus = "open" | "hooked" | "in_progress" | "blocked" | "deferred" | "closed";
+
+/**
+ * Status filter can be a single status, comma-separated list, or preset.
+ * - "default": Shows active work (open, hooked, in_progress, blocked)
+ * - "all": Shows everything
+ * - Single status: "open", "hooked", "in_progress", "blocked", "deferred", "closed"
+ * - Comma-separated: "open,in_progress,blocked"
+ */
+export type StatusFilter = BeadStatus | "default" | "all" | string;
+
+/**
  * Options for listing beads.
  */
 export interface ListBeadsOptions {
   rig?: string;
-  status?: "open" | "closed" | "all";
+  status?: StatusFilter;
   type?: string;
   limit?: number;
 }
 
+/**
+ * Default status preset: shows active work (not deferred or closed).
+ */
+const DEFAULT_STATUSES: BeadStatus[] = ["open", "hooked", "in_progress", "blocked"];
+
+/**
+ * All valid statuses for filtering.
+ */
+const ALL_STATUSES: BeadStatus[] = ["open", "hooked", "in_progress", "blocked", "deferred", "closed"];
+
 // ============================================================================
 // Helpers
 // ============================================================================
+
+/**
+ * Parses status filter into array of statuses to include.
+ * Returns null if all statuses should be shown.
+ */
+function parseStatusFilter(filter: StatusFilter | undefined): BeadStatus[] | null {
+  if (!filter || filter === "all") {
+    return null; // Show all
+  }
+  if (filter === "default") {
+    return DEFAULT_STATUSES;
+  }
+  // Handle comma-separated values
+  const statuses = filter.split(",").map((s) => s.trim().toLowerCase());
+  const valid = statuses.filter((s) => ALL_STATUSES.includes(s as BeadStatus));
+  return valid.length > 0 ? (valid as BeadStatus[]) : null;
+}
 
 function transformBead(issue: BeadsIssue): BeadInfo {
   return {
@@ -89,22 +131,42 @@ export async function listBeads(
       args.push("--label", `rig:${options.rig}`);
     }
 
+    // Parse status filter
+    const statusesToInclude = parseStatusFilter(options.status);
+    const needsClientSideFilter = statusesToInclude !== null && statusesToInclude.length > 1;
+
     // Handle status filter
-    if (options.status === "all") {
+    // For multi-status filters (default preset, comma-separated), fetch all and filter client-side
+    // For single status, use CLI flag for efficiency
+    if (statusesToInclude === null) {
+      // Show all statuses
       args.push("--all");
-    } else if (options.status === "closed") {
-      args.push("--status", "closed");
+    } else if (statusesToInclude.length === 1) {
+      // Single status - use CLI flag
+      // Safe to access [0] since we checked length === 1
+      const singleStatus = statusesToInclude[0] as BeadStatus;
+      if (singleStatus === "closed") {
+        args.push("--status", "closed");
+      } else {
+        // For open/in_progress/blocked/deferred, use the status flag
+        args.push("--status", singleStatus);
+      }
+    } else {
+      // Multiple statuses - fetch all and filter client-side
+      args.push("--all");
     }
-    // Default is open issues only
 
     // Filter by type if specified
     if (options.type) {
       args.push("--type", options.type);
     }
 
-    // Limit results
-    if (options.limit) {
-      args.push("--limit", options.limit.toString());
+    // Limit results (apply a higher limit if filtering client-side)
+    const requestLimit = needsClientSideFilter
+      ? Math.max((options.limit ?? 100) * 2, 200) // Fetch more to have enough after filtering
+      : options.limit;
+    if (requestLimit) {
+      args.push("--limit", requestLimit.toString());
     }
 
     const result = await execBd<BeadsIssue[]>(args, {
@@ -122,7 +184,14 @@ export async function listBeads(
       };
     }
 
-    const beads = (result.data ?? []).map(transformBead);
+    let beads = (result.data ?? []).map(transformBead);
+
+    // Apply client-side status filter if needed
+    if (needsClientSideFilter && statusesToInclude) {
+      beads = beads.filter((b) =>
+        statusesToInclude.includes(b.status.toLowerCase() as BeadStatus)
+      );
+    }
 
     // Sort by priority (lower = higher priority), then by updated date
     beads.sort((a, b) => {
@@ -133,6 +202,11 @@ export async function listBeads(
       const bDate = b.updatedAt ?? b.createdAt;
       return bDate.localeCompare(aDate); // Newest first
     });
+
+    // Apply final limit if we fetched extra for filtering
+    if (needsClientSideFilter && options.limit && beads.length > options.limit) {
+      beads = beads.slice(0, options.limit);
+    }
 
     return { success: true, data: beads };
   } catch (err) {

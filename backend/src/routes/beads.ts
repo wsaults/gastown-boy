@@ -21,22 +21,30 @@ export const beadsRouter = Router();
  *
  * Query params:
  * - rig: Filter by rig (optional - omit to show all beads)
- * - status: "open" | "closed" | "all" (default: open)
+ * - status: Status filter. Options:
+ *   - "default": Shows open + in_progress + blocked (active work)
+ *   - "open", "in_progress", "blocked", "deferred", "closed": Single status
+ *   - "open,in_progress,blocked": Comma-separated list
+ *   - "all": Shows everything
+ *   Default: "default" (active work only)
  * - type: Filter by bead type (e.g., "task", "bug", "feature")
  * - limit: Max results (default: 100)
  */
 beadsRouter.get("/", async (req, res) => {
   // No default rig filter - show ALL town beads
   const rig = req.query["rig"] as string | undefined;
-  const statusParam = req.query["status"] as "open" | "closed" | "all" | undefined;
+  const statusParam = req.query["status"] as string | undefined;
   const typeParam = req.query["type"] as string | undefined;
   const limitStr = req.query["limit"] as string | undefined;
   const limit = limitStr ? parseInt(limitStr, 10) : 100;
 
+  // Default to showing active work (open + in_progress + blocked)
+  const status = statusParam ?? "default";
+
   const result = await listBeads({
     ...(rig && { rig }), // Only filter by rig if explicitly requested
     ...(typeParam && { type: typeParam }),
-    ...(statusParam && { status: statusParam }),
+    status,
     limit,
   });
 
