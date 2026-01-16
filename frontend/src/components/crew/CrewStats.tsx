@@ -363,9 +363,9 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle, showAllPolec
           </span>
         </div>
         {visiblePolecats.length > 0 ? (
-          <div style={styles.polecatGrid}>
+          <div style={agentGridStyle}>
             {visiblePolecats.map((agent) => (
-              <AgentChip key={agent.id} agent={agent} />
+              <AgentCard key={agent.id} agent={agent} icon="🐱" />
             ))}
           </div>
         ) : (
@@ -433,6 +433,13 @@ function AgentCard({ agent, icon }: AgentCardProps) {
           <div style={styles.taskRow}>
             <span style={styles.taskIcon}>⚡</span>
             <span style={styles.taskText}>{agent.currentTask}</span>
+          </div>
+        )}
+
+        {agent.branch && (
+          <div style={styles.branchRow}>
+            <span style={styles.branchIcon}>⎇</span>
+            <span style={styles.branchText}>{agent.branch}</span>
           </div>
         )}
       </div>
@@ -890,6 +897,26 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     fontStyle: 'italic',
+  },
+
+  branchRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '0.7rem',
+    color: colors.primaryDim,
+  },
+
+  branchIcon: {
+    fontSize: '0.8rem',
+  },
+
+  branchText: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    fontFamily: 'monospace',
+    fontSize: '0.65rem',
   },
 
   // Chip styles (for polecats)
