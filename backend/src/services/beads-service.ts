@@ -80,11 +80,29 @@ function extractRig(assignee: string | null | undefined): string | null {
 }
 
 /**
+ * Maps bead prefix to rig name for UI grouping.
+ * Determines source from prefix, not database location.
+ */
+function prefixToSource(beadId: string): string {
+  const prefix = beadId.split("-")[0];
+  switch (prefix) {
+    case "gb":
+      return "gastown_boy";
+    case "gt":
+      return "gastown";
+    case "hq":
+      return "town";
+    default:
+      return "unknown";
+  }
+}
+
+/**
  * Transform raw BeadsIssue to BeadInfo for the UI.
  * @param issue The raw issue from bd CLI
- * @param source The source database ("town" or rig name)
+ * @param _dbSource The database source (unused - we derive from prefix)
  */
-function transformBead(issue: BeadsIssue, source: string): BeadInfo {
+function transformBead(issue: BeadsIssue, _dbSource: string): BeadInfo {
   return {
     id: issue.id,
     title: issue.title,
@@ -93,7 +111,7 @@ function transformBead(issue: BeadsIssue, source: string): BeadInfo {
     type: issue.issue_type,
     assignee: issue.assignee ?? null,
     rig: extractRig(issue.assignee),
-    source,
+    source: prefixToSource(issue.id),
     labels: issue.labels ?? [],
     createdAt: issue.created_at,
     updatedAt: issue.updated_at ?? null,
