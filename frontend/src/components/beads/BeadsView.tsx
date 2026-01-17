@@ -9,6 +9,7 @@ export interface BeadsViewProps {
 export function BeadsView({ isActive = true }: BeadsViewProps) {
   // Default shows active work: open + in_progress + blocked
   const [statusFilter, setStatusFilter] = useState<BeadsStatusFilter>('default');
+  const [searchInput, setSearchInput] = useState('');
 
   return (
     <div style={styles.container}>
@@ -16,6 +17,27 @@ export function BeadsView({ isActive = true }: BeadsViewProps) {
         <h2 style={styles.title} className="crt-glow">BEADS TRACKER</h2>
 
         <div style={styles.controls}>
+          {/* Search Input */}
+          <div style={styles.searchContainer}>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => { setSearchInput(e.target.value); }}
+              placeholder="SEARCH..."
+              style={styles.searchInput}
+              aria-label="Search beads"
+            />
+            {searchInput && (
+              <button
+                style={styles.clearButton}
+                onClick={() => { setSearchInput(''); }}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
           <span style={styles.filterLabel}>STATUS:</span>
           <select
             value={statusFilter}
@@ -33,7 +55,7 @@ export function BeadsView({ isActive = true }: BeadsViewProps) {
           </select>
         </div>
       </header>
-      <BeadsList statusFilter={statusFilter} isActive={isActive} />
+      <BeadsList statusFilter={statusFilter} isActive={isActive} searchQuery={searchInput} />
     </div>
   );
 }
@@ -79,5 +101,33 @@ const styles = {
     padding: '2px 8px',
     outline: 'none',
     cursor: 'pointer',
+  },
+  searchContainer: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  searchInput: {
+    backgroundColor: '#050505',
+    color: 'var(--crt-phosphor)',
+    border: '1px solid var(--crt-phosphor-dim)',
+    fontFamily: '"Share Tech Mono", monospace',
+    fontSize: '0.8rem',
+    padding: '4px 24px 4px 8px',
+    outline: 'none',
+    width: '140px',
+    letterSpacing: '0.05em',
+  },
+  clearButton: {
+    position: 'absolute',
+    right: '4px',
+    background: 'none',
+    border: 'none',
+    color: 'var(--crt-phosphor-dim)',
+    fontFamily: '"Share Tech Mono", monospace',
+    fontSize: '1rem',
+    cursor: 'pointer',
+    padding: '0 4px',
+    lineHeight: 1,
   },
 } satisfies Record<string, CSSProperties>;

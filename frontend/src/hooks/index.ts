@@ -12,3 +12,6 @@ export { useMediaQuery, useIsMobile } from "./useMediaQuery";
 export { useDashboardMail } from "./useDashboardMail";
 export { useDashboardConvoys } from "./useDashboardConvoys";
 export { useDashboardCrew } from "./useDashboardCrew";
+
+export { useFuzzySearch, fuzzyMatch, fuzzyMatchFields } from "./useFuzzySearch";
+export type { FuzzyMatchResult, UseFuzzySearchOptions, UseFuzzySearchResult } from "./useFuzzySearch";

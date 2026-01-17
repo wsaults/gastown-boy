@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useMemo, useRef, type CSSProperties } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, type CSSProperties, type ReactNode } from 'react';
 import { usePolling } from '../../hooks/usePolling';
-import { useRigFilter } from '../../contexts/RigContext';
+import { fuzzyMatch } from '../../hooks/useFuzzySearch';
 import { api } from '../../services/api';
 import type { BeadInfo } from '../../types';
 
@@ -11,6 +11,8 @@ type ActionType = 'sling' | 'delete';
 export interface BeadsListProps {
   statusFilter: BeadsStatusFilter;
   isActive?: boolean;
+  /** Search query for fuzzy filtering */
+  searchQuery?: string;
 }
 
 /** Group of beads from a source database */
@@ -89,8 +91,55 @@ function formatAssignee(assignee: string | null): string {
   if (!assignee) return '-';
   // Extract name from path like "gastown_boy/dag" -> "dag"
   const parts = assignee.split('/');
-  return parts[parts.length - 1] || assignee;
+  return parts[parts.length - 1] ?? assignee;
 }
+
+/**
+ * Highlights matching characters in a string based on fuzzy match.
+ */
+function highlightMatches(text: string, query: string): ReactNode {
+  if (!query) {
+    return text;
+  }
+
+  const result = fuzzyMatch(query, text);
+  if (!result.matches || result.matchIndices.length === 0) {
+    return text;
+  }
+
+  const parts: ReactNode[] = [];
+  let lastIndex = 0;
+  const matchSet = new Set(result.matchIndices);
+
+  for (let i = 0; i < text.length; i++) {
+    if (matchSet.has(i)) {
+      // Add text before this match
+      if (i > lastIndex) {
+        parts.push(text.slice(lastIndex, i));
+      }
+      // Add highlighted character
+      parts.push(
+        <span key={i} style={highlightStyle}>
+          {text[i]}
+        </span>
+      );
+      lastIndex = i + 1;
+    }
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return <>{parts}</>;
+}
+
+const highlightStyle: CSSProperties = {
+  backgroundColor: 'rgba(0, 255, 0, 0.3)',
+  color: 'var(--crt-phosphor-bright)',
+  fontWeight: 'bold',
+};
 
 /**
  * Groups beads by source database, maintaining sort order within each group.
@@ -128,15 +177,12 @@ function groupBeadsBySource(beads: BeadInfo[]): BeadGroup[] {
   return groups;
 }
 
-export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
+export function BeadsList({ statusFilter, isActive = true, searchQuery = '' }: BeadsListProps) {
   const [actionInProgress, setActionInProgress] = useState<{ id: string; type: ActionType } | null>(null);
   const [actionResult, setActionResult] = useState<{ id: string; type: ActionType; success: boolean } | null>(null);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
-
-  // Get selected rig from RigFilter context (not used for filtering anymore, but kept for future use)
-  const { selectedRig } = useRigFilter();
 
   const {
     data: beads,
@@ -156,11 +202,29 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
     }
   );
 
+  // Apply search query to filter beads
+  const searchedBeads = useMemo(() => {
+    if (!beads) return [];
+    if (!searchQuery.trim()) return beads;
+
+    const query = searchQuery.toLowerCase().trim();
+    return beads.filter((bead) => {
+      // Check ID and title (always defined)
+      if (fuzzyMatch(query, bead.id).matches) return true;
+      if (fuzzyMatch(query, bead.title).matches) return true;
+      // Check assignee (may be null)
+      if (bead.assignee && fuzzyMatch(query, bead.assignee).matches) return true;
+      return false;
+    });
+  }, [beads, searchQuery]);
+
   // Group beads by source database
   const beadGroups = useMemo(() => {
-    if (!beads) return [];
-    return groupBeadsBySource(beads);
-  }, [beads]);
+    return groupBeadsBySource(searchedBeads);
+  }, [searchedBeads]);
+
+  // Query for highlighting
+  const highlightQuery = searchQuery.trim();
 
   // Refetch when status filter changes
   useEffect(() => {
@@ -251,6 +315,14 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
     );
   }
 
+  if (searchedBeads.length === 0 && highlightQuery) {
+    return (
+      <div style={styles.emptyState}>
+        NO MATCHES FOR "{highlightQuery.toUpperCase()}"
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       {beadGroups.map((group) => {
@@ -309,18 +381,22 @@ export function BeadsList({ statusFilter, isActive = true }: BeadsListProps) {
                           backgroundColor: statusInfo.bgColor ?? 'transparent',
                         }}
                       >
-                        <td style={styles.idCell}>{bead.id}</td>
+                        <td style={styles.idCell}>
+                          {highlightMatches(bead.id, highlightQuery)}
+                        </td>
                         <td style={{ ...styles.cell, color: priorityInfo.color }}>
                           {priorityInfo.label}
                         </td>
                         <td style={styles.typeCell}>{bead.type.toUpperCase()}</td>
                         <td style={styles.titleCell} title={bead.title}>
-                          {bead.title}
+                          {highlightMatches(bead.title, highlightQuery)}
                         </td>
                         <td style={{ ...styles.cell, color: statusInfo.color, fontWeight: statusInfo.bgColor ? 'bold' : 'normal' }}>
                           {statusInfo.label}
                         </td>
-                        <td style={styles.cell}>{formatAssignee(bead.assignee)}</td>
+                        <td style={styles.cell}>
+                          {highlightMatches(formatAssignee(bead.assignee), highlightQuery)}
+                        </td>
                         <td style={styles.dateCell}>
                           {formatDate(bead.updatedAt ?? bead.createdAt)}
                         </td>
