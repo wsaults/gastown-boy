@@ -207,7 +207,7 @@ export function BeadsList({ statusFilter, isActive = true, searchQuery = '' }: B
     if (!beads) return [];
 
     // Filter out non-actionable bead types
-    const EXCLUDED_TYPES = ['message', 'epic', 'convoy'];
+    const EXCLUDED_TYPES = ['message', 'epic', 'convoy', 'agent'];
     const filteredBeads = beads.filter(
       (bead) => !EXCLUDED_TYPES.includes(bead.type.toLowerCase())
     );
