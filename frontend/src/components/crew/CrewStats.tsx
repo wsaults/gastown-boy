@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { useMemo, useState, useCallback } from 'react';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { usePolling } from '../../hooks/usePolling';
-import { api } from '../../services/api';
+import { api, ApiError } from '../../services/api';
 import type { CrewMember } from '../../types';
 
 /** localStorage key for polecat filter preference */
@@ -292,7 +292,13 @@ interface RigSectionProps {
   showAllPolecats: boolean;
 }
 
+/** Spawn button state */
+type SpawnState = 'idle' | 'loading' | 'success' | 'error';
+
 function RigSection({ name, agents, agentGridStyle, infraGridStyle, showAllPolecats }: RigSectionProps) {
+  const [spawnState, setSpawnState] = useState<SpawnState>('idle');
+  const [spawnError, setSpawnError] = useState<string | null>(null);
+
   // Filter polecats based on showAll preference
   const visiblePolecats = showAllPolecats
     ? agents.polecats
@@ -308,6 +314,32 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle, showAllPolec
   ];
   const totalInRig = allAgents.length;
   const runningInRig = allAgents.filter(a => a.status !== 'offline').length;
+
+  const handleSpawnPolecat = useCallback(async () => {
+    if (spawnState === 'loading') return;
+
+    setSpawnState('loading');
+    setSpawnError(null);
+
+    try {
+      await api.agents.spawnPolecat(name);
+      setSpawnState('success');
+      // Reset to idle after showing success
+      setTimeout(() => setSpawnState('idle'), 2000);
+    } catch (err) {
+      setSpawnState('error');
+      if (err instanceof ApiError) {
+        setSpawnError(err.message);
+      } else {
+        setSpawnError('Failed to request polecat');
+      }
+      // Reset to idle after showing error
+      setTimeout(() => {
+        setSpawnState('idle');
+        setSpawnError(null);
+      }, 3000);
+    }
+  }, [name, spawnState]);
 
   return (
     <div style={styles.section}>
@@ -354,6 +386,11 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle, showAllPolec
         <div style={styles.subsectionHeader}>
           <span style={styles.subsectionIcon}>└─</span>
           <span style={styles.subsectionTitle} className="crt-glow">POLECATS</span>
+          <SpawnPolecatButton
+            state={spawnState}
+            onClick={handleSpawnPolecat}
+            error={spawnError}
+          />
           <span style={styles.polecatCount}>
             {totalPolecats > 0
               ? showAllPolecats
@@ -374,6 +411,64 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle, showAllPolec
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Spawn Polecat Button
+// =============================================================================
+
+interface SpawnPolecatButtonProps {
+  state: SpawnState;
+  onClick: () => void;
+  error: string | null;
+}
+
+function SpawnPolecatButton({ state, onClick, error }: SpawnPolecatButtonProps) {
+  const getButtonContent = () => {
+    switch (state) {
+      case 'loading':
+        return '◌';
+      case 'success':
+        return '✓';
+      case 'error':
+        return '✕';
+      default:
+        return '+';
+    }
+  };
+
+  const getButtonStyle = (): CSSProperties => {
+    const base = styles.spawnButton;
+    switch (state) {
+      case 'loading':
+        return { ...base, cursor: 'wait', opacity: 0.7 };
+      case 'success':
+        return { ...base, borderColor: colors.working, color: colors.working };
+      case 'error':
+        return { ...base, borderColor: colors.stuck, color: colors.stuck };
+      default:
+        return base;
+    }
+  };
+
+  return (
+    <div style={styles.spawnButtonContainer}>
+      <button
+        style={getButtonStyle()}
+        onClick={onClick}
+        disabled={state === 'loading'}
+        title={state === 'error' && error ? error : 'Spawn new polecat'}
+        aria-label="Spawn new polecat"
+      >
+        {getButtonContent()}
+      </button>
+      {state === 'error' && error && (
+        <span style={styles.spawnError} title={error}>
+          {error.length > 20 ? `${error.slice(0, 20)}...` : error}
+        </span>
+      )}
     </div>
   );
 }
@@ -752,6 +847,41 @@ const styles = {
     fontSize: '0.65rem',
     color: colors.idle,
     marginLeft: 'auto',
+  },
+
+  spawnButtonContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginLeft: '8px',
+  },
+
+  spawnButton: {
+    width: '20px',
+    height: '20px',
+    padding: 0,
+    border: `1px solid ${colors.primaryDim}`,
+    backgroundColor: 'transparent',
+    color: colors.primary,
+    fontSize: '14px',
+    fontWeight: 'bold',
+    fontFamily: 'monospace',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s ease',
+    lineHeight: 1,
+  },
+
+  spawnError: {
+    fontSize: '0.6rem',
+    color: colors.stuck,
+    letterSpacing: '0.05em',
+    maxWidth: '120px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
 
   // Grid layouts

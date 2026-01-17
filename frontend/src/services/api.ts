@@ -196,6 +196,17 @@ export const api = {
     async check(): Promise<{ healthy: boolean; issues: string[] }> {
       return apiFetch('/agents/health');
     },
+
+    /**
+     * Request a new polecat spawn for a rig.
+     * Sends a task message to the mayor.
+     */
+    async spawnPolecat(rig: string): Promise<{ rig: string; requested: boolean }> {
+      return apiFetch('/agents/spawn-polecat', {
+        method: 'POST',
+        body: { rig },
+      });
+    },
   },
 
   /**
