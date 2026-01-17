@@ -90,27 +90,21 @@ function getPolecatBranch(rig: string, polecatName: string): string | undefined 
 }
 
 async function fetchAgents(cwd: string, beadsDir: string): Promise<BeadsIssue[]> {
-  const issues: BeadsIssue[] = [];
-
-  // Fetch active agents (default status=open)
-  const openResult = await execBd<BeadsIssue[]>(
-    ["list", "--type=agent", "--json"],
+  // Single call with --all, filter client-side for relevant statuses
+  const result = await execBd<BeadsIssue[]>(
+    ["list", "--type=agent", "--all", "--json"],
     { cwd, beadsDir }
   );
-  if (openResult.success && openResult.data) {
-    issues.push(...openResult.data);
+
+  if (!result.success || !result.data) {
+    return [];
   }
 
-  // Fetch tombstone agents (polecats often use this status)
-  const tombstoneResult = await execBd<BeadsIssue[]>(
-    ["list", "--type=agent", "--status=tombstone", "--json"],
-    { cwd, beadsDir }
+  // Filter for active agents (open) and tombstone (polecats use this)
+  const relevantStatuses = new Set(["open", "tombstone"]);
+  return result.data.filter((issue) =>
+    relevantStatuses.has(issue.status?.toLowerCase() ?? "")
   );
-  if (tombstoneResult.success && tombstoneResult.data) {
-    issues.push(...tombstoneResult.data);
-  }
-
-  return issues;
 }
 
 /**

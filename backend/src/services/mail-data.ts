@@ -32,35 +32,21 @@ function isUnread(issue: BeadsIssue): boolean {
 
 export async function listMailIssues(townRoot: string): Promise<BeadsIssue[]> {
   const beadsDir = resolveBeadsDir(townRoot);
-  const openResult = await execBd<BeadsIssue[]>(
-    ["list", "--type", "message", "--status", "open", "--json"],
-    { cwd: townRoot, beadsDir }
-  );
-  const hookedResult = await execBd<BeadsIssue[]>(
-    ["list", "--type", "message", "--status", "hooked", "--json"],
+  // Single call with --all, filter client-side for open/hooked status
+  const result = await execBd<BeadsIssue[]>(
+    ["list", "--type", "message", "--all", "--json"],
     { cwd: townRoot, beadsDir }
   );
 
-  if (!openResult.success && !hookedResult.success) {
-    const message =
-      openResult.error?.message ??
-      hookedResult.error?.message ??
-      "Failed to list mail issues";
-    throw new Error(message);
+  if (!result.success) {
+    throw new Error(result.error?.message ?? "Failed to list mail issues");
   }
 
-  const issues = [
-    ...(openResult.success ? openResult.data ?? [] : []),
-    ...(hookedResult.success ? hookedResult.data ?? [] : []),
-  ];
-  const seen = new Set<string>();
-  const deduped: BeadsIssue[] = [];
-  for (const issue of issues) {
-    if (seen.has(issue.id)) continue;
-    seen.add(issue.id);
-    deduped.push(issue);
-  }
-  return deduped;
+  // Filter for active mail (open or hooked status)
+  const activeStatuses = new Set(["open", "hooked"]);
+  return (result.data ?? []).filter((issue) =>
+    activeStatuses.has(issue.status?.toLowerCase() ?? "")
+  );
 }
 
 export async function listMailIssuesForIdentity(
@@ -95,9 +81,12 @@ export async function listMailIssuesForIdentity(
 
   const identities = identityVariants(identity);
 
+  // Build all queries upfront, then run in parallel
+  const queries: string[][] = [];
+
   for (const variant of identities) {
     for (const status of ["open", "hooked"]) {
-      await runQuery([
+      queries.push([
         "list",
         "--type",
         "message",
@@ -111,7 +100,7 @@ export async function listMailIssuesForIdentity(
   }
 
   for (const variant of identities) {
-    await runQuery([
+    queries.push([
       "list",
       "--type",
       "message",
@@ -122,6 +111,9 @@ export async function listMailIssuesForIdentity(
       "--json",
     ]);
   }
+
+  // Run all queries in parallel
+  await Promise.all(queries.map(runQuery));
 
   if (!anySucceeded && errors.length > 0) {
     throw new Error(errors[0]);
