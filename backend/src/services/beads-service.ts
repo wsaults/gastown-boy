@@ -36,6 +36,8 @@ export interface ListBeadsOptions {
   status?: string;
   type?: string;
   limit?: number;
+  /** Prefixes to exclude (e.g., ["hq-"] to hide town-level system beads) */
+  excludePrefixes?: string[];
 }
 
 export interface BeadsServiceResult<T> {
@@ -243,6 +245,12 @@ export async function listAllBeads(
 
     const results = await Promise.all(fetchPromises);
     let allBeads = results.flat();
+
+    // Filter out excluded prefixes (e.g., hq- system beads)
+    if (options.excludePrefixes && options.excludePrefixes.length > 0) {
+      const prefixes = options.excludePrefixes;
+      allBeads = allBeads.filter((b) => !prefixes.some((p) => b.id.startsWith(p)));
+    }
 
     // Sort by priority, then by updated date
     allBeads.sort((a, b) => {

@@ -30,16 +30,21 @@ export const beadsRouter = Router();
  *   Default: "default" (active work only)
  * - type: Filter by bead type (e.g., "task", "bug", "feature")
  * - limit: Max results (default: 100)
+ * - includeSystem: Set to "true" to include hq- system beads (default: false)
  */
 beadsRouter.get("/", async (req, res) => {
   const rig = req.query["rig"] as string | undefined;
   const statusParam = req.query["status"] as string | undefined;
   const typeParam = req.query["type"] as string | undefined;
   const limitStr = req.query["limit"] as string | undefined;
+  const includeSystem = req.query["includeSystem"] === "true";
   const limit = limitStr ? parseInt(limitStr, 10) : 100;
 
   // Default to showing active work (open + in_progress + blocked)
   const status = statusParam ?? "default";
+
+  // Exclude hq- system beads by default
+  const excludePrefixes = includeSystem ? [] : ["hq-"];
 
   // If no rig specified, fetch from ALL beads databases
   if (!rig) {
@@ -47,6 +52,7 @@ beadsRouter.get("/", async (req, res) => {
       ...(typeParam && { type: typeParam }),
       status,
       limit,
+      excludePrefixes,
     });
 
     if (!result.success) {
