@@ -299,6 +299,14 @@ export async function listAllBeads(
     const results = await Promise.all(fetchPromises);
     let allBeads = results.flat();
 
+    // Deduplicate by bead ID (same bead may exist in multiple databases)
+    const seenIds = new Set<string>();
+    allBeads = allBeads.filter((b) => {
+      if (seenIds.has(b.id)) return false;
+      seenIds.add(b.id);
+      return true;
+    });
+
     // Filter out excluded prefixes (e.g., hq- system beads)
     if (options.excludePrefixes && options.excludePrefixes.length > 0) {
       const prefixes = options.excludePrefixes;
