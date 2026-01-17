@@ -24,9 +24,14 @@ export const mailRouter = Router();
 /**
  * GET /api/mail
  * List all mail messages, sorted by newest first.
+ *
+ * Query params:
+ * - filter: "user" | "infrastructure" | undefined (default: all)
+ * - all: "true" to include all messages (overrides default filters)
  */
 mailRouter.get("/", async (req, res) => {
   const showAll = req.query["all"] === "true";
+  const filter = req.query["filter"] as string | undefined;
   const result = await listMail(showAll ? null : undefined);
 
   if (!result.success) {
@@ -35,7 +40,15 @@ mailRouter.get("/", async (req, res) => {
     );
   }
 
-  const messages = result.data ?? [];
+  let messages = result.data ?? [];
+
+  // Apply infrastructure filter if specified
+  if (filter === "user") {
+    messages = messages.filter((m) => !m.isInfrastructure);
+  } else if (filter === "infrastructure") {
+    messages = messages.filter((m) => m.isInfrastructure);
+  }
+
   return res.json(success(paginated(messages, messages.length, false)));
 });
 

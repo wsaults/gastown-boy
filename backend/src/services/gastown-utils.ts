@@ -1,6 +1,27 @@
 import type { Message, MessagePriority, MessageType } from "../types/index.js";
 import type { BeadsIssue } from "./bd-client.js";
 
+/**
+ * Patterns that identify infrastructure/coordination messages.
+ * These are system-generated messages that most users don't need to see.
+ */
+const INFRASTRUCTURE_PATTERNS = [
+  /^WITNESS_PING/i,
+  /^MERGE_READY/i,
+  /^MERGED:/i,
+  /^POLECAT_DONE/i,
+  /^Session ended/i,
+  /^Handoff complete/i,
+];
+
+/**
+ * Determines if a message subject indicates infrastructure/coordination traffic.
+ * Infrastructure messages are system-generated and typically not relevant to users.
+ */
+export function isInfrastructureMessage(subject: string): boolean {
+  return INFRASTRUCTURE_PATTERNS.some(p => p.test(subject));
+}
+
 export interface AgentFields {
   roleType?: string;
   rig?: string;
@@ -222,6 +243,7 @@ export function beadsIssueToMessage(issue: BeadsIssue): Message {
     threadId: labelInfo.threadId ?? "",
     pinned: issue.pinned ?? false,
     cc: labelInfo.cc.map(identityToAddress),
+    isInfrastructure: isInfrastructureMessage(issue.title),
   };
   if (labelInfo.replyTo) message.replyTo = labelInfo.replyTo;
   return message;
