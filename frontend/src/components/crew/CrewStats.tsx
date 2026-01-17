@@ -484,7 +484,10 @@ interface AgentCardProps {
 
 function AgentCard({ agent, icon }: AgentCardProps) {
   const isOnline = agent.status !== 'offline';
-  const statusColor = getStatusColor(agent.status);
+  // Determine if agent is "active" - has hooked work but raw status shows idle
+  const isActive = agent.currentTask && agent.status === 'idle';
+  const displayStatus = isActive ? 'active' : agent.status;
+  const statusColor = getStatusColor(displayStatus);
 
   return (
     <div
@@ -493,7 +496,7 @@ function AgentCard({ agent, icon }: AgentCardProps) {
         borderColor: isOnline ? colors.panelBorder : colors.offlineBorder,
       }}
       role="listitem"
-      aria-label={`${agent.name} - ${agent.status}`}
+      aria-label={`${agent.name} - ${displayStatus}`}
     >
       <div style={styles.cardHeader}>
         <span style={styles.typeIcon}>{icon}</span>
@@ -504,8 +507,10 @@ function AgentCard({ agent, icon }: AgentCardProps) {
       </div>
 
       <div style={styles.cardBody}>
-        <div style={styles.statusRow}>
+        <div style={styles.statusRow} data-testid="status-row">
           <span
+            data-testid="status-indicator"
+            className={isActive ? 'pulsate' : ''}
             style={{
               ...styles.statusIndicator,
               backgroundColor: statusColor,
@@ -513,7 +518,7 @@ function AgentCard({ agent, icon }: AgentCardProps) {
             }}
           />
           <span style={{ ...styles.statusText, color: statusColor }}>
-            {agent.status.toUpperCase()}
+            {displayStatus.toUpperCase()}
           </span>
         </div>
 
@@ -594,6 +599,7 @@ function AgentChip({ agent }: AgentChipProps) {
 function getStatusColor(status: string): string {
   switch (status) {
     case 'working':
+    case 'active':
       return colors.working;
     case 'idle':
       return colors.idle;

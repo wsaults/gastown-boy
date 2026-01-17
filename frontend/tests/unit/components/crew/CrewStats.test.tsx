@@ -316,6 +316,97 @@ describe("CrewStats", () => {
   });
 
   // ===========================================================================
+  // Active Status for Polecats with Hooked Work
+  // ===========================================================================
+
+  describe("active status for polecats with hooked work", () => {
+    it("should display ACTIVE instead of IDLE when polecat has currentTask", () => {
+      mockUsePolling.mockReturnValue(
+        createMockPollingResult({
+          data: [
+            createMockAgent({
+              type: "polecat",
+              rig: "gastown_boy",
+              status: "idle",
+              currentTask: "Fix the bug in auth module",
+            }),
+          ],
+        })
+      );
+
+      renderWithRigProvider(<CrewStats />);
+
+      expect(screen.getByText("ACTIVE")).toBeInTheDocument();
+      expect(screen.queryByText("IDLE")).not.toBeInTheDocument();
+    });
+
+    it("should display IDLE when polecat has no currentTask", () => {
+      mockUsePolling.mockReturnValue(
+        createMockPollingResult({
+          data: [
+            createMockAgent({
+              type: "polecat",
+              rig: "gastown_boy",
+              status: "idle",
+              currentTask: undefined,
+            }),
+          ],
+        })
+      );
+
+      renderWithRigProvider(<CrewStats />);
+
+      expect(screen.getByText("IDLE")).toBeInTheDocument();
+      expect(screen.queryByText("ACTIVE")).not.toBeInTheDocument();
+    });
+
+    it("should have pulsating class on status indicator for active polecat", () => {
+      mockUsePolling.mockReturnValue(
+        createMockPollingResult({
+          data: [
+            createMockAgent({
+              type: "polecat",
+              rig: "gastown_boy",
+              status: "idle",
+              currentTask: "Working on feature",
+            }),
+          ],
+        })
+      );
+
+      renderWithRigProvider(<CrewStats />);
+
+      // The status indicator should have the pulsate class
+      const activeText = screen.getByText("ACTIVE");
+      const statusRow = activeText.closest('[data-testid="status-row"]');
+      const indicator = statusRow?.querySelector('[data-testid="status-indicator"]');
+      expect(indicator).toHaveClass("pulsate");
+    });
+
+    it("should not have pulsating class on status indicator for idle polecat", () => {
+      mockUsePolling.mockReturnValue(
+        createMockPollingResult({
+          data: [
+            createMockAgent({
+              type: "polecat",
+              rig: "gastown_boy",
+              status: "idle",
+              currentTask: undefined,
+            }),
+          ],
+        })
+      );
+
+      renderWithRigProvider(<CrewStats />);
+
+      const idleText = screen.getByText("IDLE");
+      const statusRow = idleText.closest('[data-testid="status-row"]');
+      const indicator = statusRow?.querySelector('[data-testid="status-indicator"]');
+      expect(indicator).not.toHaveClass("pulsate");
+    });
+  });
+
+  // ===========================================================================
   // Accessibility
   // ===========================================================================
 
