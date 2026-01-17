@@ -62,6 +62,8 @@ export interface Message {
   pinned: boolean;
   /** Additional recipient addresses */
   cc?: string[];
+  /** True if this is an infrastructure/coordination message */
+  isInfrastructure: boolean;
 }
 
 /** Request payload for sending a new message. */
@@ -276,6 +278,7 @@ export const MessageSchema = z.object({
   replyTo: z.string().optional(),
   pinned: z.boolean(),
   cc: z.array(z.string()).optional(),
+  isInfrastructure: z.boolean(),
 });
 
 export const SendMessageRequestSchema = z.object({

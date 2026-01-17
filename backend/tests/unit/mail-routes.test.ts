@@ -40,6 +40,7 @@ function createMockMessage(overrides: Partial<Message> = {}): Message {
     type: "notification",
     threadId: "thread-001",
     pinned: false,
+    isInfrastructure: false,
     ...overrides,
   };
 }
@@ -98,6 +99,61 @@ describe("mail routes", () => {
       expect(response.status).toBe(500);
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe("INTERNAL_ERROR");
+    });
+
+    it("should filter to user messages only with filter=user", async () => {
+      const mockMessages = [
+        createMockMessage({ id: "msg-001", subject: "Fix bug", isInfrastructure: false }),
+        createMockMessage({ id: "msg-002", subject: "WITNESS_PING: check", isInfrastructure: true }),
+        createMockMessage({ id: "msg-003", subject: "Review PR", isInfrastructure: false }),
+      ];
+
+      vi.mocked(listMail).mockResolvedValue({
+        success: true,
+        data: mockMessages,
+      });
+
+      const response = await request(app).get("/api/mail?filter=user");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.items).toHaveLength(2);
+      expect(response.body.data.items.every((m: Message) => !m.isInfrastructure)).toBe(true);
+    });
+
+    it("should filter to infrastructure messages only with filter=infrastructure", async () => {
+      const mockMessages = [
+        createMockMessage({ id: "msg-001", subject: "Fix bug", isInfrastructure: false }),
+        createMockMessage({ id: "msg-002", subject: "WITNESS_PING: check", isInfrastructure: true }),
+        createMockMessage({ id: "msg-003", subject: "MERGED: PR #123", isInfrastructure: true }),
+      ];
+
+      vi.mocked(listMail).mockResolvedValue({
+        success: true,
+        data: mockMessages,
+      });
+
+      const response = await request(app).get("/api/mail?filter=infrastructure");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.items).toHaveLength(2);
+      expect(response.body.data.items.every((m: Message) => m.isInfrastructure)).toBe(true);
+    });
+
+    it("should return all messages when no filter specified", async () => {
+      const mockMessages = [
+        createMockMessage({ id: "msg-001", isInfrastructure: false }),
+        createMockMessage({ id: "msg-002", isInfrastructure: true }),
+      ];
+
+      vi.mocked(listMail).mockResolvedValue({
+        success: true,
+        data: mockMessages,
+      });
+
+      const response = await request(app).get("/api/mail");
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.items).toHaveLength(2);
     });
   });
 
