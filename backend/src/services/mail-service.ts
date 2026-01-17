@@ -6,6 +6,7 @@
  */
 
 import { randomBytes } from "crypto";
+import { spawn } from "child_process";
 import { execBd, resolveBeadsDir, type BeadsIssue } from "./bd-client.js";
 import { gt } from "./gt-executor.js";
 import { resolveTownRoot } from "./gastown-workspace.js";
@@ -113,6 +114,31 @@ async function resolveThreadId(
   if (!result.success || !result.data) return undefined;
   const labels = parseMessageLabels(result.data.labels);
   return labels.threadId;
+}
+
+/**
+ * Send a tmux notification to a session.
+ * Maps recipient address to tmux session name.
+ */
+function sendTmuxNotification(to: string, from: string, subject: string): void {
+  // Map recipient to tmux session
+  let session: string | null = null;
+  if (to === "mayor/" || to === "mayor") {
+    session = "hq-mayor";
+  }
+  // Add more mappings as needed for other recipients
+
+  if (!session) return;
+
+  const message = `📬 Mail from ${from}: ${subject}`;
+  const durationMs = 5000;
+
+  // Fire and forget - don't wait for tmux
+  const proc = spawn("tmux", ["display-message", "-t", session, "-d", durationMs.toString(), message], {
+    stdio: "ignore",
+    detached: true,
+  });
+  proc.unref();
 }
 
 // ============================================================================
@@ -353,6 +379,9 @@ export async function sendMail(
       },
     };
   }
+
+  // Send tmux notification since we bypassed gt mail send
+  sendTmuxNotification(to, fromIdentity, request.subject);
 
   return { success: true };
 }
