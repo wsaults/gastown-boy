@@ -206,8 +206,8 @@ export function BeadsList({ statusFilter, isActive = true, searchQuery = '' }: B
   const searchedBeads = useMemo(() => {
     if (!beads) return [];
 
-    // Filter out message and epic types
-    const EXCLUDED_TYPES = ['message', 'epic'];
+    // Filter out non-actionable bead types
+    const EXCLUDED_TYPES = ['message', 'epic', 'convoy'];
     const filteredBeads = beads.filter(
       (bead) => !EXCLUDED_TYPES.includes(bead.type.toLowerCase())
     );
