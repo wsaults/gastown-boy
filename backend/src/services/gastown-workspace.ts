@@ -170,14 +170,6 @@ export async function listRigNames(townRoot: string): Promise<string[]> {
 }
 
 /**
- * Known external rig paths that aren't subdirectories of townRoot.
- * Can be extended via GT_RIG_PATHS env var (format: "rigName=/path,rigName2=/path2")
- */
-const EXTERNAL_RIG_PATHS: Record<string, string> = {
-  gastown_boy: "/Users/will/Projects/Saults/gastown-boy",
-};
-
-/**
  * Maps bead prefixes to rig names.
  * Used to route bead lookups to the correct beads database.
  */
@@ -189,10 +181,10 @@ const BEAD_PREFIX_TO_RIG: Record<string, string | null> = {
 
 /**
  * Resolves the filesystem path for a rig.
- * Checks external paths first, then falls back to townRoot/rigName.
+ * Checks GT_RIG_PATHS env var first, then falls back to townRoot/rigName.
  */
 export function resolveRigPath(rigName: string, townRoot: string): string | null {
-  // Check external rig paths from env
+  // Check external rig paths from env (format: "rigName=/path,rigName2=/path2")
   const envPaths = process.env["GT_RIG_PATHS"];
   if (envPaths) {
     for (const pair of envPaths.split(",")) {
@@ -201,12 +193,6 @@ export function resolveRigPath(rigName: string, townRoot: string): string | null
         return path;
       }
     }
-  }
-
-  // Check known external paths
-  const externalPath = EXTERNAL_RIG_PATHS[rigName];
-  if (externalPath && existsSync(externalPath)) {
-    return externalPath;
   }
 
   // Fall back to rig as subdirectory of townRoot
