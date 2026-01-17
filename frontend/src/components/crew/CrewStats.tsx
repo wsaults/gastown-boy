@@ -380,7 +380,7 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle, showAllPolec
         <div style={styles.subsection}>
           <div style={styles.subsectionHeader}>
             <span style={styles.subsectionIcon}>├─</span>
-            <span style={styles.subsectionTitle} className="crt-glow">INFRASTRUCTURE</span>
+            <span style={styles.subsectionTitle}>INFRASTRUCTURE</span>
           </div>
           <div style={infraGridStyle}>
             {agents.witness && <AgentCard agent={agents.witness} icon="👁" />}
@@ -393,7 +393,7 @@ function RigSection({ name, agents, agentGridStyle, infraGridStyle, showAllPolec
       <div style={styles.subsection}>
         <div style={styles.subsectionHeader}>
           <span style={styles.subsectionIcon}>└─</span>
-          <span style={styles.subsectionTitle} className="crt-glow">POLECATS</span>
+          <span style={styles.subsectionTitle}>POLECATS</span>
           <SpawnPolecatButton
             state={spawnState}
             onClick={handleSpawnPolecat}
