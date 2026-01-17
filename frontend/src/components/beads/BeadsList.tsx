@@ -272,6 +272,7 @@ export function BeadsList({ statusFilter, isActive = true, searchQuery = '' }: B
     try {
       if (action === 'sling') {
         await api.mail.send({
+          from: 'overseer',
           to: 'mayor/',
           subject: `Sling request: ${bead.id}`,
           body: `Please sling this bead to a polecat:\n\nID: ${bead.id}\nTitle: ${bead.title}\nType: ${bead.type}\nPriority: P${bead.priority}`,
@@ -280,6 +281,7 @@ export function BeadsList({ statusFilter, isActive = true, searchQuery = '' }: B
         });
       } else if (action === 'delete') {
         await api.mail.send({
+          from: 'overseer',
           to: 'mayor/',
           subject: `Delete request: ${bead.id}`,
           body: `Request to delete this bead:\n\nID: ${bead.id}\nTitle: ${bead.title}\nType: ${bead.type}\n\nIf deletion is not appropriate, please close with a note.`,
