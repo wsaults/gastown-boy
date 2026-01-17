@@ -117,6 +117,35 @@ async function resolveThreadId(
 }
 
 /**
+ * Nudge a tmux session with a notification message.
+ * This injects the message into the agent's conversation by typing it and pressing Enter.
+ * Mirrors the behavior of gt mail send --notify.
+ */
+async function nudgeSession(session: string, message: string): Promise<void> {
+  // Helper to run tmux commands
+  const runTmux = (args: string[]): Promise<void> => {
+    return new Promise((resolve) => {
+      const proc = spawn("tmux", args, { stdio: "ignore" });
+      proc.on("close", () => resolve());
+      proc.on("error", () => resolve());
+    });
+  };
+
+  // 1. Send text in literal mode (handles special characters)
+  await runTmux(["send-keys", "-t", session, "-l", message]);
+
+  // 2. Wait 500ms for paste to complete
+  await new Promise((r) => setTimeout(r, 500));
+
+  // 3. Send Escape to exit vim INSERT mode if enabled (harmless in normal mode)
+  await runTmux(["send-keys", "-t", session, "Escape"]);
+  await new Promise((r) => setTimeout(r, 100));
+
+  // 4. Send Enter to submit the message
+  await runTmux(["send-keys", "-t", session, "Enter"]);
+}
+
+/**
  * Send a tmux notification to a session.
  * Maps recipient address to tmux session name.
  */
@@ -130,15 +159,10 @@ function sendTmuxNotification(to: string, from: string, subject: string): void {
 
   if (!session) return;
 
-  const message = `📬 Mail from ${from}: ${subject}`;
-  const durationMs = 5000;
+  const message = `📬 You have new mail from ${from}. Subject: ${subject}. Run 'gt mail inbox' to read.`;
 
-  // Fire and forget - don't wait for tmux
-  const proc = spawn("tmux", ["display-message", "-t", session, "-d", durationMs.toString(), message], {
-    stdio: "ignore",
-    detached: true,
-  });
-  proc.unref();
+  // Fire and forget - don't block on the notification
+  void nudgeSession(session, message);
 }
 
 // ============================================================================
