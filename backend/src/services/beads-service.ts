@@ -82,49 +82,79 @@ function extractRig(assignee: string | null | undefined): string | null {
 }
 
 /**
- * Cached prefix-to-source map loaded from routes.jsonl.
+ * Cached prefix-to-source map built from beads config files.
  * Maps prefix (e.g., "gb") to rig name (e.g., "gastown_boy").
  */
 let prefixToSourceMap: Map<string, string> | null = null;
 
 /**
- * Loads prefix-to-source mapping from routes.jsonl.
- * Extracts rig name from path (e.g., "gastown_boy/mayor/rig" → "gastown_boy").
+ * Reads the issue prefix from a .beads/config.yaml file.
+ * Returns null if not found or unreadable.
+ */
+function readPrefixFromConfig(beadsDir: string): string | null {
+  try {
+    const configPath = join(beadsDir, "config.yaml");
+    const content = readFileSync(configPath, "utf8");
+    // Simple YAML parsing for prefix field (handles both "prefix:" and "issue-prefix:")
+    const prefixMatch = content.match(/^(?:prefix|issue-prefix):\s*["']?([a-zA-Z0-9_-]+)["']?\s*$/m);
+    return prefixMatch?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Builds prefix-to-source mapping dynamically from discovered beads directories.
+ * Reads the prefix from each rig's .beads/config.yaml file.
+ */
+async function buildPrefixMap(): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+
+  // Town beads always use "hq" prefix
+  map.set("hq", "town");
+
+  try {
+    const beadsDirs = await listAllBeadsDirs();
+
+    for (const dirInfo of beadsDirs) {
+      if (!dirInfo.rig) continue; // Skip town-level (already added)
+
+      const prefix = readPrefixFromConfig(dirInfo.path);
+      if (prefix) {
+        map.set(prefix, dirInfo.rig);
+      }
+    }
+  } catch {
+    // If discovery fails, map will just have the "hq" → "town" default
+  }
+
+  return map;
+}
+
+/**
+ * Loads prefix-to-source mapping, building it dynamically if not cached.
  */
 function loadPrefixMap(): Map<string, string> {
   if (prefixToSourceMap) return prefixToSourceMap;
 
+  // Synchronous fallback - will be replaced by async version on first listAllBeads call
   prefixToSourceMap = new Map();
-  try {
-    const townRoot = resolveTownRoot();
-    const routesPath = join(townRoot, ".beads", "routes.jsonl");
-    const content = readFileSync(routesPath, "utf8");
-
-    for (const line of content.split("\n")) {
-      if (!line.trim()) continue;
-      const route = JSON.parse(line) as { prefix: string; path: string };
-      // Extract prefix without trailing dash (e.g., "gb-" → "gb")
-      const prefix = route.prefix.replace(/-$/, "");
-      // Extract rig name from path (first segment, or "town" for ".")
-      const rigName = route.path === "." ? "town" : route.path.split("/")[0];
-      if (rigName) {
-        prefixToSourceMap.set(prefix, rigName);
-      }
-    }
-  } catch {
-    // Fallback defaults if routes.jsonl not found
-    prefixToSourceMap.set("hq", "town");
-    prefixToSourceMap.set("gb", "gastown_boy");
-    prefixToSourceMap.set("gt", "gastown");
-    prefixToSourceMap.set("wr", "WritingExperiment");
-  }
-
+  prefixToSourceMap.set("hq", "town");
   return prefixToSourceMap;
 }
 
 /**
+ * Ensures prefix map is built (call this before using prefixToSource).
+ */
+async function ensurePrefixMap(): Promise<void> {
+  if (!prefixToSourceMap || prefixToSourceMap.size <= 1) {
+    prefixToSourceMap = await buildPrefixMap();
+  }
+}
+
+/**
  * Maps bead prefix to rig name for UI grouping.
- * Reads from routes.jsonl dynamically.
+ * Uses dynamically built prefix map from rig config files.
  */
 function prefixToSource(beadId: string): string {
   const prefix = beadId.split("-")[0];
@@ -240,6 +270,9 @@ export async function listBeads(
   options: ListBeadsOptions = {}
 ): Promise<BeadsServiceResult<BeadInfo[]>> {
   try {
+    // Build prefix map for source mapping in transformBead
+    await ensurePrefixMap();
+
     const townRoot = resolveTownRoot();
     const workDir = options.rigPath ?? townRoot;
     const beadsDir = resolveBeadsDir(workDir);
@@ -287,6 +320,9 @@ export async function listAllBeads(
   options: Omit<ListBeadsOptions, "rig" | "rigPath"> = {}
 ): Promise<BeadsServiceResult<BeadInfo[]>> {
   try {
+    // Build prefix map from discovered rigs (for source mapping in transformBead)
+    await ensurePrefixMap();
+
     const townRoot = resolveTownRoot();
     const beadsDirs = await listAllBeadsDirs();
 
