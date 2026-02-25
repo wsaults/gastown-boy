@@ -35,7 +35,14 @@ export interface ParsedAgentBead {
   name: string | null;
 }
 
-export function parseAgentBeadId(id: string, defaultRig?: string | null): ParsedAgentBead | null {
+export function parseAgentBeadId(
+  id: string | null | undefined,
+  defaultRig?: string | null,
+): ParsedAgentBead | null {
+  if (!id) {
+    return null;
+  }
+
   const hyphenIdx = id.indexOf("-");
   if (hyphenIdx < 2 || hyphenIdx > 3) return null;
   const rest = id.slice(hyphenIdx + 1);
@@ -74,8 +81,12 @@ export function parseAgentBeadId(id: string, defaultRig?: string | null): Parsed
   return null;
 }
 
-export function parseAgentFields(description: string): AgentFields {
+export function parseAgentFields(description: string | null | undefined): AgentFields {
   const fields: AgentFields = {};
+  if (typeof description !== "string") {
+    return fields;
+  }
+
   for (const rawLine of description.split("\n")) {
     const line = rawLine.trim();
     if (!line) continue;
