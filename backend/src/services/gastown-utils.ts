@@ -74,8 +74,9 @@ export function parseAgentBeadId(id: string, defaultRig?: string | null): Parsed
   return null;
 }
 
-export function parseAgentFields(description: string): AgentFields {
+export function parseAgentFields(description: string | null | undefined): AgentFields {
   const fields: AgentFields = {};
+  if (!description) return fields;
   for (const rawLine of description.split("\n")) {
     const line = rawLine.trim();
     if (!line) continue;
