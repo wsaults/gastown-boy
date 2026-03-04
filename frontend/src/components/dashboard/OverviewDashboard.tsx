@@ -42,10 +42,10 @@ function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function DashboardView() {
-  const { recentMessages, totalCount: mailTotal, unreadCount, loading: mailLoading, error: mailError } = useDashboardMail();
-  const { recentConvoys, loading: convoysLoading, error: convoysError } = useDashboardConvoys();
-  const { totalCrew, activeCrew, recentCrew, crewAlerts, loading: crewLoading, error: crewError } = useDashboardCrew();
+export function DashboardView({ isActive = false }: { isActive?: boolean }) {
+  const { recentMessages, totalCount: mailTotal, unreadCount, loading: mailLoading, error: mailError } = useDashboardMail(isActive);
+  const { recentConvoys, loading: convoysLoading, error: convoysError } = useDashboardConvoys(isActive);
+  const { totalCrew, activeCrew, recentCrew, crewAlerts, loading: crewLoading, error: crewError } = useDashboardCrew(isActive);
 
 
 
