@@ -284,6 +284,14 @@ export async function listAllBeadsDirs(): Promise<BeadsDirInfo[]> {
     // Deduplicate by resolved beads path, not workDir
     if (scannedBeadsPaths.has(beadsPath)) return;
 
+    // Validate the resolved beads directory has a database
+    // (config.yaml or issues.jsonl). Stale/empty .beads/ dirs
+    // (e.g., ~/.beads from a previous install) cause bd to fail
+    // with "no beads database found".
+    if (!existsSync(join(beadsPath, "config.yaml")) && !existsSync(join(beadsPath, "issues.jsonl"))) {
+      return;
+    }
+
     results.push({
       path: beadsPath,
       rig,
@@ -317,10 +325,22 @@ export async function listAllBeadsDirs(): Promise<BeadsDirInfo[]> {
     }
   }
 
-  // 4. Heuristic search up from CWD
+  // 4. Heuristic search up from CWD, but stop at the town root.
+  // Walking above the town root discovers spurious .beads/ directories
+  // (e.g., ~/.beads from old installs) that cause bd to fail.
+  const resolvedTownRoot = resolve(townRoot);
   let current = process.cwd();
   while (true) {
-    addDir(current, scannedBeadsPaths.has(resolveBeadsDir(resolve(current))) ? null : basename(current));
+    const resolvedCurrent = resolve(current);
+    // Stop once we've reached or passed the town root
+    if (resolvedCurrent === resolvedTownRoot || !resolvedCurrent.startsWith(resolvedTownRoot + sep)) {
+      // Add the current dir but don't go higher than town root
+      addDir(current, scannedBeadsPaths.has(resolveBeadsDir(resolvedCurrent)) ? null : basename(current));
+      if (resolvedCurrent === resolvedTownRoot) break;
+      // If CWD is outside the town root tree, just stop
+      break;
+    }
+    addDir(current, scannedBeadsPaths.has(resolveBeadsDir(resolvedCurrent)) ? null : basename(current));
     const parent = dirname(current);
     if (parent === current) break;
     current = parent;
