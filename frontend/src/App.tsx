@@ -93,7 +93,7 @@ function App() {
               hidden={activeTab !== "dashboard"}
               aria-hidden={activeTab !== "dashboard"}
             >
-              <DashboardView />
+              <DashboardView isActive={activeTab === "dashboard"} />
             </section>
             <section
               className="tab-view"

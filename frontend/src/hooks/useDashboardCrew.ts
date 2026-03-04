@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { usePolling } from './usePolling';
 import { api } from '../services/api';
 import type { AgentType, CrewMemberStatus } from '../types';
 
@@ -12,21 +13,14 @@ export interface DashboardCrewMember {
 }
 
 interface DashboardCrew {
-  /** Total crew/polecat count */
   totalCrew: number;
-  /** Active (working + idle) count */
   activeCrew: number;
-  /** 3 most recent crew/polecats sorted by status priority */
   recentCrew: DashboardCrewMember[];
-  /** Alerts for blocked/stuck agents */
   crewAlerts: string[];
   loading: boolean;
   error: string | null;
 }
 
-/**
- * Custom hook to fetch crew data for the dashboard.
- */
 /** Agent types to show in the dashboard crew section */
 const DASHBOARD_AGENT_TYPES: AgentType[] = ['crew', 'polecat'];
 
@@ -39,58 +33,53 @@ const STATUS_PRIORITY: Record<CrewMemberStatus, number> = {
   offline: 4,
 };
 
-export function useDashboardCrew(): DashboardCrew {
-  const [totalCrew, setTotalCrew] = useState(0);
-  const [activeCrew, setActiveCrew] = useState(0);
-  const [recentCrew, setRecentCrew] = useState<DashboardCrewMember[]>([]);
-  const [crewAlerts, setCrewAlerts] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+/**
+ * Custom hook to fetch crew data for the dashboard.
+ */
+export function useDashboardCrew(isActive = false): DashboardCrew {
+  const { data, loading, error } = usePolling(
+    () => api.agents.list(),
+    { interval: 60000, enabled: isActive }
+  );
 
-  useEffect(() => {
-    const fetchCrewData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const crewMembers = await api.agents.list();
+  const { totalCrew, activeCrew, recentCrew, crewAlerts } = useMemo(() => {
+    if (!data) return { totalCrew: 0, activeCrew: 0, recentCrew: [] as DashboardCrewMember[], crewAlerts: [] as string[] };
 
-        // Filter to crew/polecat types, excluding offline polecats
-        const dashboardAgents = crewMembers.filter((m) =>
-          DASHBOARD_AGENT_TYPES.includes(m.type) &&
-          !(m.type === 'polecat' && m.status === 'offline')
-        );
-        setTotalCrew(dashboardAgents.length);
+    const dashboardAgents = data.filter((m) =>
+      DASHBOARD_AGENT_TYPES.includes(m.type) &&
+      !(m.type === 'polecat' && m.status === 'offline')
+    );
 
-        // Count active (working + idle)
-        const active = dashboardAgents.filter((m) => m.status === 'working' || m.status === 'idle').length;
-        setActiveCrew(active);
+    const active = dashboardAgents.filter((m) => m.status === 'working' || m.status === 'idle').length;
 
-        // Get 3 most recent crew/polecats sorted by status priority
-        const recent = dashboardAgents
-          .sort((a, b) => STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status])
-          .slice(0, 3)
-          .map((m) => ({ name: m.name, type: m.type, status: m.status, rig: m.rig, currentTask: m.currentTask }));
-        setRecentCrew(recent);
+    const recent = dashboardAgents
+      .sort((a, b) => STATUS_PRIORITY[a.status] - STATUS_PRIORITY[b.status])
+      .slice(0, 3)
+      .map((m) => ({ name: m.name, type: m.type, status: m.status, rig: m.rig, currentTask: m.currentTask }));
 
-        // Generate alerts for blocked/stuck agents
-        const alerts: string[] = [];
-        for (const m of dashboardAgents) {
-          if (m.status === 'stuck') {
-            alerts.push(`${m.name} is STUCK`);
-          } else if (m.status === 'blocked') {
-            alerts.push(`${m.name} is blocked`);
-          }
-        }
-        setCrewAlerts(alerts);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch crew data');
-      } finally {
-        setLoading(false);
+    const alerts: string[] = [];
+    for (const m of dashboardAgents) {
+      if (m.status === 'stuck') {
+        alerts.push(`${m.name} is STUCK`);
+      } else if (m.status === 'blocked') {
+        alerts.push(`${m.name} is blocked`);
       }
+    }
+
+    return {
+      totalCrew: dashboardAgents.length,
+      activeCrew: active,
+      recentCrew: recent,
+      crewAlerts: alerts,
     };
+  }, [data]);
 
-    void fetchCrewData();
-  }, []);
-
-  return { totalCrew, activeCrew, recentCrew, crewAlerts, loading, error };
+  return {
+    totalCrew,
+    activeCrew,
+    recentCrew,
+    crewAlerts,
+    loading,
+    error: error?.message ?? null,
+  };
 }
