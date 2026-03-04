@@ -3,6 +3,7 @@ import { useDashboardMail } from '../../hooks/useDashboardMail';
 import { useDashboardConvoys } from '../../hooks/useDashboardConvoys';
 import { useDashboardCrew } from '../../hooks/useDashboardCrew';
 import { ConvoyCard } from '../convoys/ConvoyCard';
+import { EventStreamPanel } from './EventStreamPanel';
 import './DashboardView.css';
 
 // Simple widget wrapper for dashboard sections
@@ -176,6 +177,8 @@ export function DashboardView({ isActive = false }: { isActive?: boolean }) {
           )}
         </DashboardWidget>
 
+        {/* Event Stream Widget */}
+        <EventStreamPanel isActive={isActive} />
 
       </div>
     </div>
