@@ -28,3 +28,6 @@ state.json
 
 # Claude Code
 .claude/
+
+# Gas Town (added by gt)
+.logs/
