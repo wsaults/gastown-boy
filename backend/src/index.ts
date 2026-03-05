@@ -1,6 +1,6 @@
 import cors from "cors";
 import express from "express";
-import { agentsRouter, beadsRouter, convoysRouter, mailRouter, powerRouter, statusRouter, tunnelRouter } from "./routes/index.js";
+import { agentsRouter, beadsRouter, convoysRouter, eventsRouter, mailRouter, powerRouter, statusRouter, tunnelRouter } from "./routes/index.js";
 import { logInfo } from "./utils/index.js";
 
 const app = express();
@@ -31,6 +31,7 @@ app.use("/api/mail", mailRouter);
 app.use("/api/power", powerRouter);
 app.use("/api/status", statusRouter);
 app.use("/api/tunnel", tunnelRouter);
+app.use("/api/events", eventsRouter);
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
