@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import type { Message } from '../../types';
 import { useIsMobile } from '../../hooks/useMediaQuery';
+import { EVENT_SYMBOLS } from '../../constants/event-symbols';
 
 /**
  * Props for the MailDetail component.
@@ -165,7 +166,7 @@ export function MailDetail({
       {/* Footer with status indicators and actions */}
       <footer style={styles.footer}>
         <div style={styles.footerLeft}>
-          {message.pinned && <span style={styles.statusBadge}>📌 PINNED</span>}
+          {message.pinned && <span style={styles.statusBadge}>{EVENT_SYMBOLS.PIN} PINNED</span>}
           {message.replyTo && <span style={styles.statusBadge}>↩ REPLY</span>}
         </div>
         <div style={styles.footerRight}>
