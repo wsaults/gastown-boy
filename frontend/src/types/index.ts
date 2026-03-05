@@ -177,6 +177,8 @@ export interface CrewMember {
   firstFrom?: string;
   /** Current git branch (for polecats) */
   branch?: string;
+  /** ISO timestamp of last activity from events.jsonl */
+  lastActivity?: string;
 }
 
 // ============================================================================

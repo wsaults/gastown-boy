@@ -551,6 +551,11 @@ function AgentCard({ agent, icon }: AgentCardProps) {
           <span style={{ ...styles.statusText, color: statusColor }}>
             {displayStatus.toUpperCase()}
           </span>
+          {agent.lastActivity && (
+            <span style={styles.activityAge}>
+              {formatRelativeTime(agent.lastActivity)}
+            </span>
+          )}
         </div>
 
         {agent.firstSubject && (
@@ -622,6 +627,11 @@ function PolecatCard({ agent, isExpanded, onClick, disabled }: PolecatCardProps)
         <span style={{ ...styles.polecatStatus, color: statusColor }}>
           {displayStatus.toUpperCase()}
         </span>
+        {agent.lastActivity && (
+          <span style={styles.polecatActivity}>
+            {formatRelativeTime(agent.lastActivity)}
+          </span>
+        )}
         {agent.unreadMail > 0 && (
           <span style={styles.polecatMail}>📬{agent.unreadMail}</span>
         )}
@@ -690,6 +700,30 @@ function AgentChip({ agent }: AgentChipProps) {
 // =============================================================================
 // Helpers
 // =============================================================================
+
+/**
+ * Formats an ISO timestamp as a relative time string (e.g. "3m ago", "2h ago").
+ */
+function formatRelativeTime(isoTimestamp: string): string {
+  const now = Date.now();
+  const then = new Date(isoTimestamp).getTime();
+  if (isNaN(then)) return '';
+
+  const diffMs = now - then;
+  if (diffMs < 0) return 'just now';
+
+  const seconds = Math.floor(diffMs / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 function getStatusColor(status: string): string {
   switch (status) {
@@ -1059,6 +1093,14 @@ const styles = {
     marginLeft: '4px',
   },
 
+  polecatActivity: {
+    fontSize: '0.65rem',
+    color: colors.primaryDim,
+    marginLeft: '4px',
+    letterSpacing: '0.05em',
+    fontStyle: 'italic',
+  },
+
   polecatMail: {
     fontSize: '0.7rem',
     color: colors.primaryBright,
@@ -1170,6 +1212,14 @@ const styles = {
   statusText: {
     fontSize: '0.75rem',
     letterSpacing: '0.1em',
+  },
+
+  activityAge: {
+    fontSize: '0.65rem',
+    color: colors.primaryDim,
+    marginLeft: 'auto',
+    letterSpacing: '0.05em',
+    fontStyle: 'italic',
   },
 
   mailRow: {

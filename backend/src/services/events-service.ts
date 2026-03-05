@@ -10,6 +10,7 @@
 
 import { readFileSync, existsSync, watch, type FSWatcher } from "fs";
 import { resolveTownRoot } from "./gastown-workspace.js";
+import { addressToIdentity } from "./gastown-utils.js";
 
 /** A single event from the events.jsonl file. */
 export interface GtEvent {
@@ -191,6 +192,27 @@ export class EventsService {
       this.watcher.close();
       this.watcher = null;
     }
+  }
+
+  /**
+   * Get the last event timestamp per actor identity.
+   * Scans events.jsonl and returns a map of normalized identity -> ISO timestamp.
+   */
+  getLastActivityByActor(): Map<string, string> {
+    const actorTimestamps = new Map<string, string>();
+    if (!existsSync(this.eventsPath)) {
+      return actorTimestamps;
+    }
+
+    const content = readFileSync(this.eventsPath, "utf-8");
+    const events = this.parseEvents(content);
+
+    for (const event of events) {
+      const identity = addressToIdentity(event.actor);
+      actorTimestamps.set(identity, event.ts);
+    }
+
+    return actorTimestamps;
   }
 
   /** Check for new events since last read and notify listeners. */

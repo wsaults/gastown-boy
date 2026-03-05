@@ -181,6 +181,8 @@ export interface CrewMember {
   firstFrom?: string;
   /** Current git branch (for polecats) */
   branch?: string;
+  /** ISO timestamp of last activity from events.jsonl */
+  lastActivity?: string;
 }
 
 // ============================================================================
@@ -346,4 +348,5 @@ export const CrewMemberSchema = z.object({
   firstSubject: z.string().optional(),
   firstFrom: z.string().optional(),
   branch: z.string().optional(),
+  lastActivity: z.string().optional(),
 });

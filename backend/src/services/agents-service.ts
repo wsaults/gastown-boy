@@ -7,6 +7,8 @@
 
 import { collectAgentSnapshot, type AgentRuntimeInfo } from "./agent-data.js";
 import { resolveTownRoot } from "./gastown-workspace.js";
+import { addressToIdentity } from "./gastown-utils.js";
+import { getEventsService } from "./events-service.js";
 import type { CrewMember, CrewMemberStatus, AgentType } from "../types/index.js";
 
 // ============================================================================
@@ -62,7 +64,7 @@ function mapStatus(running: boolean, state?: string): CrewMemberStatus {
   return stateMap[state.toLowerCase()] ?? "idle";
 }
 
-function transformAgent(agent: AgentRuntimeInfo): CrewMember {
+function transformAgent(agent: AgentRuntimeInfo, activityMap: Map<string, string>): CrewMember {
   const result: CrewMember = {
     id: agent.address,
     name: agent.name,
@@ -85,6 +87,12 @@ function transformAgent(agent: AgentRuntimeInfo): CrewMember {
   if (agent.branch) {
     result.branch = agent.branch;
   }
+  // Last activity from events.jsonl
+  const identity = addressToIdentity(agent.address);
+  const lastActivity = activityMap.get(identity);
+  if (lastActivity) {
+    result.lastActivity = lastActivity;
+  }
   return result;
 }
 
@@ -100,7 +108,8 @@ export async function getAgents(): Promise<AgentsServiceResult<CrewMember[]>> {
   try {
     const townRoot = resolveTownRoot();
     const { agents } = await collectAgentSnapshot(townRoot);
-    const crewMembers = agents.map(transformAgent);
+    const activityMap = getEventsService().getLastActivityByActor();
+    const crewMembers = agents.map(a => transformAgent(a, activityMap));
     crewMembers.sort((a, b) => a.name.localeCompare(b.name));
     return { success: true, data: crewMembers };
   } catch (err) {
