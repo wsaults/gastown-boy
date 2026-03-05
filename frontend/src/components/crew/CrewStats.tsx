@@ -5,6 +5,7 @@ import { usePolling } from '../../hooks/usePolling';
 import { api, ApiError } from '../../services/api';
 import { TerminalPane } from '../terminal';
 import type { CrewMember } from '../../types';
+import { EVENT_SYMBOLS } from '../../constants/event-symbols';
 
 /** localStorage key for polecat filter preference */
 const SHOW_ALL_POLECATS_KEY = 'gastown-boy:showAllPolecats';
@@ -461,11 +462,11 @@ function SpawnPolecatButton({ state, onClick, error }: SpawnPolecatButtonProps) 
       case 'loading':
         return '◌';
       case 'success':
-        return '✓';
+        return EVENT_SYMBOLS.COMPLETE;
       case 'error':
-        return '✕';
+        return EVENT_SYMBOLS.FAIL;
       default:
-        return '+';
+        return EVENT_SYMBOLS.CREATE;
     }
   };
 

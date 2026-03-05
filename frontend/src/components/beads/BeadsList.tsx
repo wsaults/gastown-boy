@@ -3,6 +3,7 @@ import { usePolling } from '../../hooks/usePolling';
 import { fuzzyMatch } from '../../hooks/useFuzzySearch';
 import { api } from '../../services/api';
 import type { BeadInfo } from '../../types';
+import { EVENT_SYMBOLS } from '../../constants/event-symbols';
 
 export type BeadsStatusFilter = 'default' | 'open' | 'hooked' | 'in_progress' | 'blocked' | 'deferred' | 'closed' | 'all';
 
@@ -423,7 +424,7 @@ export function BeadsList({ statusFilter, isActive = true, searchQuery = '' }: B
                                   ...styles.actionResult,
                                   color: result.success ? 'var(--crt-phosphor-bright)' : '#FF4444',
                                 }}>
-                                  {result.success ? '✓' : '✗'}
+                                  {result.success ? EVENT_SYMBOLS.COMPLETE : EVENT_SYMBOLS.FAIL}
                                 </span>
                               ) : (
                                 <button
