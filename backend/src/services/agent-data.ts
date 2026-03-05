@@ -6,6 +6,7 @@ import {
   extractBeadPrefix,
   listAllBeadsDirs,
   resolveBeadsDirFromId,
+  resolveGtBinary,
   resolveTownRoot,
 } from "./gastown-workspace.js";
 import {
@@ -16,6 +17,7 @@ import {
 } from "./gastown-utils.js";
 import { listTmuxSessions } from "./tmux.js";
 import { buildMailIndex, listMailIssues, type MailIndexEntry } from "./mail-data.js";
+import { logInfo, logWarn } from "../utils/index.js";
 
 export interface AgentRuntimeInfo {
   id: string;
@@ -162,11 +164,124 @@ async function fetchBeadTitles(
   return titles;
 }
 
+// ============================================================================
+// gt status --json types and parsing
+// ============================================================================
+
+/** Agent entry from gt status --json (appears in both top-level and per-rig) */
+interface GtStatusAgent {
+  name: string;
+  address: string;
+  session: string;
+  role: string;
+  running: boolean;
+  has_work?: boolean;
+  work_title?: string;
+  hook_bead?: string;
+  state?: string;
+  unread_mail?: number;
+}
+
+/** Rig entry from gt status --json */
+interface GtStatusRig {
+  name: string;
+  agents?: GtStatusAgent[];
+}
+
+/** Top-level gt status --json structure (partial — only fields we need) */
+interface GtStatusOutput {
+  agents?: GtStatusAgent[];
+  rigs?: GtStatusRig[];
+}
+
+/**
+ * Fetches agents from `gt status --json`.
+ * This is the most authoritative source: it knows correct session names,
+ * running state, and includes all agent types (crew, polecats, infra).
+ */
+export async function fetchAgentsFromGtStatus(
+  townRoot: string
+): Promise<Omit<AgentRuntimeInfo, "unreadMail" | "firstSubject">[]> {
+  try {
+    const gtBin = resolveGtBinary();
+    const stdout = execFileSync(gtBin, ["status", "--json"], {
+      cwd: townRoot,
+      encoding: "utf-8",
+      timeout: 15000,
+    });
+
+    const status: GtStatusOutput = JSON.parse(stdout);
+    const agents: Omit<AgentRuntimeInfo, "unreadMail" | "firstSubject">[] = [];
+
+    // Process top-level agents (mayor, deacon)
+    for (const agent of status.agents ?? []) {
+      const entry = gtStatusAgentToRuntime(agent, null);
+      if (entry) agents.push(entry);
+    }
+
+    // Process per-rig agents
+    for (const rig of status.rigs ?? []) {
+      for (const agent of rig.agents ?? []) {
+        const entry = gtStatusAgentToRuntime(agent, rig.name);
+        if (entry) agents.push(entry);
+      }
+    }
+
+    logInfo("gt status agent discovery", { count: agents.length });
+    return agents;
+  } catch (err) {
+    logWarn("gt status --json failed, falling back to beads+tmux", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return [];
+  }
+}
+
+function gtStatusAgentToRuntime(
+  agent: GtStatusAgent,
+  rigName: string | null
+): Omit<AgentRuntimeInfo, "unreadMail" | "firstSubject"> | null {
+  const role = normalizeRole(agent.role);
+  if (!role) return null;
+
+  const address = agent.address || buildAgentAddress(role, rigName, agent.name);
+  if (!address) return null;
+
+  const entry: Omit<AgentRuntimeInfo, "unreadMail" | "firstSubject"> = {
+    id: address,
+    name: agent.name,
+    role,
+    rig: rigName,
+    address,
+    sessionName: agent.session || null,
+    running: agent.running,
+  };
+
+  if (agent.state) entry.state = agent.state;
+  if (agent.hook_bead) entry.hookBead = agent.hook_bead;
+  if (agent.work_title) entry.hookBeadTitle = agent.work_title;
+
+  return entry;
+}
+
 export async function collectAgentSnapshot(
   townRoot: string,
   extraIdentities: string[] = []
 ): Promise<AgentSnapshot> {
-  const sessions = await listTmuxSessions();
+  const identities = new Set(extraIdentities.map(addressToIdentity));
+  const baseAgents: Omit<AgentRuntimeInfo, "unreadMail" | "firstSubject">[] = [];
+
+  // PRIMARY SOURCE: gt status --json — authoritative, includes all agent types
+  // with correct session names and running state
+  const gtStatusAgents = await fetchAgentsFromGtStatus(townRoot);
+  for (const agent of gtStatusAgents) {
+    const identity = addressToIdentity(agent.address);
+    if (identities.has(identity)) continue;
+    identities.add(identity);
+    baseAgents.push(agent);
+  }
+
+  // SECONDARY SOURCE: beads database — may have richer metadata
   const foundIssues: { issue: BeadsIssue; sourceRig: string | null }[] = [];
   const beadsDirs = await listAllBeadsDirs();
 
@@ -175,13 +290,8 @@ export async function collectAgentSnapshot(
     foundIssues.push(...agents.map((issue) => ({ issue, sourceRig: dirInfo.rig })));
   }
 
-  if (foundIssues.length === 0) {
-    // If no agents found at all, we'll rely on tmux synthesis later
-  }
-
-  const identities = new Set(extraIdentities.map(addressToIdentity));
-  const baseAgents: Omit<AgentRuntimeInfo, "unreadMail" | "firstSubject">[] = [];
-
+  // Enrich or add agents from beads data
+  const sessions = await listTmuxSessions();
   for (const { issue, sourceRig } of foundIssues) {
     const parsed = parseAgentBeadId(issue.id, sourceRig);
     const fields = parseAgentFields(issue.description);
@@ -198,7 +308,7 @@ export async function collectAgentSnapshot(
     if (!address) continue;
 
     const identity = addressToIdentity(address);
-    // Skip if we've already seen this agent (dedup across beads directories)
+    // Skip if already found via gt status
     if (identities.has(identity)) continue;
     identities.add(identity);
 
@@ -221,7 +331,7 @@ export async function collectAgentSnapshot(
     baseAgents.push(agentEntry);
   }
 
-  // Synthesize agents from running tmux sessions if not found in beads
+  // TERTIARY SOURCE: tmux session synthesis (fallback for agents not in gt status or beads)
   for (const sessionName of sessions) {
     let rig: string | null = null;
     let role: string | null = null;
@@ -235,14 +345,11 @@ export async function collectAgentSnapshot(
       name = "deacon";
     } else if (sessionName.startsWith("gt-")) {
       const parts = sessionName.split("-");
-      // gt-{rig}-witness
-      // gt-{rig}-refinery
-      // gt-{rig}-crew-{name}
-      // gt-{rig}-{name} (polecat)
+      // gt-{rig}-witness, gt-{rig}-refinery, gt-{rig}-crew-{name}, gt-{rig}-{name}
       if (parts.length >= 3 && parts[1] && parts[2]) {
         rig = parts[1];
         const typeOrName = parts[2];
-        
+
         if (typeOrName === "witness") {
           role = "witness";
           name = "witness";
@@ -253,7 +360,6 @@ export async function collectAgentSnapshot(
           role = "crew";
           name = parts.slice(3).join("-");
         } else {
-          // Assume polecat if not one of the above known types
           role = "polecat";
           name = parts.slice(2).join("-");
         }
@@ -264,18 +370,17 @@ export async function collectAgentSnapshot(
       const address = buildAgentAddress(role, rig, name);
       if (address) {
         const identity = addressToIdentity(address);
-        // Check if already found via beads
         if (!identities.has(identity)) {
           identities.add(identity);
           baseAgents.push({
-            id: address, // Fallback ID
+            id: address,
             name,
             role,
             rig,
             address,
             sessionName,
             running: true,
-            state: "running", // It has a session, so it's running
+            state: "running",
           });
         }
       }
@@ -285,9 +390,9 @@ export async function collectAgentSnapshot(
   const mailIssues = await listMailIssues(townRoot);
   const mailIndex = buildMailIndex(mailIssues, Array.from(identities));
 
-  // Collect all hook bead IDs and fetch their titles
+  // Collect hook bead IDs that don't already have titles (gt status provides some)
   const hookBeadIds = baseAgents
-    .filter((a) => a.hookBead)
+    .filter((a) => a.hookBead && !a.hookBeadTitle)
     .map((a) => a.hookBead as string);
   const uniqueHookBeadIds = [...new Set(hookBeadIds)];
 
@@ -302,14 +407,14 @@ export async function collectAgentSnapshot(
     };
     if (mailInfo?.firstSubject) result.firstSubject = mailInfo.firstSubject;
 
-    // Add hook bead title for current task display
-    if (agent.hookBead) {
+    // Add hook bead title for current task display (if not already set by gt status)
+    if (agent.hookBead && !agent.hookBeadTitle) {
       const title = hookBeadTitles.get(agent.hookBead);
       if (title) result.hookBeadTitle = title;
     }
 
-    // Get branch for polecats
-    if (agent.role === "polecat" && agent.rig) {
+    // Get branch for polecats and crew (both may have worktrees)
+    if ((agent.role === "polecat") && agent.rig) {
       const branch = getPolecatBranch(agent.rig, agent.name);
       if (branch) result.branch = branch;
     }
