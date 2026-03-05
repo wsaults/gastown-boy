@@ -59,7 +59,18 @@ export function useDashboardCrew(isActive = false): DashboardCrew {
 
     const alerts: string[] = [];
     for (const m of dashboardAgents) {
-      if (m.status === 'stuck') {
+      // Problem-based alerts take priority
+      if (m.problems && m.problems.length > 0) {
+        for (const p of m.problems) {
+          if (p.type === 'gupp_violation') {
+            alerts.push(`${m.name}: GUPP VIOLATION (${p.minutesIdle}m idle)`);
+          } else if (p.type === 'zombie') {
+            alerts.push(`${m.name}: ZOMBIE (dead with hooked work)`);
+          } else if (p.type === 'stalled') {
+            alerts.push(`${m.name}: STALLED (${p.minutesIdle}m idle)`);
+          }
+        }
+      } else if (m.status === 'stuck') {
         alerts.push(`${m.name} is STUCK`);
       } else if (m.status === 'blocked') {
         alerts.push(`${m.name} is blocked`);

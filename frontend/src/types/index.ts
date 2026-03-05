@@ -152,6 +152,20 @@ export interface GastownStatus {
 }
 
 // ============================================================================
+// Problem Detection Types
+// ============================================================================
+
+/** A detected operational problem for an agent. */
+export interface AgentProblem {
+  /** Problem category */
+  type: "gupp_violation" | "stalled" | "zombie";
+  /** Human-readable description */
+  detail: string;
+  /** Minutes since last activity (for timing-based problems) */
+  minutesIdle?: number;
+}
+
+// ============================================================================
 // Crew Member Types
 // ============================================================================
 
@@ -179,6 +193,8 @@ export interface CrewMember {
   branch?: string;
   /** ISO timestamp of last activity from events.jsonl */
   lastActivity?: string;
+  /** Detected operational problems requiring intervention */
+  problems?: AgentProblem[];
 }
 
 // ============================================================================
