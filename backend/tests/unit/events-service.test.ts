@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { readFileSync } from "fs";
+import { readFileSync, watch } from "fs";
 import { EventsService, type GtEvent } from "../../src/services/events-service.js";
 
 // Mock fs module
 vi.mock("fs", () => ({
   readFileSync: vi.fn(),
   existsSync: vi.fn(() => true),
-  statSync: vi.fn(() => ({ size: 1000 })),
+  watch: vi.fn(),
 }));
 
 // Mock fs/promises for watch
@@ -212,6 +212,92 @@ not valid json
       // Should include events at 20:00:02, 20:00:03, 20:00:04
       expect(events).toHaveLength(3);
       expect(events[0]!.type).toBe("nudge");
+    });
+  });
+
+  describe("startWatching / checkForNewEvents", () => {
+    it("should use character length (not byte size) to detect new content", () => {
+      // Multi-byte emoji: "✓" is 3 bytes in UTF-8 but 1 JS character
+      const initialLine = '{"ts":"2026-03-04T20:00:00Z","source":"gt","type":"done","actor":"test","payload":{"sym":"✓"},"visibility":"feed"}\n';
+      const appendedLine = '{"ts":"2026-03-04T20:00:01Z","source":"gt","type":"mail","actor":"test","payload":{},"visibility":"feed"}\n';
+
+      // First read (during startWatching) returns initial content
+      vi.mocked(readFileSync).mockReturnValue(initialLine);
+
+      let watchCallback: (() => void) | undefined;
+      const mockWatcher = {
+        on: vi.fn().mockReturnThis(),
+        close: vi.fn(),
+      };
+      vi.mocked(watch).mockImplementation((_path: any, cb: any) => {
+        watchCallback = cb as () => void;
+        return mockWatcher as any;
+      });
+
+      const listener = vi.fn();
+      const service = new EventsService("/tmp/test-events.jsonl");
+      service.startWatching(listener);
+
+      // Now file has both lines
+      vi.mocked(readFileSync).mockReturnValue(initialLine + appendedLine);
+
+      // Trigger the watcher callback
+      watchCallback!();
+
+      expect(listener).toHaveBeenCalledTimes(1);
+      const newEvents = listener.mock.calls[0]![0] as GtEvent[];
+      expect(newEvents).toHaveLength(1);
+      expect(newEvents[0]!.type).toBe("mail");
+
+      service.stopWatching(listener);
+    });
+
+    it("should handle ENOENT when events file does not exist", () => {
+      // readFileSync throws ENOENT during init
+      vi.mocked(readFileSync).mockImplementation(() => {
+        const err = new Error("ENOENT") as NodeJS.ErrnoException;
+        err.code = "ENOENT";
+        throw err;
+      });
+
+      // watch() throws ENOENT for missing file
+      vi.mocked(watch).mockImplementation(() => {
+        const err = new Error("ENOENT") as NodeJS.ErrnoException;
+        err.code = "ENOENT";
+        throw err;
+      });
+
+      const listener = vi.fn();
+      const service = new EventsService("/tmp/nonexistent-events.jsonl");
+
+      // Should not throw
+      expect(() => service.startWatching(listener)).not.toThrow();
+
+      service.stopWatching(listener);
+    });
+
+    it("should handle watcher error events gracefully", () => {
+      vi.mocked(readFileSync).mockReturnValue("");
+
+      let errorHandler: ((err: Error) => void) | undefined;
+      const mockWatcher = {
+        on: vi.fn().mockImplementation((event: string, handler: any) => {
+          if (event === "error") errorHandler = handler;
+          return mockWatcher;
+        }),
+        close: vi.fn(),
+      };
+      vi.mocked(watch).mockReturnValue(mockWatcher as any);
+
+      const listener = vi.fn();
+      const service = new EventsService("/tmp/test-events.jsonl");
+      service.startWatching(listener);
+
+      // Simulate an error event (e.g., file deleted while watching)
+      expect(() => errorHandler!(new Error("ENOENT"))).not.toThrow();
+      expect(mockWatcher.close).toHaveBeenCalled();
+
+      service.stopWatching(listener);
     });
   });
 });

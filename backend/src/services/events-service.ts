@@ -8,8 +8,7 @@
  * - File watching for SSE push
  */
 
-import { readFileSync, existsSync, statSync } from "fs";
-import { watch, type FSWatcher } from "fs";
+import { readFileSync, existsSync, watch, type FSWatcher } from "fs";
 import { resolveTownRoot } from "./gastown-workspace.js";
 
 /** A single event from the events.jsonl file. */
@@ -58,7 +57,7 @@ const DEDUPE_WINDOW_MS = 2000;
 export class EventsService {
   private readonly eventsPath: string;
   private watcher: FSWatcher | null = null;
-  private lastSize = 0;
+  private lastLength = 0;
   private listeners: Set<(events: GtEvent[]) => void> = new Set();
 
   constructor(eventsPath?: string) {
@@ -161,16 +160,27 @@ export class EventsService {
 
     if (this.watcher) return; // Already watching
 
+    // Initialize lastLength from file content length (characters, not bytes)
     try {
-      const stat = statSync(this.eventsPath);
-      this.lastSize = stat.size;
+      const content = readFileSync(this.eventsPath, "utf-8");
+      this.lastLength = content.length;
     } catch {
-      this.lastSize = 0;
+      this.lastLength = 0;
     }
 
-    this.watcher = watch(this.eventsPath, () => {
-      this.checkForNewEvents();
-    });
+    try {
+      this.watcher = watch(this.eventsPath, () => {
+        this.checkForNewEvents();
+      });
+      this.watcher.on("error", () => {
+        // File may be deleted or become inaccessible; stop watching gracefully
+        this.watcher?.close();
+        this.watcher = null;
+      });
+    } catch {
+      // File doesn't exist yet — watcher will be retried on next startWatching call
+      this.watcher = null;
+    }
   }
 
   /** Stop watching and remove a listener. */
@@ -186,13 +196,12 @@ export class EventsService {
   /** Check for new events since last read and notify listeners. */
   private checkForNewEvents(): void {
     try {
-      const stat = statSync(this.eventsPath);
-      if (stat.size <= this.lastSize) return;
-
-      // Read the new portion of the file
       const content = readFileSync(this.eventsPath, "utf-8");
-      const newContent = content.substring(this.lastSize);
-      this.lastSize = stat.size;
+      if (content.length <= this.lastLength) return;
+
+      // Read the new portion of the file using character offsets
+      const newContent = content.substring(this.lastLength);
+      this.lastLength = content.length;
 
       const newEvents = this.parseEvents(newContent);
       if (newEvents.length > 0) {
