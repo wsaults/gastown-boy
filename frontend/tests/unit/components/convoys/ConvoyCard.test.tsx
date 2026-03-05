@@ -70,20 +70,20 @@ describe("ConvoyCard", () => {
   // Progress Display
   // ===========================================================================
 
-  describe("progress display", () => {
-    it("should display progress as fraction and percentage", () => {
+  describe("progress dots", () => {
+    it("should show dots matching completed/total ratio (2 of 5)", () => {
       render(
         <ConvoyCard
           convoy={createMockConvoy({
-            progress: { completed: 3, total: 10 },
+            progress: { completed: 2, total: 5 },
           })}
         />
       );
 
-      expect(screen.getByText("3/10 (30%)")).toBeInTheDocument();
+      expect(screen.getByText("●●○○○")).toBeInTheDocument();
     });
 
-    it("should show 100% when all issues are complete", () => {
+    it("should show all filled dots when complete", () => {
       render(
         <ConvoyCard
           convoy={createMockConvoy({
@@ -92,10 +92,10 @@ describe("ConvoyCard", () => {
         />
       );
 
-      expect(screen.getByText("5/5 (100%)")).toBeInTheDocument();
+      expect(screen.getByText("●●●●●")).toBeInTheDocument();
     });
 
-    it("should show 0% when no issues are complete", () => {
+    it("should show all empty dots when none complete", () => {
       render(
         <ConvoyCard
           convoy={createMockConvoy({
@@ -104,10 +104,10 @@ describe("ConvoyCard", () => {
         />
       );
 
-      expect(screen.getByText("0/5 (0%)")).toBeInTheDocument();
+      expect(screen.getByText("○○○○○")).toBeInTheDocument();
     });
 
-    it("should show 100% when there are no issues (empty convoy)", () => {
+    it("should show all filled dots for empty convoy (0/0)", () => {
       render(
         <ConvoyCard
           convoy={createMockConvoy({
@@ -117,7 +117,32 @@ describe("ConvoyCard", () => {
         />
       );
 
-      expect(screen.getByText("0/0 (100%)")).toBeInTheDocument();
+      expect(screen.getByText("●●●●●")).toBeInTheDocument();
+    });
+
+    it("should scale dots proportionally for large totals (3/10 = 2 filled)", () => {
+      render(
+        <ConvoyCard
+          convoy={createMockConvoy({
+            progress: { completed: 3, total: 10 },
+          })}
+        />
+      );
+
+      // 3/10 = 0.3 * 5 = 1.5 → rounds to 2
+      expect(screen.getByText("●●○○○")).toBeInTheDocument();
+    });
+
+    it("should show fraction text alongside dots", () => {
+      render(
+        <ConvoyCard
+          convoy={createMockConvoy({
+            progress: { completed: 3, total: 10 },
+          })}
+        />
+      );
+
+      expect(screen.getByText("3/10")).toBeInTheDocument();
     });
   });
 

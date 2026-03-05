@@ -9,9 +9,11 @@ interface ConvoyCardProps {
  * Display a single convoy with its progress and tracked issues.
  */
 export function ConvoyCard({ convoy }: ConvoyCardProps) {
-  const progress = convoy.progress.total > 0
-    ? Math.round((convoy.progress.completed / convoy.progress.total) * 100)
-    : 100;
+  const { completed, total } = convoy.progress;
+  const filledCount = total > 0
+    ? Math.round((completed / total) * 5)
+    : 5;
+  const dots = '●'.repeat(filledCount) + '○'.repeat(5 - filledCount);
 
   return (
     <div style={styles.card}>
@@ -22,11 +24,9 @@ export function ConvoyCard({ convoy }: ConvoyCardProps) {
       <div style={styles.title}>{convoy.title}</div>
 
       <div style={styles.progressSection}>
-        <div style={styles.progressBar}>
-          <div style={{ ...styles.progressFill, width: `${progress}%` }} />
-        </div>
+        <span style={styles.progressDots}>{dots}</span>
         <span style={styles.progressText}>
-          {convoy.progress.completed}/{convoy.progress.total} ({progress}%)
+          {completed}/{total}
         </span>
       </div>
 
@@ -117,24 +117,15 @@ const styles = {
     gap: '8px',
     marginBottom: '10px',
   },
-  progressBar: {
-    flex: 1,
-    height: '6px',
-    backgroundColor: 'rgba(0, 255, 0, 0.1)',
-    borderRadius: '1px',
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: 'var(--crt-phosphor)',
-    transition: 'width 0.3s',
+  progressDots: {
+    fontSize: '12px',
+    color: 'var(--crt-phosphor)',
+    letterSpacing: '2px',
   },
   progressText: {
     fontSize: '10px',
     color: 'var(--crt-phosphor-dim)',
     whiteSpace: 'nowrap',
-    minWidth: '70px',
-    textAlign: 'right',
   },
   issuesList: {
     display: 'flex',
