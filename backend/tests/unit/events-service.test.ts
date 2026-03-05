@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { readFileSync, watch } from "fs";
+import { readFileSync, existsSync, watch } from "fs";
 import { EventsService, type GtEvent } from "../../src/services/events-service.js";
 
 // Mock fs module
@@ -212,6 +212,31 @@ not valid json
       // Should include events at 20:00:02, 20:00:03, 20:00:04
       expect(events).toHaveLength(3);
       expect(events[0]!.type).toBe("nudge");
+    });
+  });
+
+  describe("getLastActivityByActor", () => {
+    it("should return the last event timestamp per normalized actor identity", () => {
+      vi.mocked(readFileSync).mockReturnValue(sampleEventLines());
+      const service = new EventsService("/tmp/test-events.jsonl");
+
+      const activityMap = service.getLastActivityByActor();
+
+      // gastownBoy/witness had one event at 20:00:00
+      expect(activityMap.get("gastownBoy/witness")).toBe("2026-03-04T20:00:00Z");
+      // gastownBoy/polecats/rust normalizes to gastownBoy/rust — had events at 20:00:01, 20:00:02, 20:00:03
+      // The nudge at 20:00:02 from "gastownBoy/rust" also normalizes to "gastownBoy/rust"
+      expect(activityMap.get("gastownBoy/rust")).toBe("2026-03-04T20:00:03Z");
+      // mayor normalizes to "mayor/"
+      expect(activityMap.get("mayor/")).toBe("2026-03-04T20:00:04Z");
+    });
+
+    it("should return empty map when events file does not exist", () => {
+      vi.mocked(existsSync).mockReturnValue(false);
+      const service = new EventsService("/tmp/nonexistent.jsonl");
+
+      const activityMap = service.getLastActivityByActor();
+      expect(activityMap.size).toBe(0);
     });
   });
 
