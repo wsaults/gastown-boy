@@ -9,6 +9,7 @@ import { collectAgentSnapshot, type AgentRuntimeInfo } from "./agent-data.js";
 import { resolveTownRoot } from "./gastown-workspace.js";
 import { addressToIdentity } from "./gastown-utils.js";
 import { getEventsService } from "./events-service.js";
+import { detectAgentProblems } from "./problem-detection.js";
 import type { CrewMember, CrewMemberStatus, AgentType } from "../types/index.js";
 
 // ============================================================================
@@ -109,7 +110,23 @@ export async function getAgents(): Promise<AgentsServiceResult<CrewMember[]>> {
     const townRoot = resolveTownRoot();
     const { agents } = await collectAgentSnapshot(townRoot);
     const activityMap = getEventsService().getLastActivityByActor();
-    const crewMembers = agents.map(a => transformAgent(a, activityMap));
+    const now = new Date();
+
+    const crewMembers = agents.map((agent) => {
+      const member = transformAgent(agent, activityMap);
+
+      // Problem detection using last activity timestamp
+      const identity = addressToIdentity(agent.address);
+      const lastActivityStr = activityMap.get(identity);
+      const lastActivity = lastActivityStr ? new Date(lastActivityStr) : null;
+      const problems = detectAgentProblems(agent, lastActivity, now);
+      if (problems.length > 0) {
+        member.problems = problems;
+      }
+
+      return member;
+    });
+
     crewMembers.sort((a, b) => a.name.localeCompare(b.name));
     return { success: true, data: crewMembers };
   } catch (err) {

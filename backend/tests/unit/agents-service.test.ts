@@ -9,6 +9,17 @@ vi.mock("../../src/services/gastown-workspace.js", () => ({
   resolveTownRoot: vi.fn(() => "/tmp/town"),
 }));
 
+vi.mock("../../src/services/events-service.js", () => ({
+  getEventsService: vi.fn(() => ({
+    getLastActivityByActor: vi.fn(() => new Map()),
+  })),
+}));
+
+vi.mock("../../src/services/gastown-utils.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/services/gastown-utils.js")>();
+  return { ...actual };
+});
+
 import { collectAgentSnapshot, type AgentRuntimeInfo } from "../../src/services/agent-data.js";
 import { getAgents } from "../../src/services/agents-service.js";
 
@@ -146,6 +157,45 @@ describe("agents-service", () => {
       expect(result.data?.[0].firstSubject).toBe("Urgent task");
       expect(result.data?.[0].currentTask).toBe("Fix bug #123");
       expect(result.data?.[0].branch).toBe("feature/new-ui");
+    });
+
+    it("should attach zombie problem for dead agent with hooked work", async () => {
+      vi.mocked(collectAgentSnapshot).mockResolvedValue({
+        agents: [
+          createAgentInfo({
+            name: "chrome",
+            address: "rig/chrome",
+            role: "polecat",
+            running: false,
+            hookBead: "gb-003",
+          }),
+        ],
+        polecats: [],
+      });
+
+      const result = await getAgents();
+
+      expect(result.success).toBe(true);
+      expect(result.data?.[0].problems).toHaveLength(1);
+      expect(result.data?.[0].problems?.[0].type).toBe("zombie");
+    });
+
+    it("should not attach problems for healthy agents", async () => {
+      vi.mocked(collectAgentSnapshot).mockResolvedValue({
+        agents: [
+          createAgentInfo({
+            name: "chrome",
+            running: true,
+            state: "working",
+          }),
+        ],
+        polecats: [],
+      });
+
+      const result = await getAgents();
+
+      expect(result.success).toBe(true);
+      expect(result.data?.[0].problems).toBeUndefined();
     });
 
     it("should handle errors gracefully", async () => {

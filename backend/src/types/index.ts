@@ -156,6 +156,20 @@ export interface GastownStatus {
 }
 
 // ============================================================================
+// Problem Detection Types
+// ============================================================================
+
+/** A detected operational problem for an agent. */
+export interface AgentProblem {
+  /** Problem category */
+  type: "gupp_violation" | "stalled" | "zombie";
+  /** Human-readable description */
+  detail: string;
+  /** Minutes since last activity (for timing-based problems) */
+  minutesIdle?: number;
+}
+
+// ============================================================================
 // Crew Member Types
 // ============================================================================
 
@@ -183,6 +197,8 @@ export interface CrewMember {
   branch?: string;
   /** ISO timestamp of last activity from events.jsonl */
   lastActivity?: string;
+  /** Detected operational problems requiring intervention */
+  problems?: AgentProblem[];
 }
 
 // ============================================================================
@@ -337,6 +353,12 @@ export const GastownStatusSchema = z.object({
   fetchedAt: z.string(),
 });
 
+export const AgentProblemSchema = z.object({
+  type: z.enum(["gupp_violation", "stalled", "zombie"]),
+  detail: z.string(),
+  minutesIdle: z.number().optional(),
+});
+
 export const CrewMemberSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -349,4 +371,5 @@ export const CrewMemberSchema = z.object({
   firstFrom: z.string().optional(),
   branch: z.string().optional(),
   lastActivity: z.string().optional(),
+  problems: z.array(AgentProblemSchema).optional(),
 });

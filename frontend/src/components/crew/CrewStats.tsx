@@ -4,7 +4,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { usePolling } from '../../hooks/usePolling';
 import { api, ApiError } from '../../services/api';
 import { TerminalPane } from '../terminal';
-import type { CrewMember } from '../../types';
+import type { CrewMember, AgentProblem } from '../../types';
 import { EVENT_SYMBOLS } from '../../constants/event-symbols';
 
 /** localStorage key for polecat filter preference */
@@ -139,6 +139,7 @@ export function CrewStats({ className = '', isActive = true }: CrewStatsProps) {
 
   const totalAgents = agents?.length ?? 0;
   const runningAgents = agents?.filter(a => a.status !== 'offline').length ?? 0;
+  const problemAgents = agents?.filter(a => a.problems && a.problems.length > 0).length ?? 0;
   const townGridStyle = isNarrow
     ? { ...styles.townGrid, gridTemplateColumns: '1fr' }
     : styles.townGrid;
@@ -250,6 +251,17 @@ export function CrewStats({ className = '', isActive = true }: CrewStatsProps) {
               {totalAgents - runningAgents}
             </span>
           </span>
+          {problemAgents > 0 && (
+            <>
+              <span style={styles.statDivider}>│</span>
+              <span style={styles.statItem}>
+                <span style={styles.statLabel}>PROBLEMS</span>
+                <span style={{ ...styles.statValue, color: colors.stuck }}>
+                  {problemAgents}
+                </span>
+              </span>
+            </>
+          )}
         </div>
       </footer>
     </section>
@@ -519,19 +531,23 @@ function AgentCard({ agent, icon }: AgentCardProps) {
   const isActive = agent.currentTask && agent.status === 'idle';
   const displayStatus = isActive ? 'active' : agent.status;
   const statusColor = getStatusColor(displayStatus);
+  const hasProblems = agent.problems && agent.problems.length > 0;
 
   return (
     <div
       style={{
         ...styles.card,
-        borderColor: isOnline ? colors.panelBorder : colors.offlineBorder,
+        borderColor: hasProblems
+          ? PROBLEM_DISPLAY[agent.problems![0].type].color
+          : isOnline ? colors.panelBorder : colors.offlineBorder,
       }}
       role="listitem"
-      aria-label={`${agent.name} - ${displayStatus}`}
+      aria-label={`${agent.name} - ${displayStatus}${hasProblems ? ' (problem detected)' : ''}`}
     >
       <div style={styles.cardHeader}>
         <span style={styles.typeIcon}>{icon}</span>
         <span style={styles.agentName}>{agent.name.toUpperCase()}</span>
+        {hasProblems && <ProblemBadge problems={agent.problems!} />}
         {agent.unreadMail > 0 && (
           <span style={styles.headerMailBadge}>📬{agent.unreadMail}</span>
         )}
@@ -600,19 +616,22 @@ function PolecatCard({ agent, isExpanded, onClick, disabled }: PolecatCardProps)
   const isActive = agent.currentTask && agent.status === 'idle';
   const displayStatus = isActive ? 'active' : agent.status;
   const statusColor = getStatusColor(displayStatus);
+  const hasProblems = agent.problems && agent.problems.length > 0;
 
   return (
     <button
       style={{
         ...styles.polecatCard,
-        borderColor: isExpanded ? colors.primaryBright : (isOnline ? colors.panelBorder : colors.offlineBorder),
+        borderColor: hasProblems
+          ? PROBLEM_DISPLAY[agent.problems![0].type].color
+          : isExpanded ? colors.primaryBright : (isOnline ? colors.panelBorder : colors.offlineBorder),
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.6 : 1,
       }}
       onClick={onClick}
       disabled={disabled}
       aria-expanded={isExpanded}
-      aria-label={`${agent.name} - ${displayStatus}${isExpanded ? ' (terminal open)' : ''}`}
+      aria-label={`${agent.name} - ${displayStatus}${hasProblems ? ' (problem detected)' : ''}${isExpanded ? ' (terminal open)' : ''}`}
     >
       <div style={styles.polecatCardHeader}>
         <span style={styles.polecatIcon}>🐱</span>
@@ -627,6 +646,7 @@ function PolecatCard({ agent, isExpanded, onClick, disabled }: PolecatCardProps)
         <span style={{ ...styles.polecatStatus, color: statusColor }}>
           {displayStatus.toUpperCase()}
         </span>
+        {hasProblems && <ProblemBadge problems={agent.problems!} />}
         {agent.lastActivity && (
           <span style={styles.polecatActivity}>
             {formatRelativeTime(agent.lastActivity)}
@@ -694,6 +714,39 @@ function AgentChip({ agent }: AgentChipProps) {
         <span style={styles.chipMail}>📬{agent.unreadMail}</span>
       )}
     </div>
+  );
+}
+
+// =============================================================================
+// Problem Badge
+// =============================================================================
+
+const PROBLEM_DISPLAY: Record<AgentProblem['type'], { icon: string; label: string; color: string }> = {
+  gupp_violation: { icon: '!!!', label: 'GUPP', color: '#FF4444' },
+  stalled: { icon: '!!', label: 'STALL', color: '#FFB000' },
+  zombie: { icon: '!!!', label: 'DEAD', color: '#FF4444' },
+};
+
+function ProblemBadge({ problems }: { problems: AgentProblem[] }) {
+  if (problems.length === 0) return null;
+  // Show the most severe problem (gupp > zombie > stalled)
+  const worst = problems.reduce((a, b) => {
+    const priority: Record<AgentProblem['type'], number> = { gupp_violation: 0, zombie: 1, stalled: 2 };
+    return priority[a.type] <= priority[b.type] ? a : b;
+  });
+  const display = PROBLEM_DISPLAY[worst.type];
+  const timeStr = worst.minutesIdle ? ` ${worst.minutesIdle}m` : '';
+  return (
+    <span
+      style={{
+        ...styles.problemBadge,
+        color: display.color,
+        borderColor: display.color,
+      }}
+      title={worst.detail}
+    >
+      {display.icon} {display.label}{timeStr}
+    </span>
   );
 }
 
@@ -1325,6 +1378,18 @@ const styles = {
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
     maxWidth: '120px',
+  },
+
+  // Problem badge
+  problemBadge: {
+    fontSize: '0.6rem',
+    fontWeight: 'bold',
+    letterSpacing: '0.1em',
+    padding: '1px 5px',
+    border: '1px solid',
+    textTransform: 'uppercase',
+    whiteSpace: 'nowrap',
+    animation: 'blink 1.5s ease-in-out infinite',
   },
 
   // Footer
